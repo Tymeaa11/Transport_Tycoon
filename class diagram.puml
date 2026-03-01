@@ -679,15 +679,41 @@ namespace ViewModel {
 nameSpace View {
 
   class VisualChunk {
-    contains prerendered chunks in WPF
+    - visual : DrawingVisual
+    - isDirty : bool
+
+    + VisualChunk()
+    + Render(Chunk) : void
+    + Invalidate() : void
+
+  }
+
+  class Minimap {
+    - minimap : DrawingVisual
+
+    + Minimap()
+    + Render() : void
+    + Update() : void
   }
 
   class Camera {
 
+    - projectionMatrix : Matrix
+    - zoom : float
+    - offset : Vector
+
+    + Camera()
+
+    + Update() : void
+    + Zoom()
+    + Pan()
+    + ScreenToWorld(Point) : Point)
   }
 
   class MainGameScreen {
-    - visualChunks : VisualChunk[,]
+    - visualChunks : Map<Coordinate, VisualChunk>
+    - minimap : Minimap
+    - camera : Camera
   }
 
   class MainMenuSceen {
@@ -704,6 +730,7 @@ nameSpace View {
 
   MainGameScreen *-- VisualChunk
   MainGameScreen <-- Camera
+  MainGameScreen <-- Minimap
 
 }
 
