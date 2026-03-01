@@ -164,23 +164,23 @@ namespace World {
   interface Surface {
   }
 
-  abstract class KnowsNeightbour implements Surface {
+  abstract class KnowsNeighbour implements Surface {
     + East : Field?
     + West : Field?
     + South : Field?
     + North : Field?
 
-    + KnowsNeightbour()
-    + SetNeightBours(Field?, Field?, Field?, Field?) : void
+    + KnowsNeighbour()
+    + SetNeighbours(Field?, Field?, Field?, Field?) : void
   }
 
-  note left of KnowsNeightbour::East
+  note left of KnowsNeighbour::East
     East, West, South or North 
     can be null if the tile is
     at the edge of the world
   end note
 
-  class Road extends KnowsNeightbour {
+  class Road extends KnowsNeighbour {
     + Coordinate : Coordinate
     + IsPermanent : bool
     + VehicleLeft : Vehicle
@@ -224,14 +224,14 @@ namespace World {
     - {static} cost, maxspan, speed
   }
 
-  class BridgePart extends KnowsNeightbour {
+  class BridgePart extends KnowsNeighbour {
     + VehicleLeft : Vehicle
     + VehicleRight: Vehicle
     - Parent : Bridge
   }
 
 
-  class Mushroom extends KnowsNeightbour {
+  class Mushroom extends KnowsNeighbour {
     - mushroomCount : int
 
     + GetClearCost() : int
@@ -430,7 +430,7 @@ namespace World::Economy {
     + FillVehicle(v : Vehicle) : void
   }
 
-  abstract class Station extends Model::World::KnowsNeightbour {
+  abstract class Station extends Model::World::KnowsNeighbour {
     + Coordinate : Coordinate <<readonly>>
     + Name : string
     - PassengerBuffer : ProductBuffer
@@ -442,7 +442,7 @@ namespace World::Economy {
     + UnLoadProduct() : bool
     + Boarding() : bool
 
-    + {abstract} IsComapatable() : bool
+    + {abstract} IsCompatible() : bool
 
     
   }
