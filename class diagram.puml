@@ -1,0 +1,741 @@
+@startuml Osztaly
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+set namespaceSeparator ::
+
+' https://pdf.plantuml.net/1.2020.22/PlantUML_Language_Reference_Guide_en.pdf
+' from page 40
+
+namespace Model {
+' ==========================================
+' UTILS & ENUMS
+' ==========================================
+
+
+' --- sima összekötés
+' --* komozíció
+' --|> aggregáció
+' --. szagatott
+' Alma "1" --* Gyümölcs
+
+namespace Utils {
+  class Coordinate {
+
+    -x : int
+    -y : int
+
+    + Coordinate(x : int, y : int)
+
+    + IsInside(coord1 : Coordinate ,coord2 : Coordinate) : bool
+
+    + operator +(other : Coordinate) : Coordinate
+    + operator -(other : Coordinate) : Coordinate
+    + ToString() : string
+  }
+
+  class Direction extends Coordinate {
+
+    + {static} NORTH: readonly Direction
+    + {static} SOUTH: readonly Direction
+    + {static} EAST: readonly Direction
+    + {static} WEST: readonly Direction
+
+    - Direction(x : int, y : int)
+  }
+
+
+  struct WeightedWord {
+    + word : string
+    + weight : float
+  }
+
+  class RandomNameGenerator {
+    - {static} adjectives : List<WeightedWord>
+    - {static} nouns : List<WeightedWord>
+    - {static} cityEndings : List<WeightedWord>
+    - {static} factoryEndings : List<WeightedWord>
+    ...
+    - SharedRandom : Random
+    +RandomNameGenerator(Random)
+
+    +Generate(before, main, after : List<WeightedWord>)
+
+  }
+
+  RandomNameGenerator *-- WeightedWord
+}
+
+' ==========================================
+' WORLD, CHUNKS & TILES
+' ==========================================
+namespace World {
+  class SquareMatrixIterator<T> {
+    - matrix : T[,]
+
+    + MatrixIterator(size : int)
+    + Get(c : Coordinate) : T
+    + Set(c : Coordinate, T) : void
+    + ReadEach((x, y : int, T) -> void ) : void
+    + ModifyEach((x, y : int, T) -> T) : void
+    + SetEach((x, y : int) -> T) : void
+  }
+
+  class World <<Singleton>> {
+    - {static} sharedRandom : Random
+    - WorldSeed : long
+    - GameWorldGenerator : GameWorldGenerator
+    - ChunkMatrix : SquareMatrixIterator<Chunk>
+    --
+    + SizeInChunks : Coordinate
+    + SizeInFields : Coordinate
+    + SizeInPixels : Coordinate
+    --
+    + RoadNetwork : RoadNetwork
+    + Cities : List<<City>>
+    + Factories : List<<Factory>>
+    + Stations : List<Station>
+
+    + World()
+    + Generate(long seed) : void
+    + GetField(c : Coordinate) : Field
+    + GetField(x : int, y : int) : Field
+    + IsRoadBuildable(c : Coordinate) : bool
+    + IsStationBuildable(c : Coordinate) : bool
+    + IsBridgeBuildable(c : Coordinate) : bool
+
+    + BuildRoad(c:Coordinate) : bool
+    + BuildStation(c:Coordinate, name : string) : void
+    + BuildBridge(start : Coordinate, end : Coordinta) : void
+
+    + AddVehicle(v : Vehicle) : void
+    + ActivateVehicle(v : Vehicle) : void
+    + DeactivateVehicle(v : Vehicle) : void
+
+    + AddRoute(t : Route) : void
+    + AssignRoute(t : Route, v : Vehicle) : void
+    + RemoveRoute(t : Route, v : Vehicle) : void
+
+    + AddStationToRoute(t : Route, s : Station) : void
+    + RemoveStationFromRoute(t : Route, s : Station, index : int) : void
+
+    + RestartVehicle(v : Vehicle) : void
+
+    + Update(deltaTime : float) : void
+  }
+
+  class Chunk {
+    + {static} ChunkSize : int <<readonly>>
+    + Coordinate : Coordinate
+    - FieldMatrix : SquareMatrixIterator<Field>
+
+    + Chunk()
+    + GetField(c : Coordinate) : Field
+    + GetField(x, y : int) : Field
+  }
+
+  SquareMatrixIterator --> World
+  SquareMatrixIterator --> Chunk
+
+  class Field {
+    - {static} maxFieldTypeHeights : float[]
+    --
+    + Type : FieldType (1B)
+    + Surface : Surface?
+
+    + Field()
+    + SetHeight(height : float) : void
+  }
+
+  enum FieldType extends byte {
+    DEEP_LAVA_OCEAN
+    LAVA_OCEAN
+    BEACH
+    LOW_LANDS
+    LOW_MID_TRANSITION 
+    MID_LANDS
+    MID_HIGH_TRANSITION
+    HIGH_LANDS
+    MOUNTAINS
+    HIGH_MOUNTAINS
+  }
+
+  interface Surface {
+  }
+
+  abstract class KnowsNeightbour implements Surface {
+    + East : Field?
+    + West : Field?
+    + South : Field?
+    + North : Field?
+
+    + KnowsNeightbour()
+    + SetNeightBours(Field?, Field?, Field?, Field?) : void
+  }
+
+  note left of KnowsNeightbour::East
+    East, West, South or North 
+    can be null if the tile is
+    at the edge of the world
+  end note
+
+  class Road extends KnowsNeightbour {
+    + Coordinate : Coordinate
+    + IsPermanent : bool
+    + VehicleLeft : Vehicle
+    + VehicleRight: Vehicle
+    + RoadType : RoadType <<getter>>
+
+    + Road()
+    + UpdateRoad()
+  }
+
+  enum RoadType {
+    STRAIGHT
+    CURVED
+    JUNCTION
+    SLOPE
+  }
+
+
+  abstract class Bridge {
+    + {static} Cost : int
+    + {static} MaximumSpan : int
+    + {static} SpeedLimit : int
+    --
+    - Fields : List<<Field>>
+
+    Bridge()
+    + IsNorthSouth : bool
+    + AddField(f : Field) : bool
+    + RemoveField(f : Field) : bool
+    - IsFieldBrigable() : bool
+    - IsFieldRemovableFromBridge() : bool
+  }
+
+  class PoorMansBridge extends Bridge {
+    - {static} cost, maxspan, speed
+  }
+  class AverageMansBridge extends Bridge {
+    - {static} cost, maxspan, speed
+  }
+  class RichMansBridge extends Bridge {
+    - {static} cost, maxspan, speed
+  }
+
+  class BridgePart extends KnowsNeightbour {
+    + VehicleLeft : Vehicle
+    + VehicleRight: Vehicle
+    - Parent : Bridge
+  }
+
+
+  class Mushroom extends KnowsNeightbour {
+    - mushroomCount : int
+
+    + GetClearCost() : int
+    + Spread() : void
+  }
+
+
+  Field --* Chunk
+  Chunk --* World
+
+
+  Field <-- Surface
+  Road <-- RoadType
+  Bridge <-- BridgePart
+  Field <-- FieldType
+
+
+}
+
+' ==========================================
+' World generation
+' ==========================================
+namespace TerrainGeneration {
+  class Perlin {
+    - perlinValues : float[]
+    - octaves : int
+    - fallOff : float
+
+    + Perlin()
+    + Perlin(int, float)
+
+    + noise(x: float) : float
+    + noise(x: float, y: float) : float
+    + noiseSeed(long seed) : void
+  }
+
+  class Worley {
+    + Worley()
+
+    + noise(x: float, y: float) : float
+    + noiseSeed(long seed) : void
+  }
+
+  interface Layer {
+    + Get(x: float, y: float): float
+    + SetSeed(seed: long): void
+  }
+
+  class LayeredTerrain {
+    - layers: List<Layer>
+
+
+    + LayeredTerrain()
+    + AddLayer(Layer) : void
+
+    + SetSeed(seed: long): void
+  }
+
+  abstract class ScalableLayer {
+    - frequency : float
+    - amplitude : float
+    - offsetX : float
+    - offsetY : float
+
+    + ScalableLayer(float, float, float, float)
+
+    + Get(x: float, y: float): float
+    {abstract} Calculate(x: float, y: float) : float
+  }
+
+  class PerlinLayer extends ScalableLayer {
+    - perlin : Perlin
+
+    + PerlinLayer(float, float, float, float, Perlin)
+    + SetSeed(seed: long): void
+    Calculate(x: float, y: float) : float
+  }
+
+  class WorleyLayer extends ScalableLayer {
+    - worley : Worley
+
+    + PerlinLayer(float, float, float, float, Worley)
+    + SetSeed(seed: long): void
+    Calculate(x: float, y: float) : float
+  }
+
+  class CompositeLayer {
+    - layer0 : Layer
+    - layer1 : Layer
+    - layer2 : Layer
+
+    + CompositeLayer(Layer, Layer, Layer)
+
+    + Get(x: float, y: float): float
+    + SetSeed(seed: long): void
+  }
+
+  Layer <|.. LayeredTerrain
+  Layer <|.. ScalableLayer
+  Layer <|.. CompositeLayer
+
+  PerlinLayer <-- Perlin
+  WorleyLayer <-- Worley
+
+  note right of Layer::SetSeed
+    Empty default implementation
+  end note
+
+  interface TerrainGenerator {
+    + ModifyField(f : Field, Coordinate c) : void
+    + SetSeed(seed : long) : void
+  }
+
+  class TerrainHeightGenerator implements TerrainGenerator {
+    world generation using 
+    multiple perlin and worley layers 
+    and their combinations
+  }
+
+  class MushroomGenerator implements TerrainGenerator {
+    - perlinLayer : PerlinLayer
+    - threshold : float
+
+    + MushroomGenerator(PerlinLayer, float)
+  }
+
+  class FactoryAndCityGenerator implements TerrainGenerator {
+    - minimumDistance : float
+    - RandomNameGenerator : RandomNameGenerator
+
+    + FactoryAndCityGenerator()
+  }
+
+  class GameWorldGenerator {
+    - TerrainHeightGenerator : TerrainHeightGenerator
+    - MushroomGenerator : MushroomGenerator
+    - FactoryAndCityGenerator : FactoryAndCityGenerator
+
+    + GameWorldGenerator()
+
+    + GenerateField(c : Coordinate) : Field
+
+  }
+
+
+  TerrainHeightGenerator <-- PerlinLayer
+  TerrainHeightGenerator <-- LayeredTerrain
+  TerrainHeightGenerator <-- WorleyLayer
+  TerrainHeightGenerator <-- CompositeLayer
+
+
+  FactoryAndCityGenerator <-- Model::Utils::RandomNameGenerator
+  GameWorldGenerator <-- TerrainHeightGenerator
+  GameWorldGenerator <-- MushroomGenerator
+  GameWorldGenerator <-- FactoryAndCityGenerator
+
+  Model::World::World <-- GameWorldGenerator
+}
+
+' ==========================================
+' City--Station--Factory
+' ==========================================
+namespace World::Economy {
+  Enum ProductType {
+    NONE
+
+    HUMAN
+    BONE
+    SULFUR
+    STEAM
+    WATER
+    ASH
+    CONCRETE
+    MUSHROOM
+  }
+
+  class Product {
+    + ProductType : ProductType
+    - perlin : Perlin
+    - minValue : float
+    - maxValue : float
+    - variability : float
+    
+    + Product()
+    + GetDemand() : int
+    + GetFactoryEfficiency() : float
+  } 
+
+  class ProductBuffer {
+    + ProductType : ProductType
+    - Maximum : int <<readonly>>
+    - Current : int
+
+    + ProductBuffer()
+    + ReceiveProduct(type: ProductType, amount : int) : void
+    + FillVehicle(v : Vehicle) : void
+  }
+
+  abstract class Station extends Model::World::KnowsNeightbour {
+    + Coordinate : Coordinate <<readonly>>
+    + Name : string
+    - PassengerBuffer : ProductBuffer
+    - PassengerDemand : Product
+    - VehiclesToBeProcessed : Queue<Vehicle>
+    - ProcessedVehicles : Queue<Vehicle>
+    
+    + Station()
+    + UnLoadProduct() : bool
+    + Boarding() : bool
+
+    + {abstract} IsComapatable() : bool
+
+    
+  }
+
+  class CityBuilding implements Model::World::Surface {
+    - city : City
+  }
+  class FactoryBuilding implements Model::World::Surface {
+    - factory : Factory
+  }
+
+  class City{
+    + Name : string
+    + Needs : List<Product>
+    + CityFields : List<Field>
+
+    + City(name : string)
+    + RandomizeNeeds() : void
+  }
+
+  class CityStation extends Station {
+    -city : City
+
+    +GetCityNeeds() : List<Product>
+  }
+
+  abstract class Factory{
+    - baseProduct : ProductType
+    - finalProduct : Product
+    - baseProductBuffer : ProductBuffer
+    - finalProductBuffer : ProductBuffer
+    + factoryFields : List<Field>
+
+    + Factory()
+  }
+
+  note right of Factory
+    The factory's efficiency can be given by the finalProduct's GetFactoryEfficiency() method
+  end note
+
+  class SulfurProducer extends Factory {
+  }
+
+  class BoneProducer extends Factory {
+  }
+
+  class AshProducer extends Factory {
+  }
+
+  class MushroomProducer extends Factory {
+  }
+
+  class SteamProducer extends Factory {
+  }
+
+
+  class Condensator extends Factory {
+  }
+
+  class ConcreteFactory extends Factory {
+  }
+
+
+  Class FactoryStation extends Station{
+    -factory : Factory
+
+    +GetFactoryNeeds() : ProductType
+    +GetFactoryFinishedProduct() : ProductType
+    +GetFactoryEfficiency() : float
+    +LoadProduct() : bool
+  }
+
+  Product <-- Model::TerrainGeneration::Perlin
+  Product --. City
+  City --|> Model::World::World
+  Factory --|> Model::World::World
+
+  City <--> CityBuilding
+  City <--> CityStation
+  Factory <-- FactoryBuilding
+  Factory <-- FactoryStation
+  Factory <-- ProductBuffer
+  Station <-- ProductBuffer
+  Station <-- Product
+  Station *-- Model::Vehicle
+
+}
+' ==========================================
+' CORE SYSTEM
+' ==========================================
+class GameModel {
+-playerMoney : double
+-isPaused : bool
+-currentTime : DateTime
+== Properties ==
++World : World
++Vehicles : List<Vehicle>
+-- Methods --
++Pause() : void
++UnPause() : void
++ChangeTimeSpeed1X() : void
++ChangeTimeSpeed2X() : void
++ChangeTimeSpeed4X() : void
++Update(deltaTime : float) : void
++BuyVehicle(v : Vehicle) : bool
++SellVehicle(v : Vehicle) : void
++TryPurchase(amount : double) : bool
++AddMoney(amount : double) : void
++SaveGame() : void
++LoadGame() : void
+-HandleMonthlyExpenses() : void
+-CheckBankruptcy() : void
+.. Events ..
++ OnMoneyChanged : Action<double>
++ OnGameOver : Action<string>
++ OnNewGame : Action
++ OnStationBought : Action<Station>
++ OnRoadBought : Action<Field>
++ OnVehicleBought : Action<Vehicle>
++ OnGameAdvanced : Action<float>
+}
+
+Vehicle --* GameModel
+Model::World::World "1" --* GameModel
+
+' ==========================================
+' INCREMENTAL TOPOLOGICAL GRAPH
+' ==========================================
+class RoadNetwork {
+
+nodes : List<GraphNode>
+edges : List<GraphEdge>
+
+CalculatePath(start : Station, end : Station) : List<GraphEdge>
+OnRoadBuilt(f : Field) : void
+OnRoadRemoved(f : Field) : void
+SplitEdge(edgeToSplit : GraphEdge, crossRoad : Field) : void
+MergeEdges(nodeToRemove : GraphNode) : void
+}
+
+class GraphNode {
+
+field : Field
+nodeType : string
+}
+
+class GraphEdge {
+totalCost : double
+pathFields : List<RoadField>
+}
+
+' ==========================================
+' LOGISTICS & ENTITIES
+' ==========================================
+
+class Route {
+-stops : List<Station>
+-roadsToNextStation : List<RoadField>
+-isLoop : bool
+
++GetNextStop(current : Staton) : Station
++GetRoadsToNextStation (curr : Station, next : Station) : List<RoadField>
+}
+
+RoadField --* Route
+RoadNetwork --- Route
+
+abstract class Vehicle {
+-name : string
+-route : Route
+-currentSpeed : double
+-maxSpeed :double
+-capacity : int
+-currentEdge : GraphEdge
+-currentCoordinate : Coordinate
+-maintenanceCost : int
+-price : int
+
+-Move(deltaTime : float) : void
+-RecalculatePath() : void
++Load() : bool
++UnLoad() : bool
+}
+
+Route "1" --* Vehicle
+
+class Bus extends Vehicle {
+}
+
+class MiniBus extends Vehicle {
+}
+
+class CargoTruck extends Vehicle {
+}
+
+class TankerTruck extends Vehicle {
+}
+
+GraphEdge --* RoadNetwork
+GraphNode --* RoadNetwork
+RoadNetwork --> World::World
+
+
+' ==========================================
+' Exception   
+' ==========================================
+
+class NegativeMoneyException implements Exception
+
+class OpenFileException implements Exception
+
+class RenderFileException implements Exception
+
+}
+
+namespace WPF {
+namespace ViewModel {
+
+  class DelegateCommand {
+
+  }
+
+  class ViewModelBase {
+
+  }
+
+  class GameViewModel {
+
+  }
+
+
+}
+
+nameSpace View {
+
+  class VisualChunk {
+    contains prerendered chunks in WPF
+  }
+
+  class Camera {
+
+  }
+
+  class MainGameScreen {
+    - visualChunks : VisualChunk[,]
+  }
+
+  class MainMenuSceen {
+
+  }
+
+  class PausedGameScreen {
+
+  }
+
+  class GameOverScreen {
+
+  }
+
+  MainGameScreen *-- VisualChunk
+  MainGameScreen <-- Camera
+
+}
+
+  class App.xaml.cs {
+    - OpenFileDialog : OpenFileDialog
+    - SaveFileDialog : SavefileDialog
+
+    - gameViewModel : ViewModel::GameViewModel?
+    - MainGameScreen : View::MainGameScreen?
+    - MainMenuSceen : View::MainMenuSceen?
+    - PausedGameScreen : View::PausedGameScreen?
+    - GameOverScreen : View::GameOverScreen?
+
+    + App()
+
+    - App_startup(object, StartupEventArgs) : void
+    - OnLoadGame(object, EventArgs) : void
+    - OnSaveGame(object, EventArgs) : void
+    - OnPauseGame(object, EventArgs) : void
+    - OnGameOver(object, EventArgs) : void
+    - OnStartNewGame(object, EventArgs) : void 
+
+  }
+
+  App.xaml.cs <-- ViewModel::GameViewModel
+  App.xaml.cs <-- View::MainGameScreen
+  App.xaml.cs <-- View::MainMenuScreen
+  App.xaml.cs <-- View::PausedGameScreen
+  App.xaml.cs <-- View::GameOverScreen
+
+
+
+}
+
+@enduml
