@@ -107,7 +107,7 @@ namespace World {
 
     + BuildRoad(c:Coordinate) : bool
     + BuildStation(c:Coordinate, name : string) : void
-    + BuildBridge(start : Coordinate, end : Coordinta) : void
+    + BuildBridge(start : Coordinate, end : Coordinate) : void
 
     + AddVehicle(v : Vehicle) : void
     + ActivateVehicle(v : Vehicle) : void
@@ -164,23 +164,23 @@ namespace World {
   interface Surface {
   }
 
-  abstract class KnowsNeightbour implements Surface {
+  abstract class KnowsNeighbour implements Surface {
     + East : Field?
     + West : Field?
     + South : Field?
     + North : Field?
 
-    + KnowsNeightbour()
-    + SetNeightBours(Field?, Field?, Field?, Field?) : void
+    + KnowsNeighbour()
+    + SetNeighbours(Field?, Field?, Field?, Field?) : void
   }
 
-  note left of KnowsNeightbour::East
+  note left of KnowsNeighbour::East
     East, West, South or North 
     can be null if the tile is
     at the edge of the world
   end note
 
-  class Road extends KnowsNeightbour {
+  class Road extends KnowsNeighbour {
     + Coordinate : Coordinate
     + IsPermanent : bool
     + VehicleLeft : Vehicle
@@ -224,14 +224,14 @@ namespace World {
     - {static} cost, maxspan, speed
   }
 
-  class BridgePart extends KnowsNeightbour {
+  class BridgePart extends KnowsNeighbour {
     + VehicleLeft : Vehicle
     + VehicleRight: Vehicle
     - Parent : Bridge
   }
 
 
-  class Mushroom extends KnowsNeightbour {
+  class Mushroom extends KnowsNeighbour {
     - mushroomCount : int
 
     + GetClearCost() : int
@@ -430,7 +430,7 @@ namespace World::Economy {
     + FillVehicle(v : Vehicle) : void
   }
 
-  abstract class Station extends Model::World::KnowsNeightbour {
+  abstract class Station extends Model::World::KnowsNeighbour {
     + Coordinate : Coordinate <<readonly>>
     + Name : string
     - PassengerBuffer : ProductBuffer
@@ -442,7 +442,7 @@ namespace World::Economy {
     + UnLoadProduct() : bool
     + Boarding() : bool
 
-    + {abstract} IsComapatable() : bool
+    + {abstract} IsCompatible() : bool
 
     
   }
@@ -556,13 +556,18 @@ class GameModel {
 -HandleMonthlyExpenses() : void
 -CheckBankruptcy() : void
 .. Events ..
-+ OnMoneyChanged : Action<double>
-+ OnGameOver : Action<string>
-+ OnNewGame : Action
-+ OnStationBought : Action<Station>
-+ OnRoadBought : Action<Field>
-+ OnVehicleBought : Action<Vehicle>
-+ OnGameAdvanced : Action<float>
++ moneyChanged : Action<double>
++ gameOver : Action<string>
++ newGame : Action
++ stationBought : Action<Station>
++ roadBought : Action<Field>
++ vehicleBought : Action<Vehicle>
++ gameAdvanced : Action<float>
++ gamePaused : Action
++ gameUnpaused: Action
++ timescaleChanged: Action<int>
++ fieldChanged: Action<Coordinate>
++ vehicleSelectedAtIndex: Action<int>
 }
 
 Vehicle --* GameModel
@@ -612,6 +617,7 @@ RoadNetwork --- Route
 
 abstract class Vehicle {
 -name : string
+-type : ProductType
 -route : Route
 -currentSpeed : double
 -maxSpeed :double
@@ -671,6 +677,42 @@ namespace ViewModel {
 
   class GameViewModel {
 
+    + DecreaseTimeScaleCommand: DelegateCommand
+    + IncreaseTimeScaleCommand: DelegateCommand
+    + BuildRoadCommand: DelegateCommand
+    + BuildBridgeCommand: DelegateCommand
+    + BuildStationCommand: DelegateCommand
+    + BuyVehicleCommand: DelegateCommand
+    + SellVehicleCommand: DelegateCommand
+    + LowerTerrainCommand: DelegateCommand
+    + HeightenTerrainCommand: DelegateCommand
+
+    + OnDecreaseTimeScale(): void
+    + OnIncreaseTimeScale(): void
+    + OnBuildRoad(): void
+    + OnBuildBridge(): void
+    + OnBuildStation(): void
+    + OnBuyVehicle(): void
+    + OnSellVehicle(): void
+    + OnLowerTerrain(): void
+    + OnHeightenTerrain(): void
+    
+
+
+
+    + Model_MoneyChanged(object, EventArgs) : void
+    + Model_GameOver(object, EventArgs) : void
+    + Model_NewGame(object, EventArgs) : void
+    + Model_StationBought(object, EventArgs) : void
+    + Model_RoadBought(object, EventArgs) : void
+    + Model_VehicleBought(object, EventArgs) : void
+    + Model_GameAdvanced(object, EventArgs) : void
+    + Model_GamePaused(object, EventArgs) : void
+    + Model_GameUnpaused(object, EventArgs) : void
+    + Model_TimescaleChanged(object, EventArgs) : void
+    + Model_FieldChanged(object, EventArgs) : void
+    + Model_VehicleSelectedAtIndex(object, EventArgs) : void
+
   }
 
 
@@ -716,7 +758,7 @@ nameSpace View {
     - camera : Camera
   }
 
-  class MainMenuSceen {
+  class MainMenuScreen {
 
   }
 
@@ -740,7 +782,7 @@ nameSpace View {
 
     - gameViewModel : ViewModel::GameViewModel?
     - MainGameScreen : View::MainGameScreen?
-    - MainMenuSceen : View::MainMenuSceen?
+    - MainMenuScreen : View::MainMenuScreen?
     - PausedGameScreen : View::PausedGameScreen?
     - GameOverScreen : View::GameOverScreen?
 
