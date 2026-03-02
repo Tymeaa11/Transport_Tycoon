@@ -107,7 +107,7 @@ namespace World {
 
     + BuildRoad(c:Coordinate) : bool
     + BuildStation(c:Coordinate, name : string) : void
-    + BuildBridge(start : Coordinate, end : Coordinta) : void
+    + BuildBridge(start : Coordinate, end : Coordinate) : void
 
     + AddVehicle(v : Vehicle) : void
     + ActivateVehicle(v : Vehicle) : void
@@ -556,13 +556,18 @@ class GameModel {
 -HandleMonthlyExpenses() : void
 -CheckBankruptcy() : void
 .. Events ..
-+ OnMoneyChanged : Action<double>
-+ OnGameOver : Action<string>
-+ OnNewGame : Action
-+ OnStationBought : Action<Station>
-+ OnRoadBought : Action<Field>
-+ OnVehicleBought : Action<Vehicle>
-+ OnGameAdvanced : Action<float>
++ moneyChanged : Action<double>
++ gameOver : Action<string>
++ newGame : Action
++ stationBought : Action<Station>
++ roadBought : Action<Field>
++ vehicleBought : Action<Vehicle>
++ gameAdvanced : Action<float>
++ gamePaused : Action
++ gameUnpaused: Action
++ timescaleChanged: Action<int>
++ fieldChanged: Action<Coordinate>
++ vehicleSelectedAtIndex: Action<int>
 }
 
 Vehicle --* GameModel
@@ -671,6 +676,42 @@ namespace ViewModel {
 
   class GameViewModel {
 
+    + DecreaseTimeScaleCommand: DelegateCommand
+    + IncreaseTimeScaleCommand: DelegateCommand
+    + BuildRoadCommand: DelegateCommand
+    + BuildBridgeCommand: DelegateCommand
+    + BuildStationCommand: DelegateCommand
+    + BuyVehicleCommand: DelegateCommand
+    + SellVehicleCommand: DelegateCommand
+    + LowerTerrainCommand: DelegateCommand
+    + HeightenTerrainCommand: DelegateCommand
+
+    + OnDecreaseTimeScale(): void
+    + OnIncreaseTimeScale(): void
+    + OnBuildRoad(): void
+    + OnBuildBridge(): void
+    + OnBuildStation(): void
+    + OnBuyVehicle(): void
+    + OnSellVehicle(): void
+    + OnLowerTerrain(): void
+    + OnHeightenTerrain(): void
+    
+
+
+
+    + Model_MoneyChanged(object, EventArgs) : void
+    + Model_GameOver(object, EventArgs) : void
+    + Model_NewGame(object, EventArgs) : void
+    + Model_StationBought(object, EventArgs) : void
+    + Model_RoadBought(object, EventArgs) : void
+    + Model_VehicleBought(object, EventArgs) : void
+    + Model_GameAdvanced(object, EventArgs) : void
+    + Model_GamePaused(object, EventArgs) : void
+    + Model_GameUnpaused(object, EventArgs) : void
+    + Model_TimescaleChanged(object, EventArgs) : void
+    + Model_FieldChanged(object, EventArgs) : void
+    + Model_VehicleSelectedAtIndex(object, EventArgs) : void
+
   }
 
 
@@ -690,7 +731,7 @@ nameSpace View {
     - visualChunks : VisualChunk[,]
   }
 
-  class MainMenuSceen {
+  class MainMenuScreen {
 
   }
 
@@ -713,7 +754,7 @@ nameSpace View {
 
     - gameViewModel : ViewModel::GameViewModel?
     - MainGameScreen : View::MainGameScreen?
-    - MainMenuSceen : View::MainMenuSceen?
+    - MainMenuScreen : View::MainMenuScreen?
     - PausedGameScreen : View::PausedGameScreen?
     - GameOverScreen : View::GameOverScreen?
 
