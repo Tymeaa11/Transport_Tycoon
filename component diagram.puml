@@ -1,0 +1,140 @@
+@startuml Osztaly
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+set namespaceSeparator ::
+
+' https://pdf.plantuml.net/1.2020.22/PlantUML_Language_Reference_Guide_en.pdf
+' from page 40
+
+namespace Model {
+' ==========================================
+' UTILS & ENUMS
+' ==========================================
+
+namespace Utils {
+}
+
+' ==========================================
+' WORLD, CHUNKS & TILES
+' ==========================================
+namespace World {
+ 
+  class World <<Singleton>> {
+  }
+
+}
+
+' ==========================================
+' World generation
+' ==========================================
+namespace TerrainGeneration {
+ 
+  class GameWorldGenerator {
+  }
+
+  Model::World::World <-- GameWorldGenerator
+}
+
+' ==========================================
+' City--Station--Factory
+' ==========================================
+namespace World::Economy {
+
+  abstract class Station {
+
+  }
+
+
+  class City{
+  }
+
+
+  abstract class Factory{
+  }
+
+  City --|> Model::World::World
+  Factory --|> Model::World::World
+
+  Station *-- Model::World::RoadNetwork::Vehicle
+
+}
+' ==========================================
+' CORE SYSTEM
+' ==========================================
+class GameModel {
+
+}
+
+Model::World::RoadNetwork::Vehicle --* GameModel
+Model::World::World "1" --* GameModel
+
+namespace World::RoadNetwork {
+  ' ==========================================
+  ' INCREMENTAL TOPOLOGICAL GRAPH
+  ' ==========================================
+
+
+  class RoadNetwork {
+  }
+
+  ' ==========================================
+  ' LOGISTICS & ENTITIES
+  ' ==========================================
+
+
+  abstract class Vehicle {
+  }
+
+  RoadNetwork --> Model::World::World
+}
+
+' ==========================================
+' Exception   
+' ==========================================
+
+namespace Exceptions {
+
+}
+}
+
+namespace ViewModel {
+
+  class GameViewModel {
+  }
+
+
+}
+
+nameSpace View {
+
+  class MainGameScreen {
+
+  }
+
+  class MainMenuScreen {
+
+  }
+
+  class PausedGameScreen {
+
+  }
+
+  class GameOverScreen {
+
+  }
+
+}
+
+
+namespace Application {
+}
+
+ViewModel ..> "<import>" Application
+View "<import>" ..> Application
+
+Model "<import>" ..>  ViewModel
+
+
+@enduml

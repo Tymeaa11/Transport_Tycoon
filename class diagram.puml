@@ -248,6 +248,21 @@ namespace World {
   Bridge <-- BridgePart
   Field <-- FieldType
 
+  Field "2-4" --* KnowsNeighbour
+  Field  "1-*" --* Bridge
+
+
+
+  interface ISaveFileManager {
+    +fileFormat : string
+    + LoadGame(string file) : (World,double, bool, DateTime)
+    + SaveGame(World, double, bool, DateTime) : void
+  }
+
+  class SaveFileManager implements ISaveFileManager {
+    + LoadGame(string file) : (World,double, bool, DateTime)
+    + SaveGame(World, double, bool, DateTime) : void
+  }
 
 }
 
@@ -527,7 +542,9 @@ namespace World::Economy {
   Factory <-- ProductBuffer
   Station <-- ProductBuffer
   Station <-- Product
-  Station *-- Model::Vehicle
+  Station *-- Model::World::RoadNetwork::Vehicle
+
+
 
 }
 ' ==========================================
@@ -537,6 +554,7 @@ class GameModel {
 -playerMoney : double
 -isPaused : bool
 -currentTime : DateTime
+-savefileManager : ISaveFileManager
 == Properties ==
 +World : World
 +Vehicles : List<Vehicle>
@@ -570,98 +588,107 @@ class GameModel {
 + vehicleSelectedAtIndex: Action<int>
 }
 
-Vehicle --* GameModel
+World::ISaveFileManager "1"--* GameModel
+World::RoadNetwork::Vehicle --* GameModel
 Model::World::World "1" --* GameModel
 
-' ==========================================
-' INCREMENTAL TOPOLOGICAL GRAPH
-' ==========================================
-class RoadNetwork {
+namespace World::RoadNetwork {
+  ' ==========================================
+  ' INCREMENTAL TOPOLOGICAL GRAPH
+  ' ==========================================
 
-nodes : List<GraphNode>
-edges : List<GraphEdge>
 
-CalculatePath(start : Station, end : Station) : List<GraphEdge>
-OnRoadBuilt(f : Field) : void
-OnRoadRemoved(f : Field) : void
-SplitEdge(edgeToSplit : GraphEdge, crossRoad : Field) : void
-MergeEdges(nodeToRemove : GraphNode) : void
+  class RoadNetwork {
+
+  nodes : List<GraphNode>
+  edges : List<GraphEdge>
+
+  CalculatePath(start : Station, end : Station) : List<GraphEdge>
+  OnRoadBuilt(f : Field) : void
+  OnRoadRemoved(f : Field) : void
+  SplitEdge(edgeToSplit : GraphEdge, crossRoad : Field) : void
+  MergeEdges(nodeToRemove : GraphNode) : void
+  }
+
+  class GraphNode {
+
+  field : Field
+  nodeType : string
+  }
+
+  class GraphEdge {
+  totalCost : double
+  pathFields : List<Road>
+  }
+
+  ' ==========================================
+  ' LOGISTICS & ENTITIES
+  ' ==========================================
+
+  class Route {
+  -stops : List<Station>
+  -roadsToNextStation : List<Road>
+  -isLoop : bool
+
+  +GetNextStop(current : Staton) : Station
+  +GetRoadsToNextStation (curr : Station, next : Station) : List<Road>
+  }
+
+  Model::World::Road --* Route
+  RoadNetwork --- Route
+
+  abstract class Vehicle {
+  -name : string
+  -type : ProductType
+  -route : Route
+  -currentSpeed : double
+  -maxSpeed :double
+  -capacity : int
+  -currentEdge : GraphEdge
+  -currentCoordinate : Coordinate
+  -maintenanceCost : int
+  -price : int
+
+  -Move(deltaTime : float) : void
+  -RecalculatePath() : void
+  +Load() : bool
+  +UnLoad() : bool
+  }
+
+  Route "1" --* Vehicle
+
+  class Bus extends Vehicle {
+  }
+
+  class MiniBus extends Vehicle {
+  }
+
+  class CargoTruck extends Vehicle {
+  }
+
+  class TankerTruck extends Vehicle {
+  }
+
+  GraphEdge --* RoadNetwork
+  GraphNode --* RoadNetwork
+  RoadNetwork --> Model::World::World
 }
-
-class GraphNode {
-
-field : Field
-nodeType : string
-}
-
-class GraphEdge {
-totalCost : double
-pathFields : List<RoadField>
-}
-
-' ==========================================
-' LOGISTICS & ENTITIES
-' ==========================================
-
-class Route {
--stops : List<Station>
--roadsToNextStation : List<RoadField>
--isLoop : bool
-
-+GetNextStop(current : Staton) : Station
-+GetRoadsToNextStation (curr : Station, next : Station) : List<RoadField>
-}
-
-RoadField --* Route
-RoadNetwork --- Route
-
-abstract class Vehicle {
--name : string
--type : ProductType
--route : Route
--currentSpeed : double
--maxSpeed :double
--capacity : int
--currentEdge : GraphEdge
--currentCoordinate : Coordinate
--maintenanceCost : int
--price : int
-
--Move(deltaTime : float) : void
--RecalculatePath() : void
-+Load() : bool
-+UnLoad() : bool
-}
-
-Route "1" --* Vehicle
-
-class Bus extends Vehicle {
-}
-
-class MiniBus extends Vehicle {
-}
-
-class CargoTruck extends Vehicle {
-}
-
-class TankerTruck extends Vehicle {
-}
-
-GraphEdge --* RoadNetwork
-GraphNode --* RoadNetwork
-RoadNetwork --> World::World
-
 
 ' ==========================================
 ' Exception   
 ' ==========================================
 
-class NegativeMoneyException implements Exception
+namespace Exceptions {
 
-class OpenFileException implements Exception
+class NegativeMoneyException extends Exception
 
-class RenderFileException implements Exception
+class OpenFileException extends Exception
 
+class RenderFileException extends Exception
+
+class VehicleStuchException extends Exception
+
+}
 }
 
 namespace WPF {
@@ -713,7 +740,16 @@ namespace ViewModel {
     + Model_FieldChanged(object, EventArgs) : void
     + Model_VehicleSelectedAtIndex(object, EventArgs) : void
 
+    + SaveGame : EventHandler?
+    + LoadGame : EventHandler?
+    + LoseGame : EventHandler?
+    + InvalidateChunk : EventHandler?
+    + PassChunkData : EventHandler?
+
   }
+
+  GameViewModel <-- DelegateCommand
+  GameViewModel <-- ViewModelBase
 
 
 }
@@ -756,6 +792,8 @@ nameSpace View {
     - visualChunks : Map<Coordinate, VisualChunk>
     - minimap : Minimap
     - camera : Camera
+
+    + InvalidateChunk(object?, EventaArgs) : void
   }
 
   class MainMenuScreen {
@@ -806,5 +844,7 @@ nameSpace View {
 
 
 }
+
+Model::GameModel "1" --* WPF::ViewModel::GameViewModel
 
 @enduml
