@@ -617,7 +617,7 @@ RoadNetwork --- Route
 
 abstract class Vehicle {
 -name : string
--tyoe : ProductType
+-type : ProductType
 -route : Route
 -currentSpeed : double
 -maxSpeed :double
