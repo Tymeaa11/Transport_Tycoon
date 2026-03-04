@@ -574,18 +574,18 @@ class GameModel {
 -HandleMonthlyExpenses() : void
 -CheckBankruptcy() : void
 .. Events ..
-+ moneyChanged : Action<double>
-+ gameOver : Action<string>
-+ newGame : Action
-+ stationBought : Action<Station>
-+ roadBought : Action<Field>
-+ vehicleBought : Action<Vehicle>
-+ gameAdvanced : Action<float>
-+ gamePaused : Action
-+ gameUnpaused: Action
-+ timescaleChanged: Action<int>
-+ fieldChanged: Action<Coordinate>
-+ vehicleSelectedAtIndex: Action<int>
++ moneyChanged : EventHandler<EventArgs>?
++ gameOver : EventHandler<EventArgs>?
++ newGame : EventHandler<EventArgs>?
++ stationBought : EventHandler<EventArgs>?
++ roadBought : EventHandler<EventArgs>?
++ vehicleBought : EventHandler<EventArgs>?
++ gameAdvanced : EventHandler<EventArgs>?
++ gamePaused : EventHandler<EventArgs>?
++ gameUnpaused: EventHandler<EventArgs>?
++ timescaleChanged: EventHandler<EventArgs>?
++ fieldChanged: EventHandler<EventArgs>?
++ vehicleSelectedAtIndex: EventHandler<EventArgs>?
 }
 
 World::ISaveFileManager "1"--* GameModel
@@ -752,13 +752,11 @@ namespace ViewModel {
     + Model_FieldChanged(object, EventArgs) : void
     + Model_VehicleSelectedAtIndex(object, EventArgs) : void
 
-    + SaveGame : EventHandler?
-    + LoadGame : EventHandler?
-    + LoseGame : EventHandler?
-    + InvalidateChunk : EventHandler?
-    + PassChunkData : EventHandler?
-
-    + 
+    + SaveGame : EventHandler<EventArgs>?
+    + LoadGame : EventHandler<EventArgs>?
+    + LoseGame : EventHandler<EventArgs>?
+    + InvalidateChunk : EventHandler<EventArgs>?
+    + PassChunkData : EventHandler<EventArgs>?
 
   }
 
