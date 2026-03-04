@@ -702,7 +702,19 @@ namespace ViewModel {
 
   }
 
+  enum GAME_STATE {
+    IN_GAME,
+    PAUSED,
+    IN_MAIN_MENU,
+    GAME_OVER
+  }
+
   class GameViewModel {
+
+    - model : GameModel
+    - gameState : GAME_STATE
+
+    + GenerateWorld() : void
 
     + DecreaseTimeScaleCommand: DelegateCommand
     + IncreaseTimeScaleCommand: DelegateCommand
@@ -745,6 +757,8 @@ namespace ViewModel {
     + LoseGame : EventHandler?
     + InvalidateChunk : EventHandler?
     + PassChunkData : EventHandler?
+
+    + 
 
   }
 
