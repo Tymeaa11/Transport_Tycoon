@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Transport/Transport/bin/Debug/net8.0
+/.vs/drbt/v17
+/Transport/.vs/Transport
+/Transport/Transport/obj
+/Transport/Transport/Transport.csproj
+/.gitignore
+/.gitignore
+/Transport/Transport/Transport.csproj
