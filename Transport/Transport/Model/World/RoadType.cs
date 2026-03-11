@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-namespace Transport.Model.World
+namespace VolcanicTransport.Model.World
 {
     [Flags]
     public enum RoadType : byte

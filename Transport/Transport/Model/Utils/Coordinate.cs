@@ -1,4 +1,4 @@
-namespace Transport.Model.Utils
+namespace VolcanicTransport.Model.Utils
 {
     public readonly struct Coordinate(int x, int y) : IEquatable<Coordinate>
     {

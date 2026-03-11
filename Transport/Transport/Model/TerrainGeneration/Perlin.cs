@@ -1,4 +1,4 @@
-namespace Transport.Model.TerrainGeneration
+namespace VolcanicTransport.Model.TerrainGeneration
 {
     public class Perlin
     {

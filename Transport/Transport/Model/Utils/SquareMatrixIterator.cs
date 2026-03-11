@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace Transport.Model.Utils
+namespace VolcanicTransport.Model.Utils
 {
     public class SquareMatrixIterator<T>(int size)
     {

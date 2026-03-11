@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Transport/.vs
+/Transport/Transport/bin/Debug/net9.0
+/Transport/Transport/obj
+/Transport/VolcanicTransport - WPF/obj
+/Transport/VulcanicTransport-WPF/obj

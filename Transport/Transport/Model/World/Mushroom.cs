@@ -1,6 +1,6 @@
-using Transport.Model.Utils;
+using VolcanicTransport.Model.Utils;
 
-namespace Transport.Model.World
+namespace VolcanicTransport.Model.World
 {
     public class Mushroom : KnowsNeighbour
     {

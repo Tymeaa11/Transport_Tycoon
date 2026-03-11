@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-namespace Transport.Model.World
+namespace VolcanicTransport.Model.World
 {
     public enum FieldType : byte
     {

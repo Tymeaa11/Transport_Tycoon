@@ -1,4 +1,4 @@
-namespace Transport.Model
+namespace VolcanicTransport.Model
 {
     public class GameModel
     {

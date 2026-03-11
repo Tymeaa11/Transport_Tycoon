@@ -1,7 +1,7 @@
-using Transport.Model.TerrainGeneration;
-using Transport.Model.Utils;
+using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.Utils;
 
-namespace Transport.Model.World
+namespace VolcanicTransport.Model.World
 {
     public class World
     {

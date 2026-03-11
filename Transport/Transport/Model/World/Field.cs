@@ -1,6 +1,6 @@
 using Transport.Model.Utils;
 
-namespace Transport.Model.World
+namespace VolcanicTransport.Model.World
 {
     public class Field
     {

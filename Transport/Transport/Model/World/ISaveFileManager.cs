@@ -1,4 +1,4 @@
-namespace Transport.Model.World
+namespace VolcanicTransport.Model.World
 {
     public interface ISaveFileManager
     {

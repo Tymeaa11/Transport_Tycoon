@@ -1,4 +1,4 @@
-namespace Transport.Model.Utils
+namespace VolcanicTransport.Model.Utils
 {
     public static class Direction
     {

@@ -1,4 +1,4 @@
-namespace Transport.Model.Utils
+namespace VolcanicTransport.Model.Utils
 {
     public readonly struct WeightedWord(string word, float weight)
     {

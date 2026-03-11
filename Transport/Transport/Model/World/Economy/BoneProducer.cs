@@ -1,4 +1,4 @@
-namespace Transport.Model.World.Economy
+namespace VolcanicTransport.Model.World.Economy
 {
     public class BoneProducer
     {
