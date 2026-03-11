@@ -3,11 +3,6 @@
 ################################################################################
 
 /.vs
-/Transport/.vs
-/Transport/Transport/bin/Debug/net9.0
-/Transport/Transport/obj
-/Transport/VolcanicTransport - WPF/obj
-/Transport/VulcanicTransport-WPF/obj
 /VolcanicTransport/.vs
-/VolcanicTransport/VolcanicTransport/bin/Debug/net9.0
-/VolcanicTransport/VolcanicTransport/obj/Debug/net9.0
+/VolcanicTransport/VolcanicTransport/bin/*
+/VolcanicTransport/VolcanicTransport/obj/*
