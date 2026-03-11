@@ -6,3 +6,5 @@
 /VolcanicTransport/.vs
 /VolcanicTransport/VolcanicTransport/bin/*
 /VolcanicTransport/VolcanicTransport/obj/*
+/VolcanicTransport/VolcanicTransport-WPF/bin/Debug/net9.0-windows
+/VolcanicTransport/VolcanicTransport-WPF/obj
