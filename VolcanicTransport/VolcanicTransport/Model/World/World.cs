@@ -1,5 +1,7 @@
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World.Economy;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World
 {
@@ -16,6 +18,11 @@ namespace VolcanicTransport.Model.World
 
         public Coordinate SizeInChunks { get; init; }
         public Coordinate SizeInFields { get; init; }
+        public RoadNetwork roadnetwork { get; set; }
+        public List<City> Cities { get; set; } = new List<City>();
+        public List<Factory> Factories { get; set; } = new List<Factory>();
+        public List<Station> Stations { get; set; } = new List<Station>();
+        private List<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 
         private GameWorldGenerator _gameWorldGenerator;
         private SquareMatrixIterator<Chunk> ChunkMatrix { get; }
@@ -70,6 +77,25 @@ namespace VolcanicTransport.Model.World
             ChunkMatrix.ReadEach(
                 (_,_,c) => c.FieldMatrix.ReadEach(
                     (x,y, f) => f.SetFieldHeight(200)));
+        }
+
+        public void AddVehicle(Vehicle v)
+        {
+
+            Vehicles.Add(v);
+
+        }
+
+        public void ActivateVehicle(Vehicle v)
+        {
+            if (!Vehicles.Contains(v)) return;
+            v.Activate();
+        }
+
+        public void DeactivateVehicle(Vehicle v)
+        {
+            if (!Vehicles.Contains(v)) return;
+            v.DeActivate();
         }
     }
 }
