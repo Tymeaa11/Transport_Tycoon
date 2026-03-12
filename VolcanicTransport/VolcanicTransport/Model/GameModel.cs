@@ -1,3 +1,5 @@
+using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -9,9 +11,9 @@ namespace VolcanicTransport.Model
         private bool isPaused;
         private DateTime currentTime;
         private ISaveFileManager savefileManager;
-
-        public World.World world { get; set; }
         public List<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
+
+        public World.World WorldInstance { get => World.World.Instance; }
 
         public event EventHandler? moneyChanged;
         public event EventHandler? gameOver;
@@ -25,6 +27,32 @@ namespace VolcanicTransport.Model
         public event EventHandler? timescaleChanged;
         public event EventHandler? fieldChanged;
         public event EventHandler? vehicleSelectedIndex;
+
+
+
+        #region Instance
+        public class GameModelNotInitialisedException : Exception { }
+
+        private static GameModel? _instance;
+
+        private GameModel()
+        {
+            World.World.Initialise(2, new TerrainGeneration.GameWorldGenerator());
+            savefileManager = new SaveFileManager();
+
+            WorldInstance.Generate();
+        }
+
+        public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
+
+        public static void Initialise()
+        {
+            if (_instance != null) throw new InvalidOperationException("World already initialised");
+
+            _instance = new GameModel();
+        }
+        #endregion
+
 
         public void Pause()
         {
@@ -101,5 +129,7 @@ namespace VolcanicTransport.Model
                 gameOver?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
     }
 }
