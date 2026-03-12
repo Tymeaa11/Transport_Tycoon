@@ -1,3 +1,4 @@
+using System.Drawing;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -7,7 +8,6 @@ namespace VolcanicTransport.Model.World
 {
     public class World
     {
-        public class WorldNotInitialisedException : Exception {}
         
         #region static fields
         public static readonly Random SharedRandom = new();
@@ -28,8 +28,10 @@ namespace VolcanicTransport.Model.World
         private SquareMatrixIterator<Chunk> ChunkMatrix { get; }
 
         #endregion
-        
+
         #region Instance
+        public class WorldNotInitialisedException : Exception { }
+
         private static World? _instance;
         
         private World(int worldSize, GameWorldGenerator gameWorldGenerator)
@@ -59,11 +61,19 @@ namespace VolcanicTransport.Model.World
         {
             if (!fieldCoordinate.IsInside(SizeInFields))
                 return null;
-            
-            var chunkCoordinate = fieldCoordinate / SizeInChunks;
-            var fieldInChunkCoordinate = fieldCoordinate % SizeInChunks;
-            
+
+            var chunkCoordinate = fieldCoordinate / Chunk.ChunkSize;
+            var fieldInChunkCoordinate = fieldCoordinate % Chunk.ChunkSize;
+
             return ChunkMatrix[chunkCoordinate].FieldMatrix[fieldInChunkCoordinate];
+        }
+
+        public Chunk? GetChunk(Coordinate chunkCoordinate)
+        {
+            if (!chunkCoordinate.IsInside(SizeInChunks))
+                return null;
+
+            return ChunkMatrix[chunkCoordinate];
         }
         
         private void InitialiseWorld()
@@ -76,7 +86,9 @@ namespace VolcanicTransport.Model.World
         {
             ChunkMatrix.ReadEach(
                 (_,_,c) => c.FieldMatrix.ReadEach(
-                    (x,y, f) => f.SetFieldHeight(200)));
+                    (x,y, f) => f.SetFieldHeight(
+                        Math.Abs(x - Chunk.ChunkSize / 2) * Math.Abs(y - Chunk.ChunkSize / 2) * 2
+                        )));
         }
 
         public void AddVehicle(Vehicle v)

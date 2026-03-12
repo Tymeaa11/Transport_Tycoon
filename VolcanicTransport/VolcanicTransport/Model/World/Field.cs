@@ -18,6 +18,8 @@ namespace VolcanicTransport.Model.World
             50000
         ];
 
+        public static readonly int FieldSize = 64;
+
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
         public ISurface? Surface { get; set; }
