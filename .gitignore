@@ -1,1 +1,10 @@
-.vs/
+################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/VolcanicTransport/.vs
+/VolcanicTransport/VolcanicTransport/bin/*
+/VolcanicTransport/VolcanicTransport/obj/*
+/VolcanicTransport/VolcanicTransport-WPF/bin/*
+/VolcanicTransport/VolcanicTransport-WPF/obj/*
