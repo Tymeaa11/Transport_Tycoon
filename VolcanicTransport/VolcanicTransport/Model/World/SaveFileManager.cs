@@ -1,6 +1,7 @@
 namespace VolcanicTransport.Model.World
 {
-    public class SaveFileManager
+    public class SaveFileManager : ISaveFileManager
     {
+
     }
 }

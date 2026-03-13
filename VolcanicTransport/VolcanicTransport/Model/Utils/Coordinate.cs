@@ -16,13 +16,13 @@ namespace VolcanicTransport.Model.Utils
         public double Magnitude => Math.Sqrt(X * X + Y * Y);
         
         public bool IsInside(Coordinate topLeft, Coordinate bottomRight)
-        => X >= topLeft.X && X <= bottomRight.X && Y >= topLeft.Y && Y <= bottomRight.Y;
+        => X >= topLeft.X && X < bottomRight.X && Y >= topLeft.Y && Y < bottomRight.Y;
         
         public bool IsInside(Coordinate bottomRight)
-            => X >= 0 &&  X <= bottomRight.X && Y >= 0 && Y <= bottomRight.Y;
+            => X >= 0 &&  X < bottomRight.X && Y >= 0 && Y < bottomRight.Y;
         
         public bool IsInside(int bottomRight)
-            => X >= 0 &&  X <= bottomRight && Y >= 0 && Y <= bottomRight;
+            => X >= 0 &&  X < bottomRight && Y >= 0 && Y < bottomRight;
         
         public override string ToString() => $"({X},{Y})";
         
