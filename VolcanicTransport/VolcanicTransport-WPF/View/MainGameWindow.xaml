@@ -85,6 +85,36 @@
             </Rectangle>
         </Canvas>
 
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CC222222" CornerRadius="8" Padding="10">
+            <StackPanel Orientation="Horizontal">
+
+                <ToggleButton Content="Út lerakása" 
+              Command="{Binding SetRoadModeCommand}" 
+              IsChecked="{Binding IsRoadModeActive, Mode=OneWay}"
+              Padding="15,8" Margin="5" 
+              Cursor="Hand">
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Background" Value="#FF444444"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="2"/>
+
+                            <Style.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter Property="Background" Value="ForestGreen"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="BorderBrush" Value="LightGreen"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
+
+            </StackPanel>
+        </Border>
+
 
     </Grid>
 </Window>
