@@ -7,7 +7,7 @@ namespace VolcanicTransport.Model.World.Economy
     public class FactoryStation : Station
     {
         private Factory factory;
-        public FactoryStation(Coordinate coor, string name, Factory factory) : base(coor, name, new ProductBuffer(ProductType.HUMAN, 50), new Product(ProductType.HUMAN, 0, 50, 5)) 
+        public FactoryStation(Coordinate coor, string name, Factory factory) : base(coor, name, new ProductBuffer(ProductType.HUMAN, 50), new Product(ProductType.HUMAN, 0, 50)) 
         {
             this.factory = factory;
         }
@@ -21,7 +21,7 @@ namespace VolcanicTransport.Model.World.Economy
                 return false;
             }
 
-            int taken = vehicle.Load(factory.getFinalProductBuffer());
+            factory.getFinalProductBuffer().FillVehicle(vehicle);
 
             return true;
         }
