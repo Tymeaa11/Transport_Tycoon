@@ -16,13 +16,14 @@ namespace VolcanicTransport.Model.World.Economy
         public float GetFactoryEfficiency() => factory.getFinalProduct().GetFactoryEfficiency();
         public bool LoadProduct()
         {
-            if (vehicles.Count > 0)
+            if (vehicle == null || vehicle.getType() != factory.getFinalProduct().ProductType)
             {
-                Vehicle firstVehicle = vehicles[0];
-                                                  
-                return true;
+                return false;
             }
-            return false;
+
+            int taken = vehicle.Load(factory.getFinalProductBuffer());
+
+            return true;
         }
 
 
