@@ -56,18 +56,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         }
 
         public int Price() => price;
-
         public string VehicleName() => name;
-
-        public void Activate()
-        {
-            active = true;
-        }
-
-        public void DeActivate()
-        {
-            active = false;
-        }
 
         public void StartJourney(List<Field> path)
         {
@@ -153,7 +142,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 State = VehicleState.Loading;
                 ReleaseJunctionLock(CurrentField);
-                return false; 
+                return false;
             }
 
             Field nextField = currentPath[currentPathIndex + 1];
@@ -168,8 +157,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 nextField.ReservedBy = this;
             }
 
-            ReleaseJunctionLock(CurrentField); 
-            
+            ReleaseJunctionLock(CurrentField);
+
             CurrentField.VehiclesOnField.Remove(this);
             nextField.VehiclesOnField.Add(this);
 
@@ -277,6 +266,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
         }
     }
 }
