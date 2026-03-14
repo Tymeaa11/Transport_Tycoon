@@ -18,7 +18,7 @@ namespace VolcanicTransport.Model.World
 
         public Coordinate SizeInChunks { get; init; }
         public Coordinate SizeInFields { get; init; }
-        public RoadNetwork roadnetwork { get; set; }
+        public RoadNetworkGraph roadnetwork { get; set; }
         public List<City> Cities { get; set; } = new List<City>();
         public List<Factory> Factories { get; set; } = new List<Factory>();
         public List<Station> Stations { get; set; } = new List<Station>();

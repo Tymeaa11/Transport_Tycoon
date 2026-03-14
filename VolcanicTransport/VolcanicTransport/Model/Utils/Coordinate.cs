@@ -1,3 +1,5 @@
+using VolcanicTransport.Model.World;
+
 namespace VolcanicTransport.Model.Utils
 {
     public readonly struct Coordinate(int x, int y) : IEquatable<Coordinate>
@@ -66,6 +68,12 @@ namespace VolcanicTransport.Model.Utils
 
         public static bool operator !=(Coordinate left, Coordinate right)
             => !(left == right);
+
+        public Field? GetField()
+        {
+            return null;
+            //TODO Coordináta field konverzió
+        }
         #endregion
     }
 }
