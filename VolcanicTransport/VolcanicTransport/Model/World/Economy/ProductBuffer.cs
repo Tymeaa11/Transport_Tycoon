@@ -8,11 +8,11 @@ namespace VolcanicTransport.Model.World.Economy
         private int maxCapacity;
         private int currentLoad;
 
-        public ProductBuffer(ProductType productType, int maxCapacity, int currentLoad)
+        public ProductBuffer(ProductType productType, int maxCapacity)
         {
             this.productType = productType;
             this.maxCapacity = maxCapacity;
-            this.currentLoad = currentLoad;
+            this.currentLoad = 0;
         }
 
         public int ReciveProduct(ProductType type, int amount)
@@ -21,19 +21,24 @@ namespace VolcanicTransport.Model.World.Economy
             {
                 return 0;
             }
-            if (maxCapacity - currentLoad > amount)
+            int spaceLeft = maxCapacity - currentLoad;
+
+            if (spaceLeft > amount)
             {
-                amount = maxCapacity - currentLoad;
                 currentLoad += amount;
                 return amount;
 
             }
-            currentLoad += amount;
-            return amount;
+            currentLoad = maxCapacity;
+            return spaceLeft;
         }
         public void FillVehicle(Vehicle vehicle)
         {
-            //TODO//
+            if ( vehicle == null || this.currentLoad <= 0 ) { return; }
+
+            int taken = vehicle.Load(this.currentLoad);
+
+            currentLoad -= taken;
         }
     }
 }

@@ -5,60 +5,63 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public abstract class Vehicle
     {
-        protected string name;
-        protected ProductType type;
-        protected Route route;
-        protected double currentSpeed;
-        protected double maxSpeed;
-        protected int capacity;
-        protected int currentLoad;
-        protected GraphEdge currentEdge;
-        protected Coordinate currentCoordinate;
-        protected int maintenanceCost;
-        protected int price;
-        protected bool active;
+        public string Name { get; protected set; }
+        public ProductType CargoType { get; protected set; }
+        public int Capacity { get; protected set; }
+        public int CurrentLoad { get; protected set; }
+        public int Price { get; protected set; }
+        public int MaintenanceCost { get; protected set; }
 
-        public Vehicle(string name, double maxSpeed, int capacity, int price)
+        public double MaxSpeed { get; protected set; }
+        public double CurrentSpeed { get; protected set; } 
+        public bool IsActive { get; protected set; }
+        public bool IsStuck { get; protected set; }
+
+        public Coordinate CurrentCoordinate { get; protected set; }
+        protected Route? Schedule { get; set; }
+        protected GraphEdge? CurrentEdge { get; set; }
+
+        public Vehicle(string name, double maxSpeed, int capacity, int price, ProductType type)
         {
-            this.name = name;
-            this.maxSpeed = maxSpeed;
-            this.capacity = capacity;
-            this.price = price;
-            currentSpeed = 0;
-            this.maintenanceCost = (int)(price * 0.05);
-            currentLoad = 0;
-            active = false;
+            Name = name;
+            MaxSpeed = maxSpeed;
+            Capacity = capacity;
+            Price = price;
+            CargoType = type;
+            MaintenanceCost = (int)(price * 0.05);
+
+            IsActive = false;
+            IsStuck = false;
+            CurrentLoad = 0;
 
         }
 
-        public int Price() => price;
-
-        public string VehicleName() => name;
-
-        public void Activate()
+        public void AssignSchedule(Route newRoute)
         {
-            active = true;
+            if (!IsActive) Schedule = newRoute;
         }
 
-        public void DeActivate()
+        public virtual void Activate()
+        { 
+            IsActive = true;
+        }
+
+        public virtual void Deactivate()
         {
-            active = false;
+            IsActive = false;
+            CurrentLoad = 0;
+            CurrentEdge = null;
+        }
+
+        public int Sell()
+        {
+            if (IsActive) Deactivate();
+            return (int)(Price * 0.7);
         }
 
         private void Move(float deltaTime)
         {
-            if (currentEdge == null || route == null) return;
-            if (currentSpeed < maxSpeed)
-            {
-                currentSpeed += 2.0 * deltaTime;
-                if (currentSpeed > maxSpeed) currentSpeed = maxSpeed;
-            }
-
-            double distanceTravelled = (currentSpeed / 3.6) * deltaTime;
-
-            // Itt jönne a logika, ami frissíti a currentCoordinate értéket 
-            // az aktuális él (currentEdge) mentén.
-            //UpdatePosition(distanceTravelled);
+            
         }
 
         private void RecalculatePath()
@@ -66,42 +69,25 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         }
 
-        public virtual (bool, int) Load(int amount)
+        public int Load(int amount)
         {
-            if (currentLoad < capacity)
-            {
-                int spaceLeft = capacity - currentLoad;
-                if (spaceLeft > amount)
-                {
-                    currentLoad = capacity;
-                    return (true, amount - spaceLeft);
-                }
-                else
-                {
-                    currentLoad += amount;
-                    return (true, 0);
-                }
-            }
-            return (false, amount);
+            int spaceLeft = Capacity - CurrentLoad;
+            int taken = Math.Min(amount, spaceLeft);
+            CurrentLoad += taken;
+            return taken;
         }
 
-        public virtual (bool, int) UnLoad(int need)
+        public int Unload(int amountNeeded)
         {
-            if (currentLoad > 0)
-            {
-                if (need > currentLoad)
-                {
-                    int amountLeft = currentLoad - need;
-                    currentLoad = 0;
-                    return (true, amountLeft);
-                }
-                else
-                {
-                    currentLoad -= need;
-                    return (true, 0);
-                }
-            }
-            return (false, need);
+            int provided = Math.Min(CurrentLoad, amountNeeded);
+            CurrentLoad -= provided;
+            return provided;
         }
+
+        public ProductType getType()
+        {
+            return CargoType;
+        }
+
     }
 }

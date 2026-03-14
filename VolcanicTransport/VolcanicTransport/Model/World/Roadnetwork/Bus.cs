@@ -1,7 +1,9 @@
+using VolcanicTransport.Model.World.Economy;
+
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public class Bus : Vehicle
     {
-        public Bus(string name) : base(name, 90.0, 50, 8500) { }
+        public Bus(string name, ProductType type) : base(name, 90.0, 50, 8500, type) { }
     }
 }

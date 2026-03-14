@@ -5,9 +5,24 @@ namespace VolcanicTransport.Model.World.Economy
 {
     public abstract class Station
     {
-        private Coordinate coordinate;
-        private string name;
-        private ProductBuffer passangerBuffer;
-        private List<Vehicle> vehicles;
+        protected Coordinate coordinate;
+        protected string name;
+        protected ProductBuffer passangerBuffer;
+        protected Vehicle? vehicle;
+        protected Product PassengerDemand;
+
+
+        public Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand)
+        {
+            this.coordinate = coordinate;
+            this.name = name;
+            this.passangerBuffer = passangerBuffer;
+            this.vehicle = null;
+            PassengerDemand = passengerDemand;
+        }
+
+        public abstract bool UnLoadProduct();
+        public abstract bool Boarding();
+        public bool IsCompatible() => true;
     }
 }
