@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
@@ -87,6 +88,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (param is Coordinate coord)
                     OnFieldClicked(coord);
             });
+            SetRoadModeCommand = new DelegateCommand(_ => OnSetRoadMode());
         }
 
 
@@ -94,6 +96,37 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             GameModel.Initialise();
         }
+
+        private BuildMode currentBuildMode = BuildMode.NONE;
+        public BuildMode CurrentBuildMode
+        {
+            get => currentBuildMode;
+            set
+            {
+                if (currentBuildMode != value)
+                {
+                    currentBuildMode = value;
+                    OnPropertyChanged(nameof(IsRoadModeActive));
+                }
+            }
+        }
+
+        public bool IsRoadModeActive => CurrentBuildMode == BuildMode.ROAD;
+
+        public DelegateCommand SetRoadModeCommand { get; private set; }
+
+        private void OnSetRoadMode()
+        {
+            if (CurrentBuildMode == BuildMode.ROAD)
+            {
+                CurrentBuildMode = BuildMode.ROAD;
+            }
+            else
+            {
+                CurrentBuildMode = BuildMode.ROAD;
+            }
+        }
+
 
 
     }

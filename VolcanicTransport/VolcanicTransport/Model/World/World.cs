@@ -109,5 +109,14 @@ namespace VolcanicTransport.Model.World
             if (!Vehicles.Contains(v)) return;
             v.DeActivate();
         }
+
+        public bool PlaceRoad(Coordinate c)
+        {
+
+
+
+
+            return true;
+        }
     }
 }
