@@ -101,13 +101,13 @@ namespace VolcanicTransport.Model.World
         public void ActivateVehicle(Vehicle v)
         {
             if (!Vehicles.Contains(v)) return;
-            v.Activate();
+            //v.Activate();
         }
 
         public void DeactivateVehicle(Vehicle v)
         {
             if (!Vehicles.Contains(v)) return;
-            v.DeActivate();
+            //v.DeActivate();
         }
 
         public bool PlaceRoad(Coordinate c)

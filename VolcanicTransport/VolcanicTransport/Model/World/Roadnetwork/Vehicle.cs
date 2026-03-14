@@ -54,8 +54,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             active = false;
 
         }
-
-        public void AssignSchedule(Route newRoute)
         public int Price() => price;
         public string VehicleName() => name;
 
@@ -170,7 +168,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             return true;
         }
 
-        public virtual (bool, int) Load(int amount)
         private void LoadWaypointsForField()
         {
             currentWaypoints.Clear();
@@ -231,8 +228,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 field.ReservedBy = null;
             }
+        }
 
-        public virtual (bool, int) UnLoad(int need)
         private bool IsFieldJunction(Field field)
         {
             if (field.Surface is Road road)
