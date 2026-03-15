@@ -15,7 +15,12 @@ namespace VolcanicTransport.Model.World.Economy
             this.currentLoad = 0;
         }
 
-        public int ReciveProduct(ProductType type, int amount)
+        public int amountNeeded()
+        {
+            return this.maxCapacity - this.currentLoad; 
+        }
+
+        public int ReciveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
         {
             if (productType != type)
             {

@@ -14,7 +14,7 @@ namespace VolcanicTransport.Model.World.Economy
         public ProductType GetFactoryNeeds() => factory.getBaseProduct();
         public ProductType GetFactoryFinishedProduct() => factory.getFinalProduct().ProductType;
         public float GetFactoryEfficiency() => factory.getFinalProduct().GetFactoryEfficiency();
-        public bool LoadProduct()
+        public bool LoadProductToVehicle()
         {
             if (vehicle == null || vehicle.getType() != factory.getFinalProduct().ProductType)
             {
@@ -27,7 +27,28 @@ namespace VolcanicTransport.Model.World.Economy
         }
 
 
-        public override bool UnLoadProduct() { /* Rakodás logika */ return true; }
+        public override bool UnLoadProductFromVehicle() 
+        {
+            if (vehicle == null || vehicle.getType() != factory.getBaseProduct())
+            {
+                return false;
+            }
+
+            int amountNeededForFactory = factory.getBaseProductBuffer().amountNeeded();
+
+            if (amountNeededForFactory == 0) { return false; }
+
+            int provided = vehicle.Unload(amountNeededForFactory);
+
+            if (provided == 0)
+            {
+                return false;
+            }
+
+            factory.getBaseProductBuffer().ReciveProduct(vehicle.getType(), provided);
+
+            return true;
+        }
         public override bool Boarding() { /* Felszállás logika */ return true; }
     }
 }
