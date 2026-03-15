@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Timer = System.Timers.Timer;
 
-namespace Transport.Model.Utils
+namespace VolcanicTransport.Model.Utils
 {
     public class ScalableTimer
     {
