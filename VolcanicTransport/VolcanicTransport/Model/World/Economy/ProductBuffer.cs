@@ -19,31 +19,26 @@ namespace VolcanicTransport.Model.World.Economy
         {
             return this.maxCapacity - this.currentLoad; 
         }
-
+        public int CurrentLoad() { return this.currentLoad; }
         public int ReciveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
         {
-            if (productType != type)
-            {
-                return 0;
-            }
-            int spaceLeft = maxCapacity - currentLoad;
+            if (productType != type) return 0;
 
-            if (spaceLeft > amount)
-            {
-                currentLoad += amount;
-                return amount;
+            int canReceive = Math.Min(amount, maxCapacity - currentLoad);
 
-            }
-            currentLoad = maxCapacity;
-            return spaceLeft;
+            currentLoad += canReceive;
+
+            return canReceive;
         }
-        public void FillVehicle(Vehicle vehicle)
+        public int FillVehicle(Vehicle vehicle)
         {
-            if ( vehicle == null || this.currentLoad <= 0 ) { return; }
+            if ( vehicle == null || this.currentLoad <= 0 ) { return 0; }
 
             int taken = vehicle.Load(this.currentLoad);
 
             currentLoad -= taken;
+
+            return taken;
         }
     }
 }

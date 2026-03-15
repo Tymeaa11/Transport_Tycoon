@@ -21,7 +21,7 @@ namespace VolcanicTransport.Model.World.Economy
                 return false;
             }
 
-            int taken = vehicle.Load(factory.getFinalProductBuffer());
+            int taken = vehicle.Load(factory.getFinalProductBuffer().CurrentLoad());
 
             return true;
         }
@@ -49,6 +49,25 @@ namespace VolcanicTransport.Model.World.Economy
 
             return true;
         }
-        public override bool Boarding() { /* Felszállás logika */ return true; }
+        public override bool Boarding()
+        {
+            if (vehicle == null || vehicle.getType() != ProductType.HUMAN)
+            {
+                return false;
+            }
+
+            int waitingPassengers = passangerBuffer.CurrentLoad();
+
+            if (waitingPassengers == 0)
+            {
+                return false;
+            }
+
+            int taken = passangerBuffer.FillVehicle(vehicle);
+
+            if (taken == 0) return false;
+
+            return true;
+        }
     }
 }
