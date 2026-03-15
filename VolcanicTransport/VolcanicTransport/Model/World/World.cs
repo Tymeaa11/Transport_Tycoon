@@ -18,7 +18,7 @@ namespace VolcanicTransport.Model.World
 
         public Coordinate SizeInChunks { get; init; }
         public Coordinate SizeInFields { get; init; }
-        public RoadNetwork roadnetwork { get; set; }
+        public RoadNetworkGraph roadnetwork { get; set; }
         public List<City> Cities { get; set; } = new List<City>();
         public List<Factory> Factories { get; set; } = new List<Factory>();
         public List<Station> Stations { get; set; } = new List<Station>();
@@ -101,13 +101,13 @@ namespace VolcanicTransport.Model.World
         public void ActivateVehicle(Vehicle v)
         {
             if (!Vehicles.Contains(v)) return;
-            v.Activate();
+            //v.Activate();
         }
 
         public void DeactivateVehicle(Vehicle v)
         {
             if (!Vehicles.Contains(v)) return;
-            v.DeActivate();
+            //v.DeActivate();
         }
 
         public bool PlaceRoad(Coordinate c)

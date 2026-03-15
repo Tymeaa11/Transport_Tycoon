@@ -1,4 +1,5 @@
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World
 {
@@ -25,6 +26,12 @@ namespace VolcanicTransport.Model.World
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
         public ISurface? Surface { get; set; }
+
+        public bool HasStation { get; set; } = false;
+
+        public List<Vehicle> VehiclesOnField { get; } = new List<Vehicle>();
+
+        public Vehicle? ReservedBy { get; set; } = null;
 
 
         public void SetFieldHeight(float height)

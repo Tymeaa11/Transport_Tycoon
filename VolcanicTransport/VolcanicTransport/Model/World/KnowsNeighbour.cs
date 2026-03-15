@@ -5,6 +5,8 @@ namespace VolcanicTransport.Model.World
     public abstract class KnowsNeighbour : ISurface
     {
         public Coordinate Coordinate { get; }
+
+        public Field? Field { get; }
         public Field? North { get; }
         public Field? South { get; }
         public Field? East { get; }
@@ -13,6 +15,7 @@ namespace VolcanicTransport.Model.World
         protected KnowsNeighbour(Coordinate coordinate)
         {
             Coordinate = coordinate;
+            Field = coordinate.GetField();
             
             North = World.Instance.GetField(Coordinate + Direction.North); 
             South = World.Instance.GetField(Coordinate + Direction.South); 

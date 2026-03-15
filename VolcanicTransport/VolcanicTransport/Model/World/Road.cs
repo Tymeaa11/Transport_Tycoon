@@ -1,4 +1,5 @@
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World
 {
@@ -11,11 +12,29 @@ namespace VolcanicTransport.Model.World
         
         #region constructors
         public Road(Coordinate coordinate) : base(coordinate) {}
-        public Road(Coordinate coordinate, bool isPermanent) : base(coordinate)
-            => IsPermanent = isPermanent;
+        //public Road(Coordinate coordinate, bool isPermanent) : base(coordinate)
+        //    => IsPermanent = isPermanent;
+        // Nemtudom kelleni fog-e ez : VR
         #endregion
 
         #region methods
+
+        public class FieldEventArgs : EventArgs
+        {
+            public Field Field { get; }
+
+            public FieldEventArgs(Field field)
+            {
+                Field = field;
+            }
+        }
+
+        public event EventHandler<FieldEventArgs> RoadLayoutChanged;
+
+        protected virtual void OnRoadLayoutChanged(Field field)
+        {
+            RoadLayoutChanged?.Invoke(this, new FieldEventArgs(field));
+        } //TODO feliratkozni az eseményre
         public void Update()
         {
             var roadNorth = North?.Surface is Road;
@@ -66,16 +85,28 @@ namespace VolcanicTransport.Model.World
                 RoadType |= RoadType.SLOPE;
                 return;
             }
-            
+
             // No neightbour can be heigher if curved or junction
             if (heightDiffNorth < 0 || heightDiffSouth < 0 || heightDiffEast < 0 || heightDiffWest < 0)
+            {
                 RoadType = RoadType.INVALID;
-            
+                return;
+            }
+
             // heights can differ only by 1 if curved or junction
             if (heightDiffNorth <= 1 && heightDiffSouth <= 1 && heightDiffEast <= 1 && heightDiffWest <= 1)
+            {
                 RoadType = RoadType.INVALID;
+                return;
+            }
+
+            if (RoadType.JUNCTION == RoadType)
+            {
+                OnRoadLayoutChanged(Field);
+            }
                 
         }
+
 
         public bool IsStraight => (RoadType & RoadType.STRAIGHT) != 0;
         public bool IsCurved   => (RoadType & RoadType.CURVED) != 0;
@@ -88,7 +119,7 @@ namespace VolcanicTransport.Model.World
             if (field == null)
                 return null;
 
-            if (field.IsBuildable())
+            if (!field.IsBuildable())
                 return null;
 
             //creating a temporal to see if a road can be place here
@@ -163,50 +194,7 @@ namespace VolcanicTransport.Model.World
             }
         }
 
-        public string VisualShape
-        {
-            get
-            {
-                if (RoadType.HasFlag(RoadType.JUNCTION))
-                {
-                    bool hasNorth = RoadType.HasFlag(RoadType.NORTH);
-                    bool hasSouth = RoadType.HasFlag(RoadType.SOUTH);
-                    bool hasEast = RoadType.HasFlag(RoadType.EAST);
-                    bool hasWest = RoadType.HasFlag(RoadType.WEST);
-
-                    if (hasNorth && hasSouth && hasEast && hasWest) 
-                        return "Crossroad";
-
-                    if (hasNorth && hasSouth && hasEast)
-                        return "JunctionE";
-                    if (hasNorth && hasSouth && hasWest)
-                        return "JunctionW";
-                    if (hasNorth && hasWest && hasEast)
-                        return "JunctionN";
-                    if (hasWest && hasSouth && hasEast)
-                        return "JunctionS";
-                }
-
-                if (RoadType.HasFlag(RoadType.STRAIGHT))
-                {
-                    if (RoadType.HasFlag(RoadType.NORTH)) return "StraightVertical";
-                    if (RoadType.HasFlag(RoadType.EAST)) return "StraightHorizontal";
-                }
-
-                if (RoadType.HasFlag(RoadType.CURVED))
-                {
-   
-                    if (RoadType.HasFlag(RoadType.NORTH) && RoadType.HasFlag(RoadType.EAST)) return "CurveNE";
-                    if (RoadType.HasFlag(RoadType.NORTH) && RoadType.HasFlag(RoadType.WEST)) return "CurveNW";
-                    if (RoadType.HasFlag(RoadType.SOUTH) && RoadType.HasFlag(RoadType.EAST)) return "CurveSE";
-                    if (RoadType.HasFlag(RoadType.SOUTH) && RoadType.HasFlag(RoadType.WEST)) return "CurveSW";
-
-                }
-
-                return "Dot";
-            }
-        }
-
+      
         #endregion
     }
 }
