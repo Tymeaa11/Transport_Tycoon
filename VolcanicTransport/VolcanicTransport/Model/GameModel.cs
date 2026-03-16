@@ -1,7 +1,6 @@
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model
@@ -41,6 +40,7 @@ namespace VolcanicTransport.Model
             World.World.Initialise(2);
             savefileManager = new SaveFileManager();
 
+            WorldInstance.gameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator());
             WorldInstance.Generate();
         }
 

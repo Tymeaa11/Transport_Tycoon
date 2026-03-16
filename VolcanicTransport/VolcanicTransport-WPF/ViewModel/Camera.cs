@@ -41,11 +41,18 @@ namespace VolcanicTransport_WPF.ViewModel
             //ZoomOut   = new DelegateCommand(_ => Zoom(-120, new Point(400, 300)));
         }
 
-        public void Zoom(double delta, Point mousePosition)
+        public void Zoom(double delta, Point screenCenter)
         {
+            // Determine if we are zooming in or out
             double zoomFactor = delta > 0 ? 1.1 : 0.9;
+
+            Point worldCenter = ScreenToWorld(screenCenter);
+
             Matrix m = ProjectionMatrix;
-            m.ScaleAtPrepend(zoomFactor, zoomFactor, mousePosition.X, mousePosition.Y);
+
+            // ScaleAtPrepend applies the scaling relative to the specified center point
+            m.ScaleAtPrepend(zoomFactor, zoomFactor, worldCenter.X, worldCenter.Y);
+
             ProjectionMatrix = m;
         }
 

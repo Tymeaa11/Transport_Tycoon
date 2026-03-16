@@ -15,7 +15,7 @@ namespace VolcanicTransport_WPF.ViewModel
 {
     public class GameViewModel : ViewModelBase
     {
-        public GameModel GameModelInstance { get => GameModel.Instance; }
+        public static GameModel GameModelInstance { get => GameModel.Instance; }
 
         public ObservableCollection<Chunk> LoadedChunks { get; } = new ObservableCollection<Chunk>();
 
@@ -28,6 +28,9 @@ namespace VolcanicTransport_WPF.ViewModel
                 LoadedChunks.Add(chunk);
             }
         }
+
+        public Coordinate WorldSizeInChunks { get => GameModelInstance.WorldInstance.SizeInChunks; }
+        public int TileSize { get => Field.FieldSize; }
 
         public Camera Camera { get; }
 

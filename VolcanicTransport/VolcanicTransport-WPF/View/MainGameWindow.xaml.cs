@@ -47,7 +47,10 @@ namespace VolcanicTransport_WPF.View
         private void MainGameWindow_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (DataContext is GameViewModel vm)
+            {
+                // Zoom around the current mouse position
                 vm.Camera.Zoom(e.Delta, e.GetPosition(ViewPort));
+            }
         }
         
         private void MainGameWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

@@ -5,7 +5,7 @@ namespace VolcanicTransport.Model.World
 {
     public class Field
     {
-        public const int FieldSize = 1;
+        public const int FieldSize = 32;
 
         private static readonly float[] MaxFieldTypeHeights =
         [
