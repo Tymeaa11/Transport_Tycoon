@@ -5,6 +5,8 @@ namespace VolcanicTransport.Model.World
 {
     public class Field
     {
+        public const int FieldSize = 1;
+
         private static readonly float[] MaxFieldTypeHeights =
         [
             20,
@@ -20,8 +22,6 @@ namespace VolcanicTransport.Model.World
         ];
 
         public Coordinate Coordinate { get; set; }
-
-        public static readonly int FieldSize = 64;
 
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
