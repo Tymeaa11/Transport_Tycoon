@@ -49,25 +49,5 @@ namespace VolcanicTransport.Model.World.Economy
 
             return true;
         }
-        public override bool Boarding()
-        {
-            if (vehicle == null || vehicle.getType() != ProductType.HUMAN)
-            {
-                return false;
-            }
-
-            int waitingPassengers = passangerBuffer.CurrentLoad();
-
-            if (waitingPassengers == 0)
-            {
-                return false;
-            }
-
-            int taken = passangerBuffer.FillVehicle(vehicle);
-
-            if (taken == 0) return false;
-
-            return true;
-        }
     }
 }

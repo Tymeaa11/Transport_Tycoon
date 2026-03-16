@@ -20,7 +20,34 @@ namespace VolcanicTransport.Model.World.Economy
         }
 
         public abstract bool UnLoadProductFromVehicle();
-        public abstract bool Boarding();
-        public bool IsCompatible() => true;
+        public bool Boarding()
+        {
+            if (vehicle == null || vehicle.getType() != ProductType.HUMAN)
+            {
+                return false;
+            }
+
+            int waitingPassengers = passangerBuffer.CurrentLoad();
+
+            if (waitingPassengers == 0)
+            {
+                return false;
+            }
+
+            int taken = passangerBuffer.FillVehicle(vehicle);
+
+            if (taken == 0) return false;
+
+            return true;
+        }
+
+        public bool UnBoarding()
+        {
+            if (vehicle == null || vehicle.getType() != ProductType.HUMAN) { return false; }
+
+            //vehicle.UnBoard() //TODO//
+
+            return true;
+        }
     }
 }

@@ -11,14 +11,25 @@ namespace VolcanicTransport.Model.World.Economy
             this.city = city;
         }
 
-        public override bool Boarding()
-        {
-            throw new NotImplementedException();
-        }
-
         public override bool UnLoadProductFromVehicle()
         {
-            throw new NotImplementedException();
+            if (vehicle == null || !city.IsProductNeeded(vehicle.getType()))
+            {
+                return false;
+            }
+
+            int amount = vehicle.CurrenLoad();
+
+            int provided = vehicle.Unload(amount);
+
+            if (provided == 0)
+            {
+                return false;
+            }
+
+            int moneyGiven = city.RecieveProduct(vehicle.getType(), provided);
+            //hogy legyen a pénz?
+            return true;
         }
     }
 }
