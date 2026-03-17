@@ -27,13 +27,7 @@ namespace VolcanicTransport_WPF
 
             _mainGameWindow = new MainGameWindow();
             _mainGameWindow.DataContext = _gameViewModel;
-
-            _mainGameWindow.RequestChunkData += _gameViewModel.On_RequestChunkData;
-
             _mainGameWindow.Show();
-
-
-            _mainGameWindow.InitializeFirstChunk();
         }
     }
 

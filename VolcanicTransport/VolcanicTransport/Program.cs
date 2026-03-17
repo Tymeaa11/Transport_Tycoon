@@ -13,11 +13,14 @@ class Program
 {
     static void Main(string[] args)
     {
+        Console.WriteLine("Creating preview at bin\\Debug\\net9.0\\");
         World.Initialise(40);
         World.Instance.gameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator());
         World.Instance.Generate();
-        
-        var size = World.Instance.SizeInFields * Field.FieldSize;
+
+        var fieldSize = 2;
+
+        var size = World.Instance.SizeInFields * fieldSize;
         using var image = new Image<Rgba32>(size.X, size.Y, Color.DarkSlateGray);
         image.Mutate(ctx => 
         {
@@ -41,9 +44,9 @@ class Program
                     };
 
                     ctx.Fill(c, new Rectangle(
-                        cx * Chunk.ChunkSize * Field.FieldSize + fx * Field.FieldSize,
-                        cy * Chunk.ChunkSize * Field.FieldSize + fy * Field.FieldSize,
-                        Field.FieldSize, Field.FieldSize
+                        cx * Chunk.ChunkSize * fieldSize + fx * fieldSize,
+                        cy * Chunk.ChunkSize * fieldSize + fy * fieldSize,
+                        fieldSize, fieldSize
                     ));
                 });
             });
@@ -58,6 +61,6 @@ class Program
             //ctx.Fill(Color.HotPink.WithAlpha(0.5f), new RectangleF(150, 150, 250, 100));
         });
 
-        image.Save("output.png");
+       image.Save("output.png");
     }
 }

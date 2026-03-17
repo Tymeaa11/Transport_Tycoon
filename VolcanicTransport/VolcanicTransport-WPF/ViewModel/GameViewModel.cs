@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using VolcanicTransport.Model;
@@ -19,18 +20,51 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public ObservableCollection<Chunk> LoadedChunks { get; } = new ObservableCollection<Chunk>();
 
-        public void On_RequestChunkData(object? sender, RequestChunkDataEventArgs e)
-        {
-            var chunk = GameModelInstance.WorldInstance.GetChunk(e.Coordinate);
+        private double _lastWidth;
+        private double _lastHeight;
 
-            if (chunk != null && !LoadedChunks.Contains(chunk))
-            {
-                LoadedChunks.Add(chunk);
-            }
+        public void SetViewDimensions(double width, double height)
+        {
+            _lastWidth = width;
+            _lastHeight = height;
+            UpdateVisibleChunks(width, height);
         }
 
-        public Coordinate WorldSizeInChunks { get => GameModelInstance.WorldInstance.SizeInChunks; }
-        public int TileSize { get => Field.FieldSize; }
+        public void UpdateVisibleChunks(double width, double height)
+        {
+            Rect bounds = Camera.GetVisibleWorldBounds(width, height);
+
+            // Get visible chunk coordinates (+1 buffer)
+            int chunkPX = Chunk.ChunkSize * Field.FieldSize;
+
+            int startX = (int)Math.Floor(bounds.Left     / chunkPX) - 1;
+            int endX   = (int)Math.Ceiling(bounds.Right  / chunkPX) + 1;
+            int startY = (int)Math.Floor(bounds.Top      / chunkPX) - 1;
+            int endY   = (int)Math.Ceiling(bounds.Bottom / chunkPX) + 1;
+
+            HashSet<Coordinate> visibleCoords = [];
+
+            for (int x = startX; x <= endX; x++)
+                for (int y = startY; y <= endY; y++)
+                    if (x >= 0 && x < WorldSizeInChunks.X && y >= 0 && y < WorldSizeInChunks.Y)
+                        visibleCoords.Add(new Coordinate(x, y));
+                
+
+            // 1. Remove if outside
+            var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();
+            foreach (var chunk in toRemove) LoadedChunks.Remove(chunk);
+
+            // 2. Add if became visible
+            foreach (var coord in visibleCoords)
+                if (!LoadedChunks.Any(c => c.Coordinate.Equals(coord)))
+                {
+                    var chunk = GameModelInstance.WorldInstance.GetChunk(coord);
+                    if (chunk != null) LoadedChunks.Add(chunk);
+                }
+        }
+
+        public Coordinate WorldSizeInChunks => GameModelInstance.WorldInstance.SizeInChunks;
+        public int TileSize => Field.FieldSize;
 
         public Camera Camera { get; }
 
@@ -54,6 +88,7 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
+            System.Diagnostics.Debug.WriteLine($"Chunks: {LoadedChunks.Count}");
         }
 
         private Coordinate _hoveredCoordinate;
@@ -86,6 +121,8 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             Camera = new Camera(Matrix.Identity);
 
+            Camera.CameraChanged += (s, e) => UpdateVisibleChunks(_lastWidth, _lastHeight);
+
             FieldClickedCommand = new DelegateCommand(param =>
             {
                 if (param is Coordinate coord)
@@ -97,7 +134,14 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise();
+            // VisualChunk/ CacheMode = new BitmapCache(); sor engedélyezése csak saját felelősségre!
+            // Kikapcsolva nem zabálja meg a memóriát, cserébe kizoomolva durván laggol
+            // 
+            //GameModel.Initialise(1); // 48 MB
+            //GameModel.Initialise(10); // 474 MB
+            //GameModel.Initialise(20); // 1781 MB
+            //GameModel.Initialise(40); // ~ 8 GB // itt lenne szép a generálás :(
+            GameModel.Initialise(20);
         }
 
         private BuildMode currentBuildMode = BuildMode.NONE;

@@ -35,9 +35,9 @@ namespace VolcanicTransport.Model
 
         private static GameModel? _instance;
 
-        private GameModel()
+        private GameModel(int worldSize)
         {
-            World.World.Initialise(2);
+            World.World.Initialise(worldSize);
             savefileManager = new SaveFileManager();
 
             WorldInstance.gameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator());
@@ -46,11 +46,11 @@ namespace VolcanicTransport.Model
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
-        public static void Initialise()
+        public static void Initialise(int worldSize)
         {
             if (_instance != null) throw new InvalidOperationException("World already initialised");
 
-            _instance = new GameModel();
+            _instance = new GameModel(worldSize);
         }
         #endregion
 
