@@ -13,10 +13,16 @@ namespace VolcanicTransport_WPF.ViewModel
     public class Camera : ViewModelBase
     {
         private const double PanSpeed = 10.0;
+        private const int MaxZoomIn = 20;
+        private const int MaxZoomOut = -10;
+
+
         private Matrix _projectionMatrix;
 
         public event EventHandler? CameraChanged;
-        
+
+        private int _zoomLevel;
+
         public Matrix ProjectionMatrix 
         { 
             get => _projectionMatrix;
@@ -36,6 +42,8 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             ProjectionMatrix = initialMatrix;
 
+            _zoomLevel = 0;
+
             MoveUp    = new DelegateCommand(_ => Pan(0, PanSpeed));
             MoveDown  = new DelegateCommand(_ => Pan(0, -PanSpeed));
             MoveLeft  = new DelegateCommand(_ => Pan(PanSpeed, 0));
@@ -44,10 +52,17 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Zoom(double delta, Point screenCenter)
         {
-            double zoomFactor = delta > 0 ? 1.1 : 0.9;
+            bool zoomIn = delta > 0;
 
+            // Limit zoom
+            if (zoomIn && _zoomLevel > MaxZoomIn) return;
+            if (!zoomIn && _zoomLevel < MaxZoomOut) return;
+
+            if (delta > 0) _zoomLevel++;
+            else _zoomLevel--;
+
+            double zoomFactor = zoomIn ? 1.1 : 0.9;
             Point worldCenter = ScreenToWorld(screenCenter);
-
             Matrix m = ProjectionMatrix;
 
             // ScaleAtPrepend applies the scaling relative to the specified center point
