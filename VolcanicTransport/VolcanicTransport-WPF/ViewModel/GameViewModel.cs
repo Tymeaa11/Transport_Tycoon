@@ -9,6 +9,7 @@ using System.Windows.Media;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
+using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport_WPF.View;
 
 namespace VolcanicTransport_WPF.ViewModel
@@ -88,7 +89,12 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (param is Coordinate coord)
                     OnFieldClicked(coord);
             });
-            SetRoadModeCommand = new DelegateCommand(_ => OnSetRoadMode());
+            SetBuildModeRoadCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.ROAD));
+            SetBuildModeStationCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.STATION));
+            SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
+            SetBuildModeBuldozeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BULDOZE));
+            SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
+            SetBuildModeHeightenCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.HEIGHTEN));
         }
 
 
@@ -106,25 +112,40 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (currentBuildMode != value)
                 {
                     currentBuildMode = value;
-                    OnPropertyChanged(nameof(IsRoadModeActive));
+                    OnPropertyChanged(nameof(IsBuildModeRoad));
+                    OnPropertyChanged(nameof(IsBuildModeStation));
+                    OnPropertyChanged(nameof(IsBuildModeBridge));
+                    OnPropertyChanged(nameof(IsBuildModeBuldoze));
+                    OnPropertyChanged(nameof(IsBuildModeLower));
+                    OnPropertyChanged(nameof(IsBuildModeHeighten));
                 }
             }
         }
+        public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
+        public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
+        public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
+        public bool IsBuildModeBuldoze => CurrentBuildMode == BuildMode.BULDOZE;
+        public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
+        public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
 
-        public bool IsRoadModeActive => CurrentBuildMode == BuildMode.ROAD;
+        public DelegateCommand SetBuildModeRoadCommand { get; private set; }
+        public DelegateCommand SetBuildModeStationCommand { get; private set; }
+        public DelegateCommand SetBuildModeBridgeCommand { get; private set; }
+        public DelegateCommand SetBuildModeBuldozeCommand { get; private set; }
+        public DelegateCommand SetBuildModeLowerCommand { get; private set; }
+        public DelegateCommand SetBuildModeHeightenCommand { get; private set; }
 
-        public DelegateCommand SetRoadModeCommand { get; private set; }
-
-        private void OnSetRoadMode()
+        private void OnSetBuildMode(BuildMode mode)
         {
-            if (CurrentBuildMode == BuildMode.ROAD)
+            if (CurrentBuildMode == mode)
             {
-                CurrentBuildMode = BuildMode.ROAD;
+                CurrentBuildMode = BuildMode.NONE;
             }
             else
             {
-                CurrentBuildMode = BuildMode.ROAD;
+                CurrentBuildMode = mode;
             }
+            
         }
 
 

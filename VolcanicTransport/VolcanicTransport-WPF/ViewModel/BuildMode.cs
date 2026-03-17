@@ -11,6 +11,9 @@ namespace VolcanicTransport_WPF.ViewModel
         NONE,
         ROAD,
         STATION,
-        BRIDGE
+        BRIDGE,
+        BULDOZE,
+        LOWER,
+        HEIGHTEN
     }
 }

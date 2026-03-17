@@ -85,32 +85,54 @@
             </Rectangle>
         </Canvas>
 
-        <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CC222222" CornerRadius="8" Padding="10">
-            <StackPanel Orientation="Horizontal">
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
+            <StackPanel Orientation="Horizontal" >
+                <StackPanel.Resources>
+                    <Style TargetType="ToggleButton">
 
-                <ToggleButton Content="Út lerakása" 
-              Command="{Binding SetRoadModeCommand}" 
-              IsChecked="{Binding IsRoadModeActive, Mode=OneWay}"
-              Padding="15,8" Margin="5" 
-              Cursor="Hand">
-                    <ToggleButton.Style>
-                        <Style TargetType="ToggleButton">
-                            <Setter Property="Background" Value="#FF444444"/>
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="BorderBrush" Value="Transparent"/>
-                            <Setter Property="BorderThickness" Value="2"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Margin" Value="2,4,2,4"/>
+                        <Setter Property="Padding" Value="16"/>
+                        <Setter Property="Background" Value="#FFAFAFAF"/>
+  
+                    </Style>
+                   
+                </StackPanel.Resources>
 
-                            <Style.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter Property="Background" Value="ForestGreen"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                    <Setter Property="BorderBrush" Value="LightGreen"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ToggleButton.Style>
+                <ToggleButton Content="road" 
+                              Command="{Binding SetBuildModeRoadCommand}" 
+                              IsChecked="{Binding IsBuildModeRoad, Mode=OneWay}">
                 </ToggleButton>
+
+                <ToggleButton Content="station" 
+                              Command="{Binding SetBuildModeStationCommand}" 
+                              IsChecked="{Binding IsBuildModeStation, Mode=OneWay}">
+                </ToggleButton>
+
+                <ToggleButton Content="bridge" 
+                              Command="{Binding SetBuildModeBridgeCommand}" 
+                              IsChecked="{Binding IsBuildModeBridge, Mode=OneWay}">
+                </ToggleButton>
+
+                <ToggleButton Content="buldoze" 
+              Command="{Binding SetBuildModeBuldozeCommand}" 
+              IsChecked="{Binding IsBuildModeBuldoze, Mode=OneWay}">
+                </ToggleButton>
+
+                <ToggleButton Content="lower" 
+              Command="{Binding SetBuildModeLowerCommand}" 
+              IsChecked="{Binding IsBuildModeLower, Mode=OneWay}">
+                </ToggleButton>
+
+                <ToggleButton Content="heighten" 
+              Command="{Binding SetBuildModeHeightenCommand}" 
+              IsChecked="{Binding IsBuildModeHeighten, Mode=OneWay}">
+                </ToggleButton>
+
+
+
+
 
             </StackPanel>
         </Border>
