@@ -1,17 +1,28 @@
+using VolcanicTransport.Model.Utils;
+
 namespace VolcanicTransport.Model.World.Economy
 {
     public class City
     {
         private string name;
         private List<Product> products;
+        private Coordinate centerCoordinate;
         private List<Field> fields;
 
-        public City(string name, List<Field> fields)
+        public City(string name, Coordinate coord)
         {
             this.name = name;
-            this.fields = fields;
+            this.centerCoordinate = coord;
+            this.fields = new List<Field>();
             products = new List<Product>();
             RandomizeNeeds();
+        }
+
+        public Coordinate CenterCoordinate { get { return centerCoordinate; } }
+
+        public void AddField(Field f)
+        {
+            fields.Add(f);
         }
 
         private void RandomizeNeeds()
