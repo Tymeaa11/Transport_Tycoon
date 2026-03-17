@@ -1,3 +1,5 @@
+using VolcanicTransport.Model.Utils;
+
 namespace VolcanicTransport.Model.World.Economy
 {
     public abstract class Factory
@@ -7,14 +9,24 @@ namespace VolcanicTransport.Model.World.Economy
         private ProductBuffer baseProductBuffer;
         private ProductBuffer finalProductBuffer;
         private List<Field> factoryFields;
+        private Coordinate originCoordinate;
 
-        public Factory(ProductType baseProduct, Product finalProduct, ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer, List<Field> factoryFields)
+        public Factory(ProductType baseProduct, Product finalProduct, ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer, Coordinate coord)
         {
             this.baseProduct = baseProduct;
             this.finalProduct = finalProduct;
             this.baseProductBuffer = baseProductBuffer;
             this.finalProductBuffer = finalProductBuffer;
-            this.factoryFields = factoryFields;
+            this.originCoordinate = coord;
+            this.factoryFields = new List<Field>();
+        }
+
+        public Coordinate OriginCoordinate { get { return originCoordinate; } }
+
+        public void AddField(Field f)
+        {
+            //ELLENŐRZÉSEK TODO//
+            factoryFields.Add(f);
         }
 
         public ProductType getBaseProduct() { return baseProduct; }
