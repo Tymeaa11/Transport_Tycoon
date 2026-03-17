@@ -5,7 +5,7 @@ namespace VolcanicTransport.Model.World
 {
     public class Field
     {
-        public const int FieldSize = 32;
+        public static readonly int FieldSize = 32;
 
         private static readonly float[] MaxFieldTypeHeights =
         [
@@ -19,13 +19,11 @@ namespace VolcanicTransport.Model.World
             400,
             450,
             50000
-        ];
+        ];  
 
         public Coordinate Coordinate { get; set; }
 
         public float Height { get; private set; }
-
-        public static readonly int FieldSize = 64;
 
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
@@ -40,7 +38,7 @@ namespace VolcanicTransport.Model.World
 
         public void SetFieldHeight(float height)
         {
-            this.Height = height;
+            Height = height;
             byte i = 0;
             while (i < MaxFieldTypeHeights.Length && height > MaxFieldTypeHeights[i]) i++;
 
