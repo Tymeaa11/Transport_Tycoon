@@ -1,4 +1,3 @@
-using System.Drawing;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -8,13 +7,12 @@ namespace VolcanicTransport.Model.World
 {
     public class World
     {
-        
         #region static fields
         public static readonly Random SharedRandom = new();
         #endregion
         
         #region Fields
-        public long WorldSeed { get; private set; }
+        public int WorldSeed { get; private set; }
 
         public Coordinate SizeInChunks { get; init; }
         public Coordinate SizeInFields { get; init; }
@@ -24,8 +22,8 @@ namespace VolcanicTransport.Model.World
         public List<Station> Stations { get; set; } = new List<Station>();
         private List<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 
-        private GameWorldGenerator _gameWorldGenerator;
-        private SquareMatrixIterator<Chunk> ChunkMatrix { get; }
+        public GameWorldGenerator? gameWorldGenerator;
+        public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
 
         #endregion
 
@@ -34,14 +32,12 @@ namespace VolcanicTransport.Model.World
 
         private static World? _instance;
         
-        private World(int worldSize, GameWorldGenerator gameWorldGenerator)
+        private World(int worldSize)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(worldSize);
 
             SizeInChunks = new Coordinate(worldSize);
             SizeInFields = SizeInChunks * Chunk.ChunkSize;
-            _gameWorldGenerator = gameWorldGenerator;
-
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
             
             InitialiseWorld();
@@ -49,11 +45,11 @@ namespace VolcanicTransport.Model.World
         
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
 
-        public static void Initialise(int worldSize, GameWorldGenerator gameWorldGenerator)
+        public static void Initialise(int worldSize)
         {
             if (_instance != null) throw new InvalidOperationException("World already initialised");
             
-            _instance = new World(worldSize, gameWorldGenerator);
+            _instance = new World(worldSize);
         }
         #endregion
 
@@ -84,11 +80,10 @@ namespace VolcanicTransport.Model.World
         
         public void Generate()
         {
+            if (gameWorldGenerator == null) throw new Exception("No generator available");
             ChunkMatrix.ReadEach(
-                (_,_,c) => c.FieldMatrix.ReadEach(
-                    (x,y, f) => f.SetFieldHeight(
-                        Math.Abs(x - Chunk.ChunkSize / 2) * Math.Abs(y - Chunk.ChunkSize / 2) * 2
-                        )));
+                (cx,cy,c) => c.FieldMatrix.ReadEach(
+                    (x,y, f) => gameWorldGenerator.GenerateField(f, cx * Chunk.ChunkSize + x, cy * Chunk.ChunkSize + y)));
         }
 
         public void AddVehicle(Vehicle v)

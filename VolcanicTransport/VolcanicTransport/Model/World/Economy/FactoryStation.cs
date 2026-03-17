@@ -13,8 +13,8 @@ namespace VolcanicTransport.Model.World.Economy
         }
         public ProductType GetFactoryNeeds() => factory.getBaseProduct();
         public ProductType GetFactoryFinishedProduct() => factory.getFinalProduct().ProductType;
-        public float GetFactoryEfficiency() => factory.getFinalProduct().GetFactoryEfficiency();
-        public bool LoadProductToVehicle()
+        public float GetFactoryEfficiency(float time) => factory.getFinalProduct().GetFactoryEfficiency(time);
+        public bool LoadProduct()
         {
             if (vehicle == null || vehicle.getType() != factory.getFinalProduct().ProductType)
             {

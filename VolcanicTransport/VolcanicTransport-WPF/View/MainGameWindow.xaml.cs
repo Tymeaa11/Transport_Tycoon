@@ -23,17 +23,6 @@ namespace VolcanicTransport_WPF.View
     /// </summary>
     public partial class MainGameWindow : Window
     {
-        public EventHandler<RequestChunkDataEventArgs>? RequestChunkData;
-
-        public void InitializeFirstChunk()
-        {
-            RequestChunkData?.Invoke(this, new RequestChunkDataEventArgs(new Coordinate(0, 0)));
-            RequestChunkData?.Invoke(this, new RequestChunkDataEventArgs(new Coordinate(0, 1)));
-            RequestChunkData?.Invoke(this, new RequestChunkDataEventArgs(new Coordinate(1, 0)));
-            RequestChunkData?.Invoke(this, new RequestChunkDataEventArgs(new Coordinate(1, 1)));
-        }
-
-
 
         public MainGameWindow()
         {
@@ -42,12 +31,22 @@ namespace VolcanicTransport_WPF.View
             this.MouseWheel += MainGameWindow_MouseWheel;
             this.MouseLeftButtonDown += MainGameWindow_MouseLeftButtonDown;
             this.MouseMove += MainGameWindow_MouseMove;
+
+            this.SizeChanged += (s, e) =>
+            {
+                if (DataContext is GameViewModel vm)
+                    vm.SetViewDimensions(ViewPort.ActualWidth, ViewPort.ActualHeight);
+            };
+
         }
 
         private void MainGameWindow_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (DataContext is GameViewModel vm)
+            {
+                // Zoom around the current mouse position
                 vm.Camera.Zoom(e.Delta, e.GetPosition(ViewPort));
+            }
         }
         
         private void MainGameWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

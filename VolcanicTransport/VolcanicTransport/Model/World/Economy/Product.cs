@@ -5,7 +5,7 @@ namespace VolcanicTransport.Model.World.Economy
     public class Product
     {
        private  ProductType producType;
-       private Perlin? perlin;
+       private Perlin perlin;
        private float minValue;
        private float maxValue;
        private float variability;
@@ -21,17 +21,16 @@ namespace VolcanicTransport.Model.World.Economy
             this.producType = type;
             this.minValue = minvalue;
             this.maxValue = maxvalue;
-            this.variability = variability;
+            this.variability = 0.05f;
+
+            this.perlin = new Perlin();
         }
 
-        public int GetDemand()
-        {
-            return 0;
-        }
+        public int GetDemand(float time) // min - max
+            => (int) (Math.Abs(maxValue - minValue) * perlin.Noise(time *variability) + minValue);
 
-        public float GetFactoryEfficiency()
-        {
-            return 0; 
-        }
+        public float GetFactoryEfficiency(float time)
+            => perlin.Noise(time * variability); // 0-1
+
     }
 }

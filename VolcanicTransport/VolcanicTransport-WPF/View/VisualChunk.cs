@@ -18,7 +18,7 @@ namespace VolcanicTransport_WPF.View
         {
             _visual = new DrawingVisual();
             AddVisualChild(_visual);
-            CacheMode = new BitmapCache();
+            //CacheMode = new BitmapCache();
 
             DataContextChanged += (s, e) =>
             {
