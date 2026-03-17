@@ -23,6 +23,10 @@ namespace VolcanicTransport.Model.World
 
         public Coordinate Coordinate { get; set; }
 
+        public float Height { get; private set; }
+
+        public static readonly int FieldSize = 64;
+
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
         public ISurface? Surface { get; set; }
@@ -36,6 +40,7 @@ namespace VolcanicTransport.Model.World
 
         public void SetFieldHeight(float height)
         {
+            this.Height = height;
             byte i = 0;
             while (i < MaxFieldTypeHeights.Length && height > MaxFieldTypeHeights[i]) i++;
 

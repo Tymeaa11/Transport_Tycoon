@@ -55,6 +55,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         }
 
+        public int CurrenLoad() => CurrentLoad;
+
         public ProductType getType() => type;
         public int Price() => price;
         public string VehicleName() => name;
