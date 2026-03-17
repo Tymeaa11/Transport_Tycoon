@@ -16,7 +16,7 @@ namespace VolcanicTransport.Model.World.Economy
             set { producType = value; }
         }
 
-       public Product(ProductType type, int minvalue, int maxvalue)
+       public Product(ProductType type, int minvalue, int maxvalue, int variability)
         {
             this.producType = type;
             this.minValue = minvalue;

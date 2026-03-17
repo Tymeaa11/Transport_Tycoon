@@ -21,6 +21,7 @@ namespace VolcanicTransport.Model
         public event EventHandler? stationBought;
         public event EventHandler? roadBought;
         public event EventHandler? vehicleBought;
+        public event EventHandler? vehicleSelled;
         public event EventHandler? gameAdvanced;
         public event EventHandler? gamePaused;
         public event EventHandler? gameUnpaused;
@@ -94,6 +95,7 @@ namespace VolcanicTransport.Model
             {
                 AddMoney(v.Price() * 0.5);
                 Vehicles.Remove(v);
+                vehicleSelled?.Invoke(this, EventArgs.Empty);
             }
         }
 
