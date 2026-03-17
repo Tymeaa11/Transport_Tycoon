@@ -14,7 +14,7 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         private const double PanSpeed = 10.0;
         private const int MaxZoomIn = 20;
-        private const int MaxZoomOut = -10;
+        private const int MaxZoomOut = -6;
 
 
         private Matrix _projectionMatrix;

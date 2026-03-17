@@ -141,7 +141,7 @@ namespace VolcanicTransport_WPF.ViewModel
             //GameModel.Initialise(10); // 474 MB
             //GameModel.Initialise(20); // 1781 MB
             //GameModel.Initialise(40); // ~ 8 GB // itt lenne szép a generálás :(
-            GameModel.Initialise(20);
+            GameModel.Initialise(8);
         }
 
         private BuildMode currentBuildMode = BuildMode.NONE;
