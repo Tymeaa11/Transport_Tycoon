@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
-using VolcanicTransport_WPF.View;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -18,7 +11,7 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
 
-        public ObservableCollection<Chunk> LoadedChunks { get; } = new ObservableCollection<Chunk>();
+        public ObservableCollection<Chunk> LoadedChunks { get; } = [];
 
         private double _lastWidth;
         private double _lastHeight;
@@ -37,10 +30,10 @@ namespace VolcanicTransport_WPF.ViewModel
             // Get visible chunk coordinates (+1 buffer)
             int chunkPX = Chunk.ChunkSize * Field.FieldSize;
 
-            int startX = (int)Math.Floor(bounds.Left     / chunkPX) - 1;
-            int endX   = (int)Math.Ceiling(bounds.Right  / chunkPX) + 1;
-            int startY = (int)Math.Floor(bounds.Top      / chunkPX) - 1;
-            int endY   = (int)Math.Ceiling(bounds.Bottom / chunkPX) + 1;
+            int startX = (int)Math.Floor(bounds.Left / chunkPX) - 1;
+            int endX = (int)Math.Ceiling(bounds.Right / chunkPX) + 1;
+            int startY = (int)Math.Floor(bounds.Top / chunkPX) - 1;
+            int endY = (int)Math.Ceiling(bounds.Bottom / chunkPX) + 1;
 
             HashSet<Coordinate> visibleCoords = [];
 
@@ -48,7 +41,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 for (int y = startY; y <= endY; y++)
                     if (x >= 0 && x < WorldSizeInChunks.X && y >= 0 && y < WorldSizeInChunks.Y)
                         visibleCoords.Add(new Coordinate(x, y));
-                
+
 
             // 1. Remove if outside
             var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();

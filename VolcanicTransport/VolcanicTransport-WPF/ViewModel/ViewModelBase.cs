@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace VolcanicTransport_WPF.ViewModel
@@ -25,10 +24,7 @@ namespace VolcanicTransport_WPF.ViewModel
         /// <param name="propertyName">Tulajdonság neve.</param>
         protected virtual void OnPropertyChanged([CallerMemberName] String? propertyName = null)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

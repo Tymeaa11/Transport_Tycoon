@@ -4,46 +4,46 @@ namespace VolcanicTransport.Model.World.Economy
 {
     public class City
     {
-        private string name;
-        private List<Product> products;
-        private Coordinate centerCoordinate;
-        private List<Field> fields;
+        private readonly string _name;
+        private readonly List<Product> _products;
+        private readonly Coordinate _centerCoordinate;
+        private readonly List<Field> _fields;
 
         public City(string name, Coordinate coord)
         {
-            this.name = name;
-            this.centerCoordinate = coord;
-            this.fields = new List<Field>();
-            products = new List<Product>();
+            _name = name;
+            _centerCoordinate = coord;
+            _fields = [];
+            _products = [];
             RandomizeNeeds();
         }
 
-        public Coordinate CenterCoordinate { get { return centerCoordinate; } }
+        public Coordinate CenterCoordinate { get { return _centerCoordinate; } }
 
         public void AddField(Field f)
         {
-            fields.Add(f);
+            _fields.Add(f);
         }
 
         private void RandomizeNeeds()
         {
-            Random rnd = new Random();
-            products.Clear();
+            var rnd = new Random();
+            _products.Clear();
 
             for (int i = 0; i < 3; i++)
             {
                 int typeIndex = rnd.Next(1, 9);
 
                 ProductType randomType = (ProductType)typeIndex;
-                Product newProduct = new Product(randomType, 0, 100, 5);
+                Product newProduct = new(randomType, 0, 100, 5);
 
-                products.Add(newProduct);
+                _products.Add(newProduct);
             }
         }
 
         public bool IsProductNeeded(ProductType productType)
         {
-            if (products.Where(f => f.ProductType == productType).Count() == 0) { return false; }
+            if (_products.Where(f => f.ProductType == productType).Count() == 0) { return false; }
             return true;
         }
 

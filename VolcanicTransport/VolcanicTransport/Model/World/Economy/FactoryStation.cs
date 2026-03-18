@@ -1,40 +1,35 @@
-using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class FactoryStation : Station
+    public class FactoryStation(Coordinate coor, string name, Factory factory) : Station(coor, name, new ProductBuffer(ProductType.HUMAN, 50), new Product(ProductType.HUMAN, 0, 50, 5))
     {
-        private Factory factory;
-        public FactoryStation(Coordinate coor, string name, Factory factory) : base(coor, name, new ProductBuffer(ProductType.HUMAN, 50), new Product(ProductType.HUMAN, 0, 50, 5)) 
-        {
-            this.factory = factory;
-        }
-        public ProductType GetFactoryNeeds() => factory.getBaseProduct();
-        public ProductType GetFactoryFinishedProduct() => factory.getFinalProduct().ProductType;
-        public float GetFactoryEfficiency(float time) => factory.getFinalProduct().GetFactoryEfficiency(time);
+        private readonly Factory _factory = factory;
+
+        public ProductType GetFactoryNeeds => _factory.BaseProduct;
+        public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
+        public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time);
         public bool LoadProduct()
         {
-            if (vehicle == null || vehicle.getType() != factory.getFinalProduct().ProductType)
+            if (vehicle == null || vehicle.Type != _factory.FinalProduct.ProductType)
             {
                 return false;
             }
 
-            int taken = vehicle.Load(factory.getFinalProductBuffer().CurrentLoad());
+            //int taken = vehicle.Load(factory.FinalProductBuffer.CurrentLoad());
 
             return true;
         }
 
 
-        public override bool UnLoadProductFromVehicle() 
+        public override bool UnLoadProductFromVehicle()
         {
-            if (vehicle == null || vehicle.getType() != factory.getBaseProduct())
+            if (vehicle == null || vehicle.Type != _factory.BaseProduct)
             {
                 return false;
             }
 
-            int amountNeededForFactory = factory.getBaseProductBuffer().amountNeeded();
+            int amountNeededForFactory = _factory.BaseProductBuffer.AmountNeeded();
 
             if (amountNeededForFactory == 0) { return false; }
 
@@ -45,7 +40,7 @@ namespace VolcanicTransport.Model.World.Economy
                 return false;
             }
 
-            factory.getBaseProductBuffer().ReciveProduct(vehicle.getType(), provided);
+            _factory.BaseProductBuffer.ReciveProduct(vehicle.Type, provided);
 
             return true;
         }

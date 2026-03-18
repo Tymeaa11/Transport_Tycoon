@@ -6,7 +6,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
 {
     public class FactoryAndCityGenerator
     {
-        private float minimumDistance = 15f; // Városok és gyárak közötti minimális távolság mezőkben
+        private const float MinimumDistance = 15f; // Városok és gyárak közötti minimális távolság mezőkben
 
         public void Generate(World.World world, int cityCount, int factoryCount)
         {
@@ -38,7 +38,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
             {
                 int rx = World.World.SharedRandom.Next(2, world.SizeInFields.X - 2);
                 int ry = World.World.SharedRandom.Next(2, world.SizeInFields.Y - 2);
-                Coordinate potential = new Coordinate(rx, ry);
+                Coordinate potential = new(rx, ry);
 
                 if (IsAreaSuitable(world, potential))
                 {
@@ -54,7 +54,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
             {
                 for (int dy = -1; dy <= 1; dy++)
                 {
-                    Coordinate current = new Coordinate(center.X + dx, center.Y + dy);
+                    Coordinate current = new(center.X + dx, center.Y + dy);
                     Field? f = world.GetField(current);
 
                     if (f == null || !f.IsBuildable())
@@ -65,11 +65,11 @@ namespace VolcanicTransport.Model.TerrainGeneration
             // Távolság ellenőrzése a már meglévő városoktól/gyáraktól
             foreach (var city in world.Cities)
             {
-                if (GetDistance(center, city.CenterCoordinate) < minimumDistance) return false;
+                if (GetDistance(center, city.CenterCoordinate) < MinimumDistance) return false;
             }
             foreach (var factory in world.Factories)
             {
-                if (GetDistance(center, factory.OriginCoordinate) < minimumDistance) return false;
+                if (GetDistance(center, factory.OriginCoordinate) < MinimumDistance) return false;
             }
 
             return true;
@@ -78,14 +78,14 @@ namespace VolcanicTransport.Model.TerrainGeneration
         private void CreateCity(World.World world, Coordinate center)
         {
             string name = "City " + (world.Cities.Count + 1);
-            City newCity = new City(name, center);
+            City newCity = new(name, center);
             float baseHeight = world.GetField(center)?.Height ?? 0;
 
             for (int dx = -1; dx <= 1; dx++)
             {
                 for (int dy = -1; dy <= 1; dy++)
                 {
-                    Coordinate c = new Coordinate(center.X + dx, center.Y + dy);
+                    Coordinate c = new(center.X + dx, center.Y + dy);
                     Field? f = world.GetField(c);
                     if (f != null)
                     {
@@ -119,7 +119,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
             {
                 for (int dy = 0; dy < 2; dy++)
                 {
-                    Coordinate currentCoord = new Coordinate(origin.X + dx, origin.Y + dy);
+                    Coordinate currentCoord = new(origin.X + dx, origin.Y + dy);
                     Field? f = world.GetField(currentCoord);
 
                     if (f != null)

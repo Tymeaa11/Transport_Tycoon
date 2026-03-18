@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport_WPF.View
 {
@@ -33,7 +27,7 @@ namespace VolcanicTransport_WPF.View
         {
             if (_isLoaded) return;
 
-            BitmapImage atlas = new BitmapImage(new Uri(atlasPath, UriKind.RelativeOrAbsolute));
+            BitmapImage atlas = new(new Uri(atlasPath, UriKind.RelativeOrAbsolute));
 
             MushroomTexture1 = GetTile(atlas, 0, 0);
             MushroomTexture2 = GetTile(atlas, 0, 1);
