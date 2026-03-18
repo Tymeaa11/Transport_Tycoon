@@ -2,41 +2,31 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class ProductBuffer
+    public class ProductBuffer(ProductType productType, int maxCapacity)
     {
-        private ProductType productType;
-        private int maxCapacity;
-        private int currentLoad;
+        private readonly ProductType _productType = productType;
+        private readonly int _maxCapacity = maxCapacity;
+        public int CurrentLoad { get; private set; } = 0;
 
-        public ProductBuffer(ProductType productType, int maxCapacity)
-        {
-            this.productType = productType;
-            this.maxCapacity = maxCapacity;
-            this.currentLoad = 0;
-        }
+        public int AmountNeeded() => _maxCapacity - CurrentLoad;
 
-        public int amountNeeded()
-        {
-            return this.maxCapacity - this.currentLoad; 
-        }
-        public int CurrentLoad() { return this.currentLoad; }
         public int ReciveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
         {
-            if (productType != type) return 0;
+            if (_productType != type) return 0;
 
-            int canReceive = Math.Min(amount, maxCapacity - currentLoad);
+            int canReceive = Math.Min(amount, _maxCapacity - CurrentLoad);
 
-            currentLoad += canReceive;
+            CurrentLoad += canReceive;
 
             return canReceive;
         }
         public int FillVehicle(Vehicle vehicle)
         {
-            if ( vehicle == null || this.currentLoad <= 0 ) { return 0; }
+            if (vehicle == null || CurrentLoad <= 0) { return 0; }
 
-            int taken = vehicle.Load(this.currentLoad);
+            int taken = vehicle.Load(CurrentLoad);
 
-            currentLoad -= taken;
+            CurrentLoad -= taken;
 
             return taken;
         }

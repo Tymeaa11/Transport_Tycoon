@@ -1,17 +1,15 @@
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Road :  KnowsNeighbour 
+    public class Road(Coordinate coordinate) : KnowsNeighbour(coordinate)
     {
         #region fields
         public bool IsPermanent { get; }
         public RoadType RoadType { get; private set; }
+
         #endregion
-        
         #region constructors
-        public Road(Coordinate coordinate) : base(coordinate) {}
         //public Road(Coordinate coordinate, bool isPermanent) : base(coordinate)
         //    => IsPermanent = isPermanent;
         // Nemtudom kelleni fog-e ez : VR
@@ -19,17 +17,12 @@ namespace VolcanicTransport.Model.World
 
         #region methods
 
-        public class FieldEventArgs : EventArgs
+        public class FieldEventArgs(Field field) : EventArgs
         {
-            public Field Field { get; }
-
-            public FieldEventArgs(Field field)
-            {
-                Field = field;
-            }
+            public Field Field { get; } = field;
         }
 
-        public event EventHandler<FieldEventArgs> RoadLayoutChanged;
+        public event EventHandler<FieldEventArgs>? RoadLayoutChanged;
 
         protected virtual void OnRoadLayoutChanged(Field field)
         {
@@ -53,32 +46,32 @@ namespace VolcanicTransport.Model.World
             {
                 // Lonely road or end piece
                 case 0:
-                case 1: 
-                    return; 
-                
+                case 1:
+                    return;
+
                 // Straight or Curved
-                case 2: 
+                case 2:
                     if (roadNorth == roadSouth && roadNorth || roadEast == roadWest && roadEast)
                         RoadType |= RoadType.STRAIGHT;
                     else
                         RoadType |= RoadType.CURVED;
                     break;
-                
+
                 // Junction
-                case 3: 
-                case 4: 
-                    RoadType |= RoadType.JUNCTION; 
+                case 3:
+                case 4:
+                    RoadType |= RoadType.JUNCTION;
                     break;
-                
+
             }
-            
-            
+
+
             var thisField = World.Instance.GetField(Coordinate);
-            
+
             var heightDiffNorth = thisField?.GetHeightDifference(North) ?? 0;
             var heightDiffSouth = thisField?.GetHeightDifference(South) ?? 0;
-            var heightDiffEast  = thisField?.GetHeightDifference(East)  ?? 0;
-            var heightDiffWest  = thisField?.GetHeightDifference(West)  ?? 0;
+            var heightDiffEast = thisField?.GetHeightDifference(East) ?? 0;
+            var heightDiffWest = thisField?.GetHeightDifference(West) ?? 0;
 
             if ((RoadType & RoadType.STRAIGHT) != 0)
             {
@@ -104,14 +97,14 @@ namespace VolcanicTransport.Model.World
             {
                 OnRoadLayoutChanged(Field);
             }
-                
+
         }
 
 
         public bool IsStraight => (RoadType & RoadType.STRAIGHT) != 0;
-        public bool IsCurved   => (RoadType & RoadType.CURVED) != 0;
+        public bool IsCurved => (RoadType & RoadType.CURVED) != 0;
         public bool IsJunction => (RoadType & RoadType.JUNCTION) != 0;
-        public bool IsSlope    => (RoadType & RoadType.SLOPE) != 0;
+        public bool IsSlope => (RoadType & RoadType.SLOPE) != 0;
 
         public event EventHandler? onPlacementFailed;
         private Road? CanPlaceRoadHere(Field field)
@@ -123,7 +116,7 @@ namespace VolcanicTransport.Model.World
                 return null;
 
             //creating a temporal to see if a road can be place here
-            Road tempRoad = new Road(field.Coordinate);
+            Road tempRoad = new(field.Coordinate);
             field.Surface = tempRoad;
             tempRoad.Update();
             field.Surface = null;
@@ -140,8 +133,9 @@ namespace VolcanicTransport.Model.World
 
         public bool TryUpdateNeighbours()
         {
-            if (North?.Surface is Road northR) { 
-                northR.Update(); 
+            if (North?.Surface is Road northR)
+            {
+                northR.Update();
                 if (northR.RoadType == RoadType.INVALID)
                 {
                     return false;
@@ -187,14 +181,15 @@ namespace VolcanicTransport.Model.World
             Road? road = CanPlaceRoadHere(field);
             if (road == null) return;
             field.Surface = road;
-            if (!road.TryUpdateNeighbours()) { 
-            field.Surface = null;
-            road.UpdateNeighbours();
-            onPlacementFailed?.Invoke(this, EventArgs.Empty);
+            if (!road.TryUpdateNeighbours())
+            {
+                field.Surface = null;
+                road.UpdateNeighbours();
+                onPlacementFailed?.Invoke(this, EventArgs.Empty);
             }
         }
 
-      
+
         #endregion
     }
 }

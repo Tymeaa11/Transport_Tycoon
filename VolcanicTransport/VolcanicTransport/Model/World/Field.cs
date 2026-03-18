@@ -19,39 +19,39 @@ namespace VolcanicTransport.Model.World
             400,
             450,
             50000
-        ];  
+        ];
 
         public Coordinate Coordinate { get; set; }
 
         public float Height { get; private set; }
 
-        
+
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
         public ISurface? Surface { get; set; }
 
         public bool HasStation { get; set; } = false;
 
-        public List<Vehicle> VehiclesOnField { get; } = new List<Vehicle>();
+        public List<Vehicle> VehiclesOnField { get; } = [];
 
         public Vehicle? ReservedBy { get; set; } = null;
-        
+
         public void SetFieldTypeToOtherFields(Field f)
         {
             Type = f.Type;
         }
-        
+
         public void SetFieldHeight(float height)
         {
             Height = height;
             byte i = 0;
             while (i < MaxFieldTypeHeights.Length && height > MaxFieldTypeHeights[i]) i++;
 
-            Type = (FieldType) i;
+            Type = (FieldType)i;
         }
-        
+
         public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && Surface == null;
 
-        public int GetHeightDifference(Field? field) =>Type - field?.Type ?? 0;
+        public int GetHeightDifference(Field? field) => Type - field?.Type ?? 0;
     }
 }

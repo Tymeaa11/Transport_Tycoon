@@ -1,34 +1,33 @@
 using System.ComponentModel;
-using System.Drawing;
 using System.Numerics;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
-using VolcanicTransport.Model.World.Roadnetwork;
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public abstract class Vehicle : INotifyPropertyChanged
+    public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type) : INotifyPropertyChanged
     {
-        protected string name;
-        protected ProductType type;
+        public string Name { get; } = name;
+        public ProductType Type { get; protected set; } = type;
+        public int CurrentLoad { get; protected set; } = 0;
+        public int Price { get; } = price;
         protected Route? route = null;
 
-        protected float currentSpeed;
-        protected float maxSpeed;
-        protected int Capacity;
-        protected int CurrentLoad;
-        protected int maintenanceCost;
-        protected int price;
-        protected bool active;
+        protected float currentSpeed = 0;
+        protected float maxSpeed = maxSpeed;
+        protected int Capacity = capacity;
+
+        protected int maintenanceCost = (int)(price * 0.05);
+        protected bool active = false;
         public VehicleState State { get; protected set; } = VehicleState.Moving;
 
-        protected List<Field> currentPath;
+        protected List<Field> currentPath = [];
         protected int currentPathIndex;
-        public Field CurrentField { get; protected set; }
+        public Field? CurrentField { get; protected set; }
 
         protected RoadEdge? currentEdge = null;
         protected Coordinate? currentCoordinate = null;
 
-        protected List<Vector2> currentWaypoints = new List<Vector2>();
+        protected List<Vector2> currentWaypoints = [];
         protected int currentWaypointIndex = 0;
 
         private Vector2 _visualPosition;
@@ -41,25 +40,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 OnPropertyChanged(nameof(VisualPosition));
             }
         }
-
-        public Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type)
-        {
-            this.name = name;
-            this.maxSpeed = maxSpeed;
-            this.Capacity = capacity;
-            this.price = price;
-            currentSpeed = 0;
-            this.maintenanceCost = (int)(price * 0.05);
-            CurrentLoad = 0;
-            active = false;
-
-        }
-
-        public int CurrenLoad() => CurrentLoad;
-
-        public ProductType getType() => type;
-        public int Price() => price;
-        public string VehicleName() => name;
 
         public void StartJourney(List<Field> path)
         {
@@ -122,7 +102,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 }
 
                 Vector2 targetWaypoint = currentWaypoints[currentWaypointIndex];
-                Vector2 direction = new Vector2(targetWaypoint.X - VisualPosition.X, targetWaypoint.Y - VisualPosition.Y);
+                Vector2 direction = new(targetWaypoint.X - VisualPosition.X, targetWaypoint.Y - VisualPosition.Y);
                 float distanceToWaypoint = direction.Length();
 
                 if (distanceToTravel >= distanceToWaypoint)
@@ -145,6 +125,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (currentPathIndex + 1 >= currentPath.Count)
             {
                 State = VehicleState.Loading;
+                if (CurrentField == null) throw new Exception();
                 ReleaseJunctionLock(CurrentField);
                 return false;
             }
@@ -160,6 +141,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 nextField.ReservedBy = this;
             }
 
+            if (CurrentField == null) throw new Exception();
             ReleaseJunctionLock(CurrentField);
 
             CurrentField.VehiclesOnField.Remove(this);
@@ -180,6 +162,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             Field? previousField = (currentPathIndex > 0) ? currentPath[currentPathIndex - 1] : null;
             Field? nextField = (currentPathIndex < currentPath.Count - 1) ? currentPath[currentPathIndex + 1] : null;
 
+
+
+            if (CurrentField == null) throw new Exception();
+
             string entryDirection = GetRelativeDirection(CurrentField, previousField);
             string exitDirection = GetRelativeDirection(CurrentField, nextField);
 
@@ -193,7 +179,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 float startX = CurrentField.Coordinate.X * 64;
                 float startY = CurrentField.Coordinate.Y * 64;
 
-                Vector2 fieldOffset = new Vector2(startX, startY);
+                Vector2 fieldOffset = new(startX, startY);
 
                 foreach (var p in localPoints)
                 {
@@ -214,6 +200,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         private Vehicle? GetVehicleAhead()
         {
+            if (CurrentField == null) throw new Exception();
             foreach (var other in CurrentField.VehiclesOnField)
             {
                 if (other != this && other.State == VehicleState.Moving)

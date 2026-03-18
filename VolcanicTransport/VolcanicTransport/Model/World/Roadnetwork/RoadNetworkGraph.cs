@@ -1,10 +1,8 @@
-using VolcanicTransport.Model.World;
-
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public class RoadNetworkGraph
     {
-        public Dictionary<Field, RoadNode> NodeMap { get; private set; } = new Dictionary<Field, RoadNode>();
+        public Dictionary<Field, RoadNode> NodeMap { get; private set; } = [];
         public void RegisterNodeIfNeeded(Field field)
         {
             if (field.Surface is Road road)
@@ -20,7 +18,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public void RebuildEdges()
         {
 
-            foreach (KeyValuePair<Field,RoadNode> kvp in NodeMap)
+            foreach (KeyValuePair<Field, RoadNode> kvp in NodeMap)
             {
                 RoadNode node = kvp.Value;
                 node.Edges.Clear();
@@ -34,11 +32,11 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         private void ExploreAndConnect(RoadNode startNode, Field? currentField)
         {
-            if (currentField == null || !(currentField.Surface is Road)) 
+            if (currentField == null || currentField.Surface is not Road)
                 return;
 
             int totalWeight = 0;
-            List<Field> pathTaken = new List<Field>();
+            List<Field> pathTaken = [];
             Field previousField = startNode.Field;
 
             while (currentField != null && currentField.Surface is Road road)

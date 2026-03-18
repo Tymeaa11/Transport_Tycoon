@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport_WPF.View
 {
     public class VisualChunk : FrameworkElement
     {
-        private DrawingVisual _visual;
+        private readonly DrawingVisual _visual;
 
         public VisualChunk()
         {
@@ -37,9 +31,9 @@ namespace VolcanicTransport_WPF.View
         {
             int size = Chunk.ChunkSize * Field.FieldSize;
 
-            RenderTargetBitmap bakedMap = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap bakedMap = new(size, size, 96, 96, PixelFormats.Pbgra32);
 
-            DrawingVisual dv = new DrawingVisual();
+            DrawingVisual dv = new();
             using (DrawingContext dc = dv.RenderOpen())
             {
                 chunkData.FieldMatrix.ReadEach((x, y, f) =>
@@ -55,7 +49,7 @@ namespace VolcanicTransport_WPF.View
                     if (f.Surface == null)
                     {
                         dc.DrawImage(
-                            TextureAtlas.FactoryBuildingTexture, 
+                            TextureAtlas.FactoryBuildingTexture,
                             new Rect(fieldX, fieldY, Field.FieldSize, Field.FieldSize));
                     }
                 });
@@ -64,10 +58,9 @@ namespace VolcanicTransport_WPF.View
             bakedMap.Render(dv);
             bakedMap.Freeze();
 
-            using (DrawingContext dc2 = _visual.RenderOpen())
-            {
-                dc2.DrawImage(bakedMap, new Rect(0, 0, size, size));
-            }
+            using DrawingContext dc2 = _visual.RenderOpen();
+            dc2.DrawImage(bakedMap, new Rect(0, 0, size, size));
+
         }
 
         protected override int VisualChildrenCount => 1;
