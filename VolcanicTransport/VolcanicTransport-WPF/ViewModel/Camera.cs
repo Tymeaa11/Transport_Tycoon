@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -23,11 +18,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private int _zoomLevel;
 
-        public Matrix ProjectionMatrix 
-        { 
+        public Matrix ProjectionMatrix
+        {
             get => _projectionMatrix;
-            private set { 
-                _projectionMatrix = value; 
+            private set
+            {
+                _projectionMatrix = value;
                 OnPropertyChanged();
                 CameraChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -44,9 +40,9 @@ namespace VolcanicTransport_WPF.ViewModel
 
             _zoomLevel = 0;
 
-            MoveUp    = new DelegateCommand(_ => Pan(0, PanSpeed));
-            MoveDown  = new DelegateCommand(_ => Pan(0, -PanSpeed));
-            MoveLeft  = new DelegateCommand(_ => Pan(PanSpeed, 0));
+            MoveUp = new DelegateCommand(_ => Pan(0, PanSpeed));
+            MoveDown = new DelegateCommand(_ => Pan(0, -PanSpeed));
+            MoveLeft = new DelegateCommand(_ => Pan(PanSpeed, 0));
             MoveRight = new DelegateCommand(_ => Pan(-PanSpeed, 0));
         }
 

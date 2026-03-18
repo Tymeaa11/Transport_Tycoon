@@ -9,7 +9,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
         private const float Stage1MinHeight = 0.55f;
         private const float Stage2MinHeight = 0.6f;
         private const float Stage3MinHeight = 0.65f;
-        
+
         private readonly Random _random = new(World.World.Instance.WorldSeed);
         private float GetOffset() => _random.NextSingle() * 1000;
 
@@ -18,11 +18,11 @@ namespace VolcanicTransport.Model.TerrainGeneration
         {
             _mushroomLayer = new PerlinLayer(new Perlin(), 0.02f, 1f, GetOffset(), GetOffset());
         }
-        
+
         public void ModifyField(Field field, int x, int y)
         {
             var height = _mushroomLayer.Get(x, y); // 0.0-1.0 range
-            
+
             if (field.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS) return;
             if (field.Surface != null) return;
             switch (height)

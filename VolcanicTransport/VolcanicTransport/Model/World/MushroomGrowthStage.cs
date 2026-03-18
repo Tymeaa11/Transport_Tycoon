@@ -6,5 +6,5 @@ public enum MushroomGrowthStage : byte
     JUVENILE = 2,
     ADULT = 3,
     FULLY_GROWN = 4
-    
+
 }
