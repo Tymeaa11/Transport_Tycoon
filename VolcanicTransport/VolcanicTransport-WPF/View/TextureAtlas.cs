@@ -47,9 +47,7 @@ namespace VolcanicTransport_WPF.View
             _isLoaded = true;
         }
 
-        private static ImageSource GetTile(BitmapSource atlas, int col, int row)
-        {
-            return new CroppedBitmap(atlas, new Int32Rect(col * 64, row * 64, 64, 64));
-        }
+        private static ImageSource GetTile(BitmapSource atlas, int row, int col)
+            => new CroppedBitmap(atlas, new Int32Rect(col * 64, row * 64, 64, 64));
     }
 }

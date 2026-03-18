@@ -46,10 +46,31 @@ namespace VolcanicTransport_WPF.View
                     dc.DrawRectangle(brush, null, new Rect(fieldX, fieldY, Field.FieldSize, Field.FieldSize));
 
                     // Render Surface (Roads, Bridges, Mushrooms)
-                    if (f.Surface == null)
+                    if (f.Surface != null)
                     {
+                        ImageSource? image = TextureAtlas.RoadInvalidTexture;
+
+                        if (f.Surface is Mushroom m)
+                        {
+                            switch (m.GrowthStage)
+                            {
+                                case MushroomGrowthStage.SPROUT:
+                                    image = TextureAtlas.MushroomTexture1;
+                                    break;
+                                case MushroomGrowthStage.JUVENILE:
+                                    image = TextureAtlas.MushroomTexture2;
+                                    break;
+                                case MushroomGrowthStage.ADULT:
+                                    image = TextureAtlas.MushroomTexture3;
+                                    break;
+                                case MushroomGrowthStage.FULLY_GROWN:
+                                    image = TextureAtlas.MushroomTexture4;
+                                    break;
+                            }
+                        }
+                        
                         dc.DrawImage(
-                            TextureAtlas.FactoryBuildingTexture,
+                            image,
                             new Rect(fieldX, fieldY, Field.FieldSize, Field.FieldSize));
                     }
                 });
