@@ -13,14 +13,14 @@ namespace VolcanicTransport.Model.TerrainGeneration
                 var wWidthP2 = World.World.Instance.SizeInFields.X * 0.5f;
                 var wHeightP2 = World.World.Instance.SizeInFields.Y * 0.5f;
                 
-                x = x - wWidthP2;
-                y = y - wHeightP2;
+                x -= wWidthP2;
+                y -= wHeightP2;
                 
-                return (float) (-1500 * Math.Pow(1 - (Math.Min( wWidthP2 - Math.Abs(x),wHeightP2 - Math.Abs(y) ) ) / Math.Max( wWidthP2, wHeightP2), 3));
+                return (float) (-700 * Math.Pow(1 - (Math.Min( wWidthP2 - Math.Abs(x),wHeightP2 - Math.Abs(y) ) ) / Math.Max( wWidthP2, wHeightP2), 3));
             }
         }
 
-        private class FinalizeNoise(LayeredTerrain baseNoise, CompositeLayer warp, PerlinLayer filter)
+        private class FinalizeNoise(Perlin perlin, LayeredTerrain baseNoise, CompositeLayer warp, PerlinLayer filter)
             : ILayer
         {
             public float Get(float x, float y)
@@ -31,12 +31,12 @@ namespace VolcanicTransport.Model.TerrainGeneration
 
             public void SetSeed(int seed)
             {
-                baseNoise.SetSeed(seed);
-                warp.SetSeed(seed);
-                filter.SetSeed(seed);
+                perlin.NoiseSeed(seed);
             }
         }
-        
+
+        private readonly Random _random = new(World.World.Instance.WorldSeed);
+        private float GetOffset() => _random.NextSingle() * 1000;
         
         public TerrainHeightGenerator()
         {
@@ -45,30 +45,30 @@ namespace VolcanicTransport.Model.TerrainGeneration
             var baseNoise = new LayeredTerrain();
             
             
-            var p1 = new PerlinLayer(perlin, 0.005f, 700, 0, 0);
-            var p2 = new PerlinLayer(perlin, 0.01f, 400, 0, 0);
-            var p3 = new PerlinLayer(perlin, 0.02f, 200, 0, 0);
-            var p4 = new PerlinLayer(perlin, 0.05f, 50, 0, 0);
+            var p1 = new PerlinLayer(perlin, 0.005f, 700, GetOffset(), GetOffset());
+            var p2 = new PerlinLayer(perlin, 0.01f, 400, GetOffset(), GetOffset());
+            var p3 = new PerlinLayer(perlin, 0.02f, 200, GetOffset(), GetOffset());
+            var p4 = new PerlinLayer(perlin, 0.05f, 50, GetOffset(), GetOffset());
 
 
-            var m1 = new PerlinLayer(perlin, 0.01f, -300, 0, 0);
-            var m2 = new PerlinLayer(perlin, 0.005f, -250, 0, 0);
+            var m1 = new PerlinLayer(perlin, 0.01f, -300, GetOffset(), GetOffset());
+            var m2 = new PerlinLayer(perlin, 0.005f, -250, GetOffset(), GetOffset());
 
 
             baseNoise.AddLayer(fallOff);
             baseNoise.AddLayer([p1,p2,p3,p4,m1,m2]);
 
 
-            var w1 = new PerlinLayer(perlin, 0.005f, 255, 0, 0);
-            var w2 = new PerlinLayer(perlin, 0.01f, 255, 0, 0);
-            var w3 = new PerlinLayer(perlin, 0.1f, 255, 0, 0);
+            var w1 = new PerlinLayer(perlin, 0.005f, 255, GetOffset(), GetOffset());
+            var w2 = new PerlinLayer(perlin, 0.01f, 255, GetOffset(), GetOffset());
+            var w3 = new PerlinLayer(perlin, 0.1f, 255, GetOffset(), GetOffset());
 
             var warp = new CompositeLayer(w3, w2, w1);
 
-            var c1 = new PerlinLayer(perlin, 0.01f, 1.5f, 300, 200);
+            var c1 = new PerlinLayer(perlin, 0.01f, 1.5f, GetOffset(), GetOffset());
 
 
-            _finalNoise = new FinalizeNoise(baseNoise, warp, c1);
+            _finalNoise = new FinalizeNoise(perlin, baseNoise, warp, c1);
         }
 
         public void ModifyField(Field field, int x, int y)
