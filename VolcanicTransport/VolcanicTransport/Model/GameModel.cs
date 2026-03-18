@@ -41,7 +41,7 @@ namespace VolcanicTransport.Model
             World.World.Initialise(worldSize);
             savefileManager = new SaveFileManager();
 
-            WorldInstance.gameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator());
+            WorldInstance.gameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator(), new MushroomGenerator());
             WorldInstance.Generate();
         }
 

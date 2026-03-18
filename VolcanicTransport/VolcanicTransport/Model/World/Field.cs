@@ -25,6 +25,7 @@ namespace VolcanicTransport.Model.World
 
         public float Height { get; private set; }
 
+        
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
         public ISurface? Surface { get; set; }
@@ -34,8 +35,12 @@ namespace VolcanicTransport.Model.World
         public List<Vehicle> VehiclesOnField { get; } = new List<Vehicle>();
 
         public Vehicle? ReservedBy { get; set; } = null;
-
-
+        
+        public void SetFieldTypeToOtherFields(Field f)
+        {
+            Type = f.Type;
+        }
+        
         public void SetFieldHeight(float height)
         {
             Height = height;

@@ -11,16 +11,20 @@ namespace VolcanicTransport;
 
 class Program
 {
-    static void Main(string[] args)
+    private static void Main(string[] args)
     {
-        Console.WriteLine("Creating preview at bin\\Debug\\net9.0\\");
+        Console.WriteLine(@"Creating preview at bin\Debug\net9.0\");
         World.Initialise(40);
-        World.Instance.gameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator());
+        World.Instance.gameWorldGenerator = new GameWorldGenerator(
+                                                new TerrainHeightGenerator(),
+                                                new MushroomGenerator()
+                                            );
         World.Instance.Generate();
 
-        var fieldSize = 2;
-
+        var fieldSize = 8;
+        var offset = fieldSize / 4;
         var size = World.Instance.SizeInFields * fieldSize;
+        
         using var image = new Image<Rgba32>(size.X, size.Y, Color.DarkSlateGray);
         image.Mutate(ctx => 
         {
@@ -48,6 +52,15 @@ class Program
                         cy * Chunk.ChunkSize * fieldSize + fy * fieldSize,
                         fieldSize, fieldSize
                     ));
+
+                    if (field.Surface is Mushroom m)
+                    {
+                        ctx.Fill(Color.Magenta.WithAlpha(1.0f / (int)(5 - m.GrowthStage)), new Rectangle(
+                            cx * Chunk.ChunkSize * fieldSize + fx * fieldSize + offset,
+                            cy * Chunk.ChunkSize * fieldSize + fy * fieldSize + offset,
+                            fieldSize -offset, fieldSize -offset
+                        ));
+                    }
                 });
             });
             // Draw a filled rectangle (Brush)
