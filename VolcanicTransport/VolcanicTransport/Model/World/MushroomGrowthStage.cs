@@ -1,10 +1,9 @@
 namespace VolcanicTransport.Model.World;
 
-public enum MushroomGrowthStage : byte
+public enum MushroomGrowthStage
 {
-    SPROUT = 1,
-    JUVENILE = 2,
-    ADULT = 3,
-    FULLY_GROWN = 4
-
+    SPROUT,
+    JUVENILE,
+    ADULT,
+    FULLY_GROWN
 }

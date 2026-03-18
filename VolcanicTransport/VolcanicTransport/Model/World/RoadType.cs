@@ -4,6 +4,8 @@ namespace VolcanicTransport.Model.World
     [Flags]
     public enum RoadType : byte
     {
+        TYPE_MASK = 0b1111_0000,
+        DIRECTION_MASK = 0b0000_1111,
         INVALID = 0b1111_1111,
         // scjr_NSEW
         // s = straight, c = curved, j = junction, r = slope 

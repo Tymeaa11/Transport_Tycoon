@@ -48,30 +48,32 @@ namespace VolcanicTransport_WPF.View
                     // Render Surface (Roads, Bridges, Mushrooms)
                     if (f.Surface != null)
                     {
-                        ImageSource? image = TextureAtlas.RoadInvalidTexture;
+                        ImageSource image = TextureAtlas.RoadTextures[RoadType.INVALID].ImageSource;
+                        int rotation = 0;
+
 
                         if (f.Surface is Mushroom m)
                         {
-                            switch (m.GrowthStage)
-                            {
-                                case MushroomGrowthStage.SPROUT:
-                                    image = TextureAtlas.MushroomTexture1;
-                                    break;
-                                case MushroomGrowthStage.JUVENILE:
-                                    image = TextureAtlas.MushroomTexture2;
-                                    break;
-                                case MushroomGrowthStage.ADULT:
-                                    image = TextureAtlas.MushroomTexture3;
-                                    break;
-                                case MushroomGrowthStage.FULLY_GROWN:
-                                    image = TextureAtlas.MushroomTexture4;
-                                    break;
-                            }
+                            image = TextureAtlas.MushroomTextures[(int)m.GrowthStage];
                         }
-                        
+                        else if (f.Surface is Road r)
+                        {
+                            var data = TextureAtlas.RoadTextures[r.RoadType];
+
+                            image = data.ImageSource;
+                            rotation = data.AngleDegrees;
+                        }
+
+                        double centerX = fieldX + Field.FieldSize * 0.5;
+                        double centerY = fieldY + Field.FieldSize * 0.5;
+
+                        dc.PushTransform(new RotateTransform(rotation, centerX, centerY));
+
                         dc.DrawImage(
-                            image,
-                            new Rect(fieldX, fieldY, Field.FieldSize, Field.FieldSize));
+                                image,
+                                new Rect(fieldX, fieldY, Field.FieldSize, Field.FieldSize));
+
+                        dc.Pop();
                     }
                 });
             }
