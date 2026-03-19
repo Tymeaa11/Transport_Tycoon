@@ -34,7 +34,7 @@ namespace VolcanicTransport.Model.Utils
 
         public static List<Coordinate> GetArea(Coordinate topLeft, Coordinate topRight)
         {
-            if (topLeft.IsInside(topRight)) 
+            if (!topLeft.IsInside(topRight)) 
                 return [];
 
             List<Coordinate> coords = [];

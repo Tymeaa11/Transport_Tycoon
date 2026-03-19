@@ -79,25 +79,14 @@ namespace VolcanicTransport.Model.TerrainGeneration
             return true;
         }
 
-        private List<Field> GetArea(Coordinate topLeft, Coordinate topRight)
-        {
-            if (topRight == topLeft) return [GetField(topLeft)];
-            if (!(topRight.IsInside(World.World.Instance.SizeInFields) && topLeft.IsInside(topRight))) 
-                throw new GenerationErrorException();
-
-            List<Field> fields = [];
-            for (int y = topLeft.Y; y <= topRight.Y; y++)
-                for (int x = topLeft.X; x <= topRight.X; x++)
-                    fields.Add(GetField(new(x, y)));
-            return fields;
-        }
-
         private void CreateCity(Coordinate center)
         {
             string name = "City " + (World.World.Instance.Cities.Count + 1);
             City newCity = new(name, center);
             Field reference = GetField(center);
-            var fields = GetArea(center - 1, center + 1);
+            var fields = World.World.Instance.GetArea(center - 1, center + 1);
+
+            if (fields.Count != 9) throw new GenerationErrorException();
 
             fields.ForEach(f => f.SetFieldTypeTo(reference));
 
@@ -119,6 +108,13 @@ namespace VolcanicTransport.Model.TerrainGeneration
             fields[5].Surface = new Road(center + Direction.East);
             fields[7].Surface = new Road(center + Direction.South);
 
+
+            fields.ForEach(f =>
+            {
+                if (f.Surface is Road r)
+                    r.Update();
+            });
+
             World.World.Instance.Cities.Add(newCity);
         }
 
@@ -139,7 +135,11 @@ namespace VolcanicTransport.Model.TerrainGeneration
 
             Field reference = GetField(origin);
 
-            GetArea(origin, origin + 1).ForEach(f => {
+            var fields = World.World.Instance.GetArea(origin, origin + 1);
+
+            if (fields.Count != 4) throw new GenerationErrorException();
+
+            fields.ForEach(f => {
                 f.SetFieldTypeTo(reference); // Kilapítás az origin magasságára
                 f.Surface = new FactoryBuilding(); // ISurface beállítása
                 newFactory.AddField(f);

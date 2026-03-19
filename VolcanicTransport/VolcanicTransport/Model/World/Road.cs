@@ -81,7 +81,7 @@ namespace VolcanicTransport.Model.World
             }
 
             // heights can differ only by 1 if curved or junction
-            if (heightDiffNorth <= 1 && heightDiffSouth <= 1 && heightDiffEast <= 1 && heightDiffWest <= 1)
+            if (heightDiffNorth > 1 || heightDiffSouth > 1 || heightDiffEast > 1 || heightDiffWest > 1)
             {
                 RoadType = RoadType.INVALID;
                 return;
