@@ -6,7 +6,6 @@
         ROAD,
         STATION,
         BRIDGE,
-        BULDOZE,
         LOWER,
         HEIGHTEN
     }

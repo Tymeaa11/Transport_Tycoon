@@ -65,7 +65,6 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetBuildModeRoadCommand { get; private set; }
         public DelegateCommand SetBuildModeStationCommand { get; private set; }
         public DelegateCommand SetBuildModeBridgeCommand { get; private set; }
-        public DelegateCommand SetBuildModeBuldozeCommand { get; private set; }
         public DelegateCommand SetBuildModeLowerCommand { get; private set; }
         public DelegateCommand SetBuildModeHeightenCommand { get; private set; }
         public DelegateCommand SetTimescale0Command { get; private set; }
@@ -123,7 +122,6 @@ namespace VolcanicTransport_WPF.ViewModel
             SetBuildModeRoadCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.ROAD));
             SetBuildModeStationCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.STATION));
             SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
-            SetBuildModeBuldozeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BULDOZE));
             SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
             SetBuildModeHeightenCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.HEIGHTEN));
             SetTimescale0Command = new DelegateCommand(_ => OnSetTimescale0X());
@@ -156,7 +154,6 @@ namespace VolcanicTransport_WPF.ViewModel
                     OnPropertyChanged(nameof(IsBuildModeRoad));
                     OnPropertyChanged(nameof(IsBuildModeStation));
                     OnPropertyChanged(nameof(IsBuildModeBridge));
-                    OnPropertyChanged(nameof(IsBuildModeBuldoze));
                     OnPropertyChanged(nameof(IsBuildModeLower));
                     OnPropertyChanged(nameof(IsBuildModeHeighten));
                 }
@@ -183,7 +180,6 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
         public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
         public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
-        public bool IsBuildModeBuldoze => CurrentBuildMode == BuildMode.BULDOZE;
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
 

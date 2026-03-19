@@ -117,11 +117,6 @@
                               IsChecked="{Binding IsBuildModeBridge, Mode=OneWay}">
                 </ToggleButton>
 
-                <ToggleButton Content="buldoze" 
-              Command="{Binding SetBuildModeBuldozeCommand}" 
-              IsChecked="{Binding IsBuildModeBuldoze, Mode=OneWay}">
-                </ToggleButton>
-
                 <ToggleButton Content="lower" 
               Command="{Binding SetBuildModeLowerCommand}" 
               IsChecked="{Binding IsBuildModeLower, Mode=OneWay}">
