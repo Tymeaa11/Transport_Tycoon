@@ -5,6 +5,8 @@
         NONE,
         ROAD,
         STATION,
-        BRIDGE
+        BRIDGE,
+        LOWER,
+        HEIGHTEN
     }
 }
