@@ -2,18 +2,25 @@
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VolcanicTransport.Model.World;
+using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport_WPF.View
 {
     public class VisualChunk : FrameworkElement
     {
+
+        private static readonly int Dpi = 96;
+        private static readonly int FieldSize = Field.FieldSize;
+        private static readonly int HalfFieldSize = FieldSize / 2;
+        private static readonly int ChunkSizeInFields = Chunk.ChunkSize * FieldSize;
+        private static readonly Rect ChunkBoundries = new(0, 0, ChunkSizeInFields, ChunkSizeInFields);
+
         private readonly DrawingVisual _visual;
 
         public VisualChunk()
         {
             _visual = new DrawingVisual();
             AddVisualChild(_visual);
-            //CacheMode = new BitmapCache();
 
             RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.NearestNeighbor);
             RenderOptions.SetEdgeMode(this, EdgeMode.Aliased);
@@ -21,17 +28,16 @@ namespace VolcanicTransport_WPF.View
             DataContextChanged += (s, e) =>
             {
                 if (DataContext is Chunk chunkData)
-                {
                     PreRender(chunkData);
-                }
             };
         }
 
         public void PreRender(Chunk chunkData)
         {
-            int size = Chunk.ChunkSize * Field.FieldSize;
 
-            RenderTargetBitmap bakedMap = new(size, size, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap bakedMap = new(
+                ChunkSizeInFields, ChunkSizeInFields, Dpi, Dpi, PixelFormats.Pbgra32
+            );
 
             DrawingVisual dv = new();
             using (DrawingContext dc = dv.RenderOpen())
@@ -40,39 +46,31 @@ namespace VolcanicTransport_WPF.View
                 {
                     // Draw the tile based on FieldType
                     Brush brush = FieldBrushProvider.GetBrush(f.Type);
-                    double fieldX = x * Field.FieldSize;
-                    double fieldY = y * Field.FieldSize;
+                    double fieldX = x * FieldSize;
+                    double fieldY = y * FieldSize;
 
-                    dc.DrawRectangle(brush, null, new Rect(fieldX, fieldY, Field.FieldSize, Field.FieldSize));
+                    Rect rectangle = new(fieldX, fieldY, FieldSize, FieldSize);
 
-                    // Render Surface (Roads, Bridges, Mushrooms)
+                    dc.DrawRectangle(brush, null, rectangle);
+
+                    // Draw Surface
                     if (f.Surface != null)
                     {
-                        ImageSource image = TextureAtlas.RoadTextures[RoadType.INVALID].ImageSource;
-                        int rotation = 0;
-
-
-                        if (f.Surface is Mushroom m)
+                        ImageWithRotation imageWithRotation = f.Surface switch
                         {
-                            image = TextureAtlas.MushroomTextures[(int)m.GrowthStage];
-                        }
-                        else if (f.Surface is Road r)
-                        {
-                            var data = TextureAtlas.RoadTextures[r.RoadType];
+                            Mushroom m => RenderMushroom(m),
+                            Road r => RenderRoad(r),
+                            Station s => RenderStation(),
+                            FactoryBuilding => RenderFactoryBuilding(),
+                            CityBuilding => RenderCityBuilding(),
+                            _ => RenderInvalid()
+                        };
 
-                            image = data.ImageSource;
-                            rotation = data.AngleDegrees;
-                        }
+                        double centerX = fieldX + HalfFieldSize;
+                        double centerY = fieldY + HalfFieldSize;
 
-                        double centerX = fieldX + Field.FieldSize * 0.5;
-                        double centerY = fieldY + Field.FieldSize * 0.5;
-
-                        dc.PushTransform(new RotateTransform(rotation, centerX, centerY));
-
-                        dc.DrawImage(
-                                image,
-                                new Rect(fieldX, fieldY, Field.FieldSize, Field.FieldSize));
-
+                        dc.PushTransform(new RotateTransform(imageWithRotation.AngleDegrees, centerX, centerY));
+                        dc.DrawImage(imageWithRotation.ImageSource, rectangle);
                         dc.Pop();
                     }
                 });
@@ -81,10 +79,23 @@ namespace VolcanicTransport_WPF.View
             bakedMap.Render(dv);
             bakedMap.Freeze();
 
+            // Draw the baked chunk to _visual
             using DrawingContext dc2 = _visual.RenderOpen();
-            dc2.DrawImage(bakedMap, new Rect(0, 0, size, size));
-
+            dc2.DrawImage(bakedMap, ChunkBoundries);
         }
+
+        private ImageWithRotation RenderInvalid()
+            => new(TextureAtlas.InvalidTexture, 0);
+        private ImageWithRotation RenderMushroom(Mushroom m)
+            => new(TextureAtlas.MushroomTextures[(int)m.GrowthStage], 0);
+        private ImageWithRotation RenderRoad(Road r)
+            => TextureAtlas.RoadTextures[r.RoadType];
+        private ImageWithRotation RenderCityBuilding()
+            => new(TextureAtlas.CityBuildingTexture, 0);
+        private ImageWithRotation RenderFactoryBuilding()
+            => new(TextureAtlas.FactoryBuildingTexture, 0);
+        private ImageWithRotation RenderStation()
+            => new(TextureAtlas.FactoryBuildingTexture, 0);
 
         protected override int VisualChildrenCount => 1;
         protected override Visual GetVisualChild(int index) => _visual;
