@@ -2,36 +2,19 @@ using VolcanicTransport.Model.TerrainGeneration;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class Product
+    public class Product(ProductType type, int minvalue, int maxvalue, float variability = 0.05f)
     {
-       private  ProductType producType;
-       private Perlin? perlin;
-       private float minValue;
-       private float maxValue;
-       private float variability;
+        public ProductType ProductType { get; set; } = type;
+        private readonly Perlin _perlin = new();
+        private readonly float _minValue = minvalue;
+        private readonly float _maxValue = maxvalue;
+        private readonly float _variability = variability;
 
-       public ProductType ProductType
-        {
-            get { return producType; }
-            set { producType = value; }
-        }
+        public int GetDemand(float time) // min - max
+            => (int)(Math.Abs(_maxValue - _minValue) * _perlin.Noise(time * _variability) + _minValue);
 
-       public Product(ProductType type, int minvalue, int maxvalue)
-        {
-            this.producType = type;
-            this.minValue = minvalue;
-            this.maxValue = maxvalue;
-            this.variability = 0;
-        }
+        public float GetFactoryEfficiency(float time)
+            => _perlin.Noise(time * _variability); // 0-1
 
-        public int GetDemand()
-        {
-            return 0;
-        }
-
-        public float GetFactoryEfficiency()
-        {
-            return 0; 
-        }
     }
 }

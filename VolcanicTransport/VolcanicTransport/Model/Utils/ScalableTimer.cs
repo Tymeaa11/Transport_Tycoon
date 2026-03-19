@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Timer = System.Timers.Timer;
+﻿using Timer = System.Timers.Timer;
 
 namespace VolcanicTransport.Model.Utils
 {
-    public class ScalableTimer
+    public class ScalableTimer : IDisposable
     {
         private readonly Timer _timer;
         private int _timeScale;
@@ -22,16 +17,16 @@ namespace VolcanicTransport.Model.Utils
         {
             get => _timeScale;
             set
-            {   
+            {
                 _timeScale = Math.Clamp(value, 0, 10);
 
-                if(_timeScale == 0)
-                { 
-                    _timer.Stop(); 
+                if (_timeScale == 0)
+                {
+                    _timer.Stop();
                 }
                 else
-                {    
-                    _timer.Interval = _baseScale / _timeScale;
+                {
+                    _timer.Interval = (double)_baseScale / _timeScale;
                     _timer.Start();
                 }
             }
@@ -55,6 +50,11 @@ namespace VolcanicTransport.Model.Utils
         public void Stop()
         {
             _timer.Stop();
+        }
+
+        public void Dispose()
+        {
+            _timer.Dispose();
         }
     }
 }

@@ -1,6 +1,6 @@
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class CityBuilding
+    public class CityBuilding : ISurface
     {
     }
 }

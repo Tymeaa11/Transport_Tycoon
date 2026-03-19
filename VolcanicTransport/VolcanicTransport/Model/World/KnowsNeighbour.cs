@@ -6,21 +6,24 @@ namespace VolcanicTransport.Model.World
     {
         public Coordinate Coordinate { get; }
 
-        public Field? Field { get; }
+        public Field Field { get; }
         public Field? North { get; }
         public Field? South { get; }
         public Field? East { get; }
         public Field? West { get; }
-        
+
         protected KnowsNeighbour(Coordinate coordinate)
         {
             Coordinate = coordinate;
-            Field = coordinate.GetField();
-            
-            North = World.Instance.GetField(Coordinate + Direction.North); 
-            South = World.Instance.GetField(Coordinate + Direction.South); 
-            East  = World.Instance.GetField(Coordinate + Direction.East); 
-            West  = World.Instance.GetField(Coordinate + Direction.West); 
+
+            var f = World.Instance.GetField(Coordinate);
+            Field = f ?? throw new Exception();
+
+
+            North = World.Instance.GetField(Coordinate + Direction.North);
+            South = World.Instance.GetField(Coordinate + Direction.South);
+            East = World.Instance.GetField(Coordinate + Direction.East);
+            West = World.Instance.GetField(Coordinate + Direction.West);
         }
 
         protected int CountSidesThatSatisfy(Predicate<Field?> predicate)
@@ -32,7 +35,7 @@ namespace VolcanicTransport.Model.World
             count += predicate(West) ? 1 : 0;
             return count;
         }
-        
-        
+
+
     }
 }

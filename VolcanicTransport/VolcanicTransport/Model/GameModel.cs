@@ -7,12 +7,10 @@ namespace VolcanicTransport.Model
 {
     public class GameModel
     {
-        private double playerMoney;
-        private bool isPaused;
-        private DateTime currentTime;
-        private ISaveFileManager savefileManager;
-        public List<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
-
+        private double _playerMoney;
+        private bool _isPaused;
+        private readonly DateTime _currentTime;
+        private readonly ISaveFileManager _savefileManager;
         public World.World WorldInstance { get => World.World.Instance; }
 
         public event EventHandler? moneyChanged;
@@ -21,6 +19,7 @@ namespace VolcanicTransport.Model
         public event EventHandler? stationBought;
         public event EventHandler? roadBought;
         public event EventHandler? vehicleBought;
+        public event EventHandler? vehicleSelled;
         public event EventHandler? gameAdvanced;
         public event EventHandler? gamePaused;
         public event EventHandler? gameUnpaused;
@@ -35,34 +34,39 @@ namespace VolcanicTransport.Model
 
         private static GameModel? _instance;
 
-        private GameModel()
+        private GameModel(int worldSize)
         {
-            World.World.Initialise(2, new TerrainGeneration.GameWorldGenerator());
-            savefileManager = new SaveFileManager();
+            World.World.Initialise(worldSize);
+            _savefileManager = new SaveFileManager();
 
+            WorldInstance.GameWorldGenerator = new GameWorldGenerator(
+                new TerrainHeightGenerator(),
+                new MushroomGenerator(),
+                new FactoryAndCityGenerator(5, 10)
+                );
             WorldInstance.Generate();
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
-        public static void Initialise()
+        public static void Initialise(int worldSize)
         {
             if (_instance != null) throw new InvalidOperationException("World already initialised");
 
-            _instance = new GameModel();
+            _instance = new GameModel(worldSize);
         }
         #endregion
 
 
         public void Pause()
         {
-            isPaused = true;
+            _isPaused = true;
             gamePaused?.Invoke(this, EventArgs.Empty);
         }
 
         public void UnPause()
         {
-            isPaused = false;
+            _isPaused = false;
             gameUnpaused?.Invoke(this, EventArgs.Empty);
         }
 
@@ -70,17 +74,17 @@ namespace VolcanicTransport.Model
         public void ChangeTimeSpeed2X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
         public void ChangeTimeSpeed4X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
 
-        public void Update(float deltaTime)
+        public void Update()
         {
-            if (isPaused) return;
+            if (_isPaused) return;
             // Itt frissül a játékidő és a járművek mozgása
         }
 
         public bool BuyVehicle(Vehicle v)
         {
-            if (TryPurchase(v.Price()))
+            if (TryPurchase(v.Price))
             {
-                Vehicles.Add(v);
+                WorldInstance.AddVehicle(v);
                 vehicleBought?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -89,18 +93,19 @@ namespace VolcanicTransport.Model
 
         public void SellVehicle(Vehicle v)
         {
-            if (Vehicles.Contains(v))
+            if (WorldInstance.HasVehicle(v))
             {
-                AddMoney(v.Price() * 0.5);
-                Vehicles.Remove(v);
+                AddMoney(v.Price * 0.5);
+                WorldInstance.RemoveVehicle(v);
+                vehicleSelled?.Invoke(this, EventArgs.Empty);
             }
         }
 
         public bool TryPurchase(int amount)
         {
-            if (playerMoney >= amount)
+            if (_playerMoney >= amount)
             {
-                playerMoney -= amount;
+                _playerMoney -= amount;
                 moneyChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -109,7 +114,7 @@ namespace VolcanicTransport.Model
 
         public void AddMoney(double amount)
         {
-            playerMoney += amount;
+            _playerMoney += amount;
             moneyChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -124,7 +129,7 @@ namespace VolcanicTransport.Model
 
         private void CheckBankruptcy()
         {
-            if (playerMoney < 0)
+            if (_playerMoney < 0)
             {
                 gameOver?.Invoke(this, EventArgs.Empty);
             }

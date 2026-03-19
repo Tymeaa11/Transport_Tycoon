@@ -2,43 +2,33 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class ProductBuffer
+    public class ProductBuffer(ProductType productType, int maxCapacity)
     {
-        private ProductType productType;
-        private int maxCapacity;
-        private int currentLoad;
+        private readonly ProductType _productType = productType;
+        private readonly int _maxCapacity = maxCapacity;
+        public int CurrentLoad { get; private set; } = 0;
 
-        public ProductBuffer(ProductType productType, int maxCapacity)
+        public int AmountNeeded() => _maxCapacity - CurrentLoad;
+
+        public int ReciveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
         {
-            this.productType = productType;
-            this.maxCapacity = maxCapacity;
-            this.currentLoad = 0;
+            if (_productType != type) return 0;
+
+            int canReceive = Math.Min(amount, _maxCapacity - CurrentLoad);
+
+            CurrentLoad += canReceive;
+
+            return canReceive;
         }
-
-        public int ReciveProduct(ProductType type, int amount)
+        public int FillVehicle(Vehicle vehicle)
         {
-            if (productType != type)
-            {
-                return 0;
-            }
-            int spaceLeft = maxCapacity - currentLoad;
+            if (vehicle == null || CurrentLoad <= 0) { return 0; }
 
-            if (spaceLeft > amount)
-            {
-                currentLoad += amount;
-                return amount;
+            int taken = vehicle.Load(CurrentLoad);
 
-            }
-            currentLoad = maxCapacity;
-            return spaceLeft;
-        }
-        public void FillVehicle(Vehicle vehicle)
-        {
-            if ( vehicle == null || this.currentLoad <= 0 ) { return; }
+            CurrentLoad -= taken;
 
-            int taken = vehicle.Load(this.currentLoad);
-
-            currentLoad -= taken;
+            return taken;
         }
     }
 }

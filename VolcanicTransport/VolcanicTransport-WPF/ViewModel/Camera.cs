@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -13,39 +8,62 @@ namespace VolcanicTransport_WPF.ViewModel
     public class Camera : ViewModelBase
     {
         private const double PanSpeed = 10.0;
+        private const int MaxZoomIn = 20;
+        private const int MaxZoomOut = -6;
+
+
         private Matrix _projectionMatrix;
 
-        public Matrix ProjectionMatrix 
-        { 
+        public event EventHandler? CameraChanged;
+
+        private int _zoomLevel;
+
+        public Matrix ProjectionMatrix
+        {
             get => _projectionMatrix;
-            private set { _projectionMatrix = value; OnPropertyChanged(); }
+            private set
+            {
+                _projectionMatrix = value;
+                OnPropertyChanged();
+                CameraChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public DelegateCommand MoveUp { get; }
         public DelegateCommand MoveDown { get; }
         public DelegateCommand MoveLeft { get; }
         public DelegateCommand MoveRight { get; }
-        //public DelegateCommand ZoomIn { get; }
-        //public DelegateCommand ZoomOut { get; }
 
         public Camera(Matrix initialMatrix)
         {
             ProjectionMatrix = initialMatrix;
 
-            MoveUp    = new DelegateCommand(_ => Pan(0, PanSpeed));
-            MoveDown  = new DelegateCommand(_ => Pan(0, -PanSpeed));
-            MoveLeft  = new DelegateCommand(_ => Pan(PanSpeed, 0));
-            MoveRight = new DelegateCommand(_ => Pan(-PanSpeed, 0));
+            _zoomLevel = 0;
 
-            //ZoomIn    = new DelegateCommand(_ => Zoom(120, new Point(400, 300))); // Default to center
-            //ZoomOut   = new DelegateCommand(_ => Zoom(-120, new Point(400, 300)));
+            MoveUp = new DelegateCommand(_ => Pan(0, PanSpeed));
+            MoveDown = new DelegateCommand(_ => Pan(0, -PanSpeed));
+            MoveLeft = new DelegateCommand(_ => Pan(PanSpeed, 0));
+            MoveRight = new DelegateCommand(_ => Pan(-PanSpeed, 0));
         }
 
-        public void Zoom(double delta, Point mousePosition)
+        public void Zoom(double delta, Point screenCenter)
         {
-            double zoomFactor = delta > 0 ? 1.1 : 0.9;
+            bool zoomIn = delta > 0;
+
+            // Limit zoom
+            if (zoomIn && _zoomLevel > MaxZoomIn) return;
+            if (!zoomIn && _zoomLevel < MaxZoomOut) return;
+
+            if (delta > 0) _zoomLevel++;
+            else _zoomLevel--;
+
+            double zoomFactor = zoomIn ? 1.1 : 0.9;
+            Point worldCenter = ScreenToWorld(screenCenter);
             Matrix m = ProjectionMatrix;
-            m.ScaleAtPrepend(zoomFactor, zoomFactor, mousePosition.X, mousePosition.Y);
+
+            // ScaleAtPrepend applies the scaling relative to the specified center point
+            m.ScaleAtPrepend(zoomFactor, zoomFactor, worldCenter.X, worldCenter.Y);
+
             ProjectionMatrix = m;
         }
 
@@ -68,5 +86,14 @@ namespace VolcanicTransport_WPF.ViewModel
                 (int)Math.Floor(worldPoint.Y / Field.FieldSize)
             );
         public Coordinate ScreenToField(Point screenPoint) => WorldToField(ScreenToWorld(screenPoint));
+
+        public Rect GetVisibleWorldBounds(double screenWidth, double screenHeight)
+        {
+            // Transform the four corners of the screen into world coordinates
+            Point topLeft = ScreenToWorld(new Point(0, 0));
+            Point bottomRight = ScreenToWorld(new Point(screenWidth, screenHeight));
+
+            return new Rect(topLeft, bottomRight);
+        }
     }
 }

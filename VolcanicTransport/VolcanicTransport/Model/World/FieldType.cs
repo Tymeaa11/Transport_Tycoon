@@ -7,7 +7,7 @@ namespace VolcanicTransport.Model.World
         LAVA_OCEAN,
         BEACH,
         LOW_LANDS,
-        LOW_MID_TRANSITION, 
+        LOW_MID_TRANSITION,
         MID_LANDS,
         MID_HIGH_TRANSITION,
         HIGH_LANDS,

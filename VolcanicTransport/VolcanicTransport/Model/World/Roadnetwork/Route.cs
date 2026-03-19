@@ -4,25 +4,27 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public class Route
     {
-        private List<Station> stops;
-        private List<Road> roadToNextStation;
-        private bool isLoop;
+        private readonly List<Station> _stops;
+        private readonly List<Road> _roadToNextStation;
+        private readonly bool _isLoop;
 
         public Route()
         {
-            stops = new List<Station>();
-            roadToNextStation = new List<Road>();
-            isLoop = false;
+            _stops = [];
+            _roadToNextStation = [];
+            _isLoop = false;
         }
 
         public Station GetNextStop(Station current)
         {
+            // TODO
             return current; //javítandó
         }
 
         public List<Road> GetRoadsToNextStation()
         {
-            return roadToNextStation; //javítandó
+            // TODO
+            return _roadToNextStation; //javítandó
         }
     }
 }
