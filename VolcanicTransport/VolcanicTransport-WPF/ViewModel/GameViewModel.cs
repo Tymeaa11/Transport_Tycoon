@@ -134,7 +134,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetBuildModeBuldozeCommand { get; private set; }
         public DelegateCommand SetBuildModeLowerCommand { get; private set; }
         public DelegateCommand SetBuildModeHeightenCommand { get; private set; }
-
+        public DelegateCommand DecreaseTimescaleCommand { get; private set; }
+        public DelegateCommand IncreaseTimescaleCommand { get; private set; }
         private void OnSetBuildMode(BuildMode mode)
         {
             if (CurrentBuildMode == mode)
@@ -145,6 +146,11 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 CurrentBuildMode = mode;
             }
+            
+        }
+
+        private void OnIncreaseTimescale()
+        {
             
         }
 
