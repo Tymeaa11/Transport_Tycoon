@@ -80,6 +80,16 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
             System.Diagnostics.Debug.WriteLine($"Chunks: {LoadedChunks.Count}");
+
+            Field? f = GameModelInstance.WorldInstance.GetField(coord);
+
+            if (f != null && f.IsBuildable()) 
+            {
+                f.Surface = new Mushroom(coord, MushroomGrowthStage.FULLY_GROWN);
+                var chunkCoord = GameModelInstance.WorldInstance.GetChunkCoordinate(coord);
+                GameModelInstance.WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
+
+            }
         }
 
         private Coordinate _hoveredCoordinate;

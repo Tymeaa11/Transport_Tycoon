@@ -56,14 +56,16 @@ namespace VolcanicTransport.Model.World
             _instance = new World(worldSize);
         }
         #endregion
+        
+        public Coordinate GetChunkCoordinate(Coordinate fieldCoordinate)
+            => fieldCoordinate / Chunk.ChunkSize;
+
+        public Coordinate GetFieldCoordinateInChunk(Coordinate fieldCoordinate)
+            => fieldCoordinate % Chunk.ChunkSize;
 
         private Field GetFieldNoChecks(Coordinate fieldCoordinate)
-        {
-            var chunkCoordinate = fieldCoordinate / Chunk.ChunkSize;
-            var fieldInChunkCoordinate = fieldCoordinate % Chunk.ChunkSize;
-
-            return ChunkMatrix[chunkCoordinate].FieldMatrix[fieldInChunkCoordinate];
-        }
+            => ChunkMatrix[GetChunkCoordinate(fieldCoordinate)]
+                .FieldMatrix[GetFieldCoordinateInChunk(fieldCoordinate)];
 
         public Field? GetField(Coordinate fieldCoordinate)
             => fieldCoordinate.IsInside(SizeInFields) 
