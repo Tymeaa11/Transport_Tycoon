@@ -27,9 +27,23 @@ namespace VolcanicTransport_WPF.View
 
             DataContextChanged += (s, e) =>
             {
-                if (DataContext is Chunk chunkData)
-                    PreRender(chunkData);
+                if (e.OldValue is Chunk oldChunk)
+                {
+                    oldChunk.Changed -= OnChunkDataChanged;
+                }
+
+                if (e.NewValue is Chunk newChunk)
+                {
+                    newChunk.Changed += OnChunkDataChanged;
+                    Dispatcher.InvokeAsync(() => PreRender(newChunk));
+                }
             };
+        }
+
+        private void OnChunkDataChanged(object? sender, EventArgs e)
+        {
+            if (DataContext is Chunk chunkData)
+                Dispatcher.InvokeAsync(() => PreRender(chunkData));
         }
 
         public void PreRender(Chunk chunkData)
