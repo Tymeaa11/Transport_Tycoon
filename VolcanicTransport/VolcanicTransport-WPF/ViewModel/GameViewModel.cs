@@ -127,13 +127,6 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            // VisualChunk/ CacheMode = new BitmapCache(); sor engedélyezése csak saját felelősségre!
-            // Kikapcsolva nem zabálja meg a memóriát, cserébe kizoomolva durván laggol
-            // 
-            //GameModel.Initialise(1); // 48 MB
-            //GameModel.Initialise(10); // 474 MB
-            //GameModel.Initialise(20); // 1781 MB
-            //GameModel.Initialise(40); // ~ 8 GB // itt lenne szép a generálás :(
             GameModel.Initialise(8);
         }
 
