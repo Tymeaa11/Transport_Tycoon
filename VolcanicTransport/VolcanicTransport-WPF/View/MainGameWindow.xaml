@@ -141,18 +141,7 @@
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="0,0,0,0" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
             <StackPanel Orientation="Horizontal" >
                 <StackPanel.Resources>
-                    <Style TargetType="Label">
-                        <Setter Property="Height" Value="32" />
-                        <Setter Property="FontStretch" Value="Expanded"/>
-                        <Setter Property="FontWeight" Value="Bold"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Margin" Value="2,4,2,4"/>
-                        <Setter Property="Padding" Value="8"/>
-                        <Setter Property="Background" Value="#FFAFAFAF"/>
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                    </Style>
-                    <Style TargetType="Button">
+                    <Style TargetType="ToggleButton">
                         <Setter Property="Height" Value="32" />
                         <Setter Property="Width" Value="32" />
                         <Setter Property="FontStretch" Value="Expanded"/>
@@ -167,21 +156,29 @@
 
                 </StackPanel.Resources>
 
-                <Button Content="-">
-                    
-                </Button>
-
-                <Label Content="1000">
-                    
-                </Label>
-                
-                <Button Content="+">
-
-                </Button>
-
-
+                <ToggleButton Content="||" 
+                              Command="{Binding SetTimescale0Command}" 
+                              IsChecked="{Binding IsTimescale0, Mode=OneWay}">
+                </ToggleButton>
+                <ToggleButton Content="1x" 
+                              Command="{Binding SetTimescale1Command}" 
+                              IsChecked="{Binding IsTimescale1, Mode=OneWay}">
+                </ToggleButton>
+                <ToggleButton Content="2x" 
+                              Command="{Binding SetTimescale2Command}" 
+                              IsChecked="{Binding IsTimescale2, Mode=OneWay}">
+                </ToggleButton>
+                <ToggleButton Content="4x" 
+                              Command="{Binding SetTimescale4Command}" 
+                              IsChecked="{Binding IsTimescale4, Mode=OneWay}">
+                </ToggleButton>
 
             </StackPanel>
+        </Border>
+
+        <Border VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,0,0,0" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
+            <TextBlock Text ="{Binding CurrentMoney}" FontSize="16" Margin="4">
+            </TextBlock>
         </Border>
 
     </Grid>
