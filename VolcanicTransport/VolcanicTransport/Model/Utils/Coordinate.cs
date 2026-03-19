@@ -1,3 +1,6 @@
+using VolcanicTransport.Model.World;
+using static VolcanicTransport.Model.TerrainGeneration.FactoryAndCityGenerator;
+
 namespace VolcanicTransport.Model.Utils
 {
     public readonly struct Coordinate(int x, int y) : IEquatable<Coordinate>
@@ -15,6 +18,8 @@ namespace VolcanicTransport.Model.Utils
 
         public double Magnitude => Math.Sqrt(X * X + Y * Y);
 
+        public double Distance(Coordinate o) => (this-o).Magnitude;
+
         public bool IsInside(Coordinate topLeft, Coordinate bottomRight)
         => X >= topLeft.X && X < bottomRight.X && Y >= topLeft.Y && Y < bottomRight.Y;
 
@@ -25,6 +30,20 @@ namespace VolcanicTransport.Model.Utils
             => X >= 0 && X < bottomRight && Y >= 0 && Y < bottomRight;
 
         public override string ToString() => $"({X},{Y})";
+
+
+        public static List<Coordinate> GetArea(Coordinate topLeft, Coordinate topRight)
+        {
+            if (!topLeft.IsInside(topRight)) 
+                return [];
+
+            List<Coordinate> coords = [];
+            for (int y = topLeft.Y; y <= topRight.Y; y++)
+                for (int x = topLeft.X; x <= topRight.X; x++)
+                    coords.Add(new(x, y));
+
+            return coords;
+        }
 
 
         #region Equals & HashCode
@@ -39,8 +58,14 @@ namespace VolcanicTransport.Model.Utils
         public static Coordinate operator +(Coordinate c1, Coordinate c2)
             => new(c1.X + c2.X, c1.Y + c2.Y);
 
+        public static Coordinate operator +(Coordinate c1, int c)
+             => new(c1.X + c, c1.Y + c);
+
         public static Coordinate operator -(Coordinate c1, Coordinate c2)
             => new(c1.X - c2.X, c1.Y - c2.Y);
+
+        public static Coordinate operator -(Coordinate c1, int c)
+            => new(c1.X - c, c1.Y - c);
 
         public static Coordinate operator *(Coordinate c1, Coordinate c2)
             => new(c1.X * c2.X, c1.Y * c2.Y);
