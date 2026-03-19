@@ -23,9 +23,6 @@ namespace VolcanicTransport.Model.World
 
         public Coordinate Coordinate { get; set; }
 
-        public float Height { get; private set; }
-
-
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
         public ISurface? Surface { get; set; }
@@ -36,15 +33,10 @@ namespace VolcanicTransport.Model.World
 
         public Vehicle? ReservedBy { get; set; } = null;
 
-        public void SetFieldTypeToOtherFields(Field f)
-        {
-            Type = f.Type;
-        }
-
+        public void SetFieldTypeTo(Field f) => Type = f.Type;
         public void SetFieldHeight(float height)
         {
-            Height = height;
-            byte i = 0;
+            int i = 0;
             while (i < MaxFieldTypeHeights.Length && height > MaxFieldTypeHeights[i]) i++;
 
             Type = (FieldType)i;

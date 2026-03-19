@@ -11,8 +11,6 @@ namespace VolcanicTransport.Model
         private bool _isPaused;
         private readonly DateTime _currentTime;
         private readonly ISaveFileManager _savefileManager;
-        public List<Vehicle> Vehicles { get; set; } = [];
-
         public World.World WorldInstance { get => World.World.Instance; }
 
         public event EventHandler? moneyChanged;
@@ -41,7 +39,11 @@ namespace VolcanicTransport.Model
             World.World.Initialise(worldSize);
             _savefileManager = new SaveFileManager();
 
-            WorldInstance.GameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator(), new MushroomGenerator());
+            WorldInstance.GameWorldGenerator = new GameWorldGenerator(
+                new TerrainHeightGenerator(),
+                new MushroomGenerator(),
+                new FactoryAndCityGenerator(5, 10)
+                );
             WorldInstance.Generate();
         }
 
@@ -72,7 +74,7 @@ namespace VolcanicTransport.Model
         public void ChangeTimeSpeed2X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
         public void ChangeTimeSpeed4X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
 
-        public void Update(float deltaTime)
+        public void Update()
         {
             if (_isPaused) return;
             // Itt frissül a játékidő és a járművek mozgása
@@ -82,7 +84,7 @@ namespace VolcanicTransport.Model
         {
             if (TryPurchase(v.Price))
             {
-                Vehicles.Add(v);
+                WorldInstance.AddVehicle(v);
                 vehicleBought?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -91,10 +93,10 @@ namespace VolcanicTransport.Model
 
         public void SellVehicle(Vehicle v)
         {
-            if (Vehicles.Contains(v))
+            if (WorldInstance.HasVehicle(v))
             {
                 AddMoney(v.Price * 0.5);
-                Vehicles.Remove(v);
+                WorldInstance.RemoveVehicle(v);
                 vehicleSelled?.Invoke(this, EventArgs.Empty);
             }
         }

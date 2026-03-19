@@ -14,9 +14,10 @@ class Program
         Console.WriteLine(@"Creating preview at bin\Debug\net9.0\");
         World.Initialise(40);
         World.Instance.GameWorldGenerator = new GameWorldGenerator(
-                                                new TerrainHeightGenerator(),
-                                                new MushroomGenerator()
-                                            );
+            new TerrainHeightGenerator(),
+            new MushroomGenerator(),
+            new FactoryAndCityGenerator(5, 10)
+        );
         World.Instance.Generate();
 
         var fieldSize = 8;

@@ -2,17 +2,11 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Road(Coordinate coordinate) : KnowsNeighbour(coordinate)
+    public class Road(Coordinate coordinate, bool isPermanent = false) : KnowsNeighbour(coordinate)
     {
         #region fields
-        public bool IsPermanent { get; }
+        public bool IsPermanent { get; } = isPermanent;
         public RoadType RoadType { get; private set; }
-
-        #endregion
-        #region constructors
-        //public Road(Coordinate coordinate, bool isPermanent) : base(coordinate)
-        //    => IsPermanent = isPermanent;
-        // Nemtudom kelleni fog-e ez : VR
         #endregion
 
         #region methods
