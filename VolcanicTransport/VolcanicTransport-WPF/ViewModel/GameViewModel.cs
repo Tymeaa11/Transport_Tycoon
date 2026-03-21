@@ -4,6 +4,7 @@ using System.Windows.Media;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -12,6 +13,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public static GameModel GameModelInstance { get => GameModel.Instance; }
 
         public ObservableCollection<Chunk> LoadedChunks { get; } = [];
+
+        public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
 
         private double _lastWidth;
         private double _lastHeight;
@@ -71,6 +74,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale1Command { get; private set; }
         public DelegateCommand SetTimescale2Command { get; private set; }
         public DelegateCommand SetTimescale4Command { get; private set; }   
+
+        public DelegateCommand BuyVehicleCommand { get; private set; }
         #endregion
 
         #region FieldClicked & FieldHovered
@@ -85,9 +90,30 @@ namespace VolcanicTransport_WPF.ViewModel
 
             if (f != null && f.IsBuildable()) 
             {
-                f.Surface = new Mushroom(coord, MushroomGrowthStage.FULLY_GROWN);
-                var chunkCoord = GameModelInstance.WorldInstance.GetChunkCoordinate(coord);
-                GameModelInstance.WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
+                switch (CurrentBuildMode)
+                {
+                    case BuildMode.ROAD:
+                        if (GameModelInstance.PlaceRoad(coord))
+                        {
+                            System.Diagnostics.Debug.WriteLine("Road built!");
+                        }
+                        break;
+
+                    case BuildMode.STATION:
+                        GameModelInstance.PlaceStation(coord);
+                        break;
+                    case BuildMode.BUY_VEHICLE:
+                        var newBus = new Bus("buszocska", VolcanicTransport.Model.World.Economy.ProductType.HUMAN);
+                        if (GameModelInstance.BuyVehicle(newBus))
+                        {
+                            System.Diagnostics.Debug.WriteLine("Vehicle deployed!");
+                            CurrentBuildMode = BuildMode.NONE; 
+                        }
+                        break;
+                    case BuildMode.NONE:
+                        // Kijelölés vagy infó lekérés
+                        break;
+                }
 
             }
         }
@@ -138,18 +164,35 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimescale1Command = new DelegateCommand(_ => OnSetTimescale1X());
             SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
             SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
+            BuyVehicleCommand = new DelegateCommand(_ =>
+            {
+                Coordinate spawnPoint = new Coordinate(100, 100);
+                GameModelInstance.BuyVehicle(new Bus("buszocska", VolcanicTransport.Model.World.Economy.ProductType.HUMAN));
+            });
 
-            //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
-        }
-
-        private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
-        {
-            OnPropertyChanged(nameof(CurrentMoney));
         }
 
         public void Initialise()
         {
             GameModel.Initialise(8);
+
+            GameModelInstance.moneyChanged += (s, e) =>
+            {
+                Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(CurrentMoney)));
+            };
+
+            GameModelInstance.vehicleBought += (s, e) =>
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var newModelVehicle = GameModelInstance.WorldInstance.GetLatestVehicle();
+                    if (newModelVehicle != null)
+                    {
+                        var vvm = new VehicleViewModel(newModelVehicle);
+                        VehicleViewModels.Add(vvm);
+                    }
+                });
+            };
         }
 
         private BuildMode currentBuildMode = BuildMode.NONE;
@@ -200,7 +243,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public string CurrentMoney
         {
-            get => 1000.ToString() + "€$"; // TODO: get from model
+            get => GameModelInstance.PlayerMoney.ToString("F0") + " €$";
         }
         private void OnSetBuildMode(BuildMode mode)
         {

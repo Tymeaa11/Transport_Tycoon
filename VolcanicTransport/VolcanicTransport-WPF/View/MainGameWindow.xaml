@@ -55,6 +55,33 @@
             </ItemsControl.ItemContainerStyle>
         </ItemsControl>
 
+        <ItemsControl ItemsSource="{Binding VehicleViewModels}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas IsHitTestVisible="False">
+                        <Canvas.RenderTransform>
+                            <MatrixTransform Matrix="{Binding Camera.ProjectionMatrix}" />
+                        </Canvas.RenderTransform>
+                    </Canvas>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Canvas.Left" Value="{Binding PixelX}" />
+                    <Setter Property="Canvas.Top" Value="{Binding PixelY}" />
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Rectangle Width="24" Height="12" Fill="Red" Stroke="White" StrokeThickness="1" RadiusX="2" RadiusY="2">
+                        <Rectangle.RenderTransform>
+                            <TranslateTransform X="-12" Y="-6" />
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
 
         <Canvas IsHitTestVisible="False">
             <Canvas.RenderTransform>
@@ -88,49 +115,44 @@
         </Canvas>
 
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
-            <StackPanel Orientation="Horizontal" >
+            <StackPanel Orientation="Horizontal">
                 <StackPanel.Resources>
-                    <Style TargetType="ToggleButton">
-
+                    <Style x:Key="MenuButtonStyle" TargetType="ButtonBase">
                         <Setter Property="FontWeight" Value="Bold"/>
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="Margin" Value="2,4,2,4"/>
                         <Setter Property="Padding" Value="16"/>
                         <Setter Property="Background" Value="#FFAFAFAF"/>
-  
                     </Style>
-                   
+                    <Style TargetType="ToggleButton" BasedOn="{StaticResource MenuButtonStyle}"/>
+                    <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}"/>
                 </StackPanel.Resources>
 
+                <Button Content="Buy Truck (100$)" Command="{Binding BuyVehicleCommand}" />
                 <ToggleButton Content="road" 
-                              Command="{Binding SetBuildModeRoadCommand}" 
-                              IsChecked="{Binding IsBuildModeRoad, Mode=OneWay}">
+                      Command="{Binding SetBuildModeRoadCommand}" 
+                      IsChecked="{Binding IsBuildModeRoad, Mode=OneWay}">
                 </ToggleButton>
 
                 <ToggleButton Content="station" 
-                              Command="{Binding SetBuildModeStationCommand}" 
-                              IsChecked="{Binding IsBuildModeStation, Mode=OneWay}">
+                      Command="{Binding SetBuildModeStationCommand}" 
+                      IsChecked="{Binding IsBuildModeStation, Mode=OneWay}">
                 </ToggleButton>
 
                 <ToggleButton Content="bridge" 
-                              Command="{Binding SetBuildModeBridgeCommand}" 
-                              IsChecked="{Binding IsBuildModeBridge, Mode=OneWay}">
+                      Command="{Binding SetBuildModeBridgeCommand}" 
+                      IsChecked="{Binding IsBuildModeBridge, Mode=OneWay}">
                 </ToggleButton>
 
                 <ToggleButton Content="lower" 
-              Command="{Binding SetBuildModeLowerCommand}" 
-              IsChecked="{Binding IsBuildModeLower, Mode=OneWay}">
+                      Command="{Binding SetBuildModeLowerCommand}" 
+                      IsChecked="{Binding IsBuildModeLower, Mode=OneWay}">
                 </ToggleButton>
 
                 <ToggleButton Content="heighten" 
-              Command="{Binding SetBuildModeHeightenCommand}" 
-              IsChecked="{Binding IsBuildModeHeighten, Mode=OneWay}">
+                      Command="{Binding SetBuildModeHeightenCommand}" 
+                      IsChecked="{Binding IsBuildModeHeighten, Mode=OneWay}">
                 </ToggleButton>
-
-
-
-
-
             </StackPanel>
         </Border>
 

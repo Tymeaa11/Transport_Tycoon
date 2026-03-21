@@ -27,6 +27,8 @@ namespace VolcanicTransport.Model.World
         public GameWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
 
+        public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
+
         #endregion
 
         #region Instance
@@ -102,25 +104,56 @@ namespace VolcanicTransport.Model.World
         public void RemoveVehicle(Vehicle v) => Vehicles.Remove(v);
         public bool HasVehicle(Vehicle v) => Vehicles.Contains(v);
 
-        public void ActivateVehicle(Vehicle v)
-        {
-            if (!Vehicles.Contains(v)) return;
-            //v.Activate();
-        }
-
-        public void DeactivateVehicle(Vehicle v)
-        {
-            if (!Vehicles.Contains(v)) return;
-            //v.DeActivate();
-        }
+        #region Road Placement Logic
 
         public bool PlaceRoad(Coordinate c)
         {
+            Field? f = GetField(c);
 
+            if (f == null || !f.IsBuildable()) return false;
 
+            Road newRoad = new Road(c);
+            f.Surface = newRoad;
 
+            UpdateRoadNetworkAround(c);
 
             return true;
+        }
+
+        public void UpdateRoadNetworkAround(Coordinate c)
+        {
+            List<Coordinate> targets = new()
+            {
+                c,
+                c + Direction.North,
+                c + Direction.South,
+                c + Direction.East,
+                c + Direction.West
+            };
+
+            foreach (var coord in targets)
+            {
+                Field? field = GetField(coord);
+                if (field?.Surface is Road road)
+                {
+                    road.Update();
+
+                    var chunkCoord = GetChunkCoordinate(coord);
+                    GetChunk(chunkCoord)?.TriggerRerender();
+                }
+            }
+        }
+
+        #endregion
+
+        public void Update(double gameDt)
+        {
+            foreach (var vehicle in Vehicles.ToList())
+            {
+                vehicle.Update(gameDt);
+            }
+
+            // Itt jöhetnének késõbb az épületek frissítései (termelés, stb.)
         }
     }
 }

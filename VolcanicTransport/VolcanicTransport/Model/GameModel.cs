@@ -1,6 +1,7 @@
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
+using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model
@@ -8,9 +9,12 @@ namespace VolcanicTransport.Model
     public class GameModel
     {
         private double _playerMoney;
-        private bool _isPaused;
+        private bool _isPaused = false;
         private readonly DateTime _currentTime;
         private readonly ISaveFileManager _savefileManager;
+        private readonly ScalableTimer _gameTickTimer;
+
+        public double PlayerMoney {  get { return _playerMoney; } }
         public World.World WorldInstance { get => World.World.Instance; }
 
         public event EventHandler? moneyChanged;
@@ -45,6 +49,18 @@ namespace VolcanicTransport.Model
                 new FactoryAndCityGenerator(5, 10)
                 );
             WorldInstance.Generate();
+
+            _gameTickTimer = new ScalableTimer();
+            _gameTickTimer.TimeScale = 1;
+            _gameTickTimer.Elapsed += (s, e) => OnTimerTick();
+            _gameTickTimer.Start();
+            _playerMoney = 10000;
+        }
+
+        private void OnTimerTick()
+        {
+            if (_isPaused) return;
+            Update();
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
@@ -61,23 +77,25 @@ namespace VolcanicTransport.Model
         public void Pause()
         {
             _isPaused = true;
+            _gameTickTimer.Stop();
             gamePaused?.Invoke(this, EventArgs.Empty);
         }
 
         public void UnPause()
         {
             _isPaused = false;
+            _gameTickTimer.Start();
             gameUnpaused?.Invoke(this, EventArgs.Empty);
         }
 
-        public void ChangeTimeSpeed1X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
-        public void ChangeTimeSpeed2X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
-        public void ChangeTimeSpeed4X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
+        public void ChangeTimeSpeed1X() { _gameTickTimer.TimeScale = 1; timescaleChanged?.Invoke(this, EventArgs.Empty); }
+        public void ChangeTimeSpeed2X() { _gameTickTimer.TimeScale = 2; timescaleChanged?.Invoke(this, EventArgs.Empty); }
+        public void ChangeTimeSpeed4X() { _gameTickTimer.TimeScale = 4; timescaleChanged?.Invoke(this, EventArgs.Empty); }
 
         public void Update()
         {
-            if (_isPaused) return;
-            // Itt frissül a játékidő és a járművek mozgása
+            WorldInstance.Update(1.0);
+            gameAdvanced?.Invoke(this, EventArgs.Empty);
         }
 
         public bool BuyVehicle(Vehicle v)
@@ -101,7 +119,7 @@ namespace VolcanicTransport.Model
             }
         }
 
-        public bool TryPurchase(int amount)
+        public bool TryPurchase(double amount)
         {
             if (_playerMoney >= amount)
             {
@@ -136,5 +154,68 @@ namespace VolcanicTransport.Model
         }
 
         public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
+
+        public bool PlaceRoad(Coordinate coord)
+        {
+            const double roadPrice = 50;
+
+            if (IsBuildable(coord) && TryPurchase(roadPrice))
+            {
+                bool success = WorldInstance.PlaceRoad(coord);
+                if (success)
+                {
+                    roadBought?.Invoke(this, EventArgs.Empty);
+                    // Jelezzük a világnak, hogy frissítse a szomszédokat is!
+                    WorldInstance.UpdateRoadNetworkAround(coord);
+                    return true;
+                }
+                else
+                {
+                    AddMoney(roadPrice); // Ha a PlaceRoad mégis meghiúsulna, visszaadjuk a pénzt
+                }
+            }
+            return false;
+        }
+        public bool PlaceStation(Coordinate coord)
+        {
+            const int stationCost = 500;
+
+            if (!IsBuildable(coord) || _playerMoney < stationCost) return false;
+
+            bool nearRoad = false;
+            Coordinate[] directions = { Direction.North, Direction.South, Direction.East, Direction.West };
+
+            foreach (var dir in directions)
+            {
+                if (WorldInstance.GetField(coord + dir)?.Surface is Road)
+                {
+                    nearRoad = true;
+                    break;
+                }
+            }
+            if (!nearRoad) return false;
+
+            var city = WorldInstance.Cities.FirstOrDefault(c => c.CenterCoordinate.Distance(coord) <= 4);
+
+            var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 3);
+
+            Station? newStation = null;
+            if (city != null) newStation = new CityStation(city, coord, "CityStation");
+            if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
+
+            if (newStation != null && TryPurchase(stationCost))
+            {
+                WorldInstance.GetField(coord).Surface = newStation;
+                WorldInstance.Stations.Add(newStation);
+
+                var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
+                WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
+
+                return true;
+            }
+
+            return false;
+        }
+      
     }
 }

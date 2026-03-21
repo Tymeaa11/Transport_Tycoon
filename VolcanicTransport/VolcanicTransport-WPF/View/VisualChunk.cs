@@ -109,7 +109,7 @@ namespace VolcanicTransport_WPF.View
         private ImageWithRotation RenderFactoryBuilding()
             => new(TextureAtlas.FactoryBuildingTexture, 0);
         private ImageWithRotation RenderStation()
-            => new(TextureAtlas.FactoryBuildingTexture, 0);
+            => new(TextureAtlas.StationTexture, 0);
 
         protected override int VisualChildrenCount => 1;
         protected override Visual GetVisualChild(int index) => _visual;

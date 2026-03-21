@@ -62,7 +62,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             State = VehicleState.Moving;
         }
 
-        public void Update(float deltaTime)
+        public void Update(double deltaTime)
         {
             if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
 
@@ -80,15 +80,15 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             if (currentSpeed < targetSpeed)
             {
-                currentSpeed += 50.0f * deltaTime;
+                currentSpeed += 50.0f * (float)deltaTime;
                 if (currentSpeed > targetSpeed) currentSpeed = targetSpeed;
             }
             else if (currentSpeed > targetSpeed)
             {
-                currentSpeed -= 100.0f * deltaTime;
+                currentSpeed -= 100.0f * (float)deltaTime;
                 if (currentSpeed < targetSpeed) currentSpeed = targetSpeed;
             }
-            float distanceToTravel = (currentSpeed / 3.6f) * deltaTime;
+            float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
 
             while (distanceToTravel > 0)
             {
