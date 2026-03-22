@@ -8,6 +8,7 @@
         BRIDGE,
         LOWER,
         HEIGHTEN,
-        BUY_VEHICLE
+        BUY_VEHICLE,
+        SELECT_STATION
     }
 }

@@ -1,9 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
+using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport_WPF.ViewModel
@@ -15,6 +17,20 @@ namespace VolcanicTransport_WPF.ViewModel
         public ObservableCollection<Chunk> LoadedChunks { get; } = [];
 
         public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
+
+        private VehicleViewModel? _selectedVehicle;
+        public VehicleViewModel? SelectedVehicle
+        {
+            get => _selectedVehicle;
+            set
+            {
+                _selectedVehicle = value;
+                OnPropertyChanged(nameof(SelectedVehicle));
+                OnPropertyChanged(nameof(IsVehiclePanelVisible));
+            }
+        }
+
+        public bool IsVehiclePanelVisible => SelectedVehicle != null;
 
         private double _lastWidth;
         private double _lastHeight;
@@ -76,6 +92,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale4Command { get; private set; }   
 
         public DelegateCommand BuyVehicleCommand { get; private set; }
+
+        public DelegateCommand AddStopCommand { get; }
         #endregion
 
         #region FieldClicked & FieldHovered
@@ -84,37 +102,48 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
-            System.Diagnostics.Debug.WriteLine($"Chunks: {LoadedChunks.Count}");
-
             Field? f = GameModelInstance.WorldInstance.GetField(coord);
+            if (f == null) return;
 
-            if (f != null && f.IsBuildable()) 
+            if (CurrentBuildMode == BuildMode.SELECT_STATION)
+            {
+                System.Diagnostics.Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {f.Surface?.GetType().Name}");
+                if (f.Surface is Station clickedStation)
+                {
+                    if (SelectedVehicle != null)
+                    {
+                        var v = SelectedVehicle.GetVehicle;
+                        if (v != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Station megvan, küldöm a modellnek!");
+                            GameModelInstance.AddStopToVehicle(v, clickedStation);
+                        }
+                    }
+                    CurrentBuildMode = BuildMode.NONE;
+                }
+                return;
+            }
+
+            if (f.IsBuildable())
             {
                 switch (CurrentBuildMode)
                 {
                     case BuildMode.ROAD:
-                        if (GameModelInstance.PlaceRoad(coord))
-                        {
-                            System.Diagnostics.Debug.WriteLine("Road built!");
-                        }
+                        GameModelInstance.PlaceRoad(coord);
                         break;
 
                     case BuildMode.STATION:
                         GameModelInstance.PlaceStation(coord);
                         break;
+
                     case BuildMode.BUY_VEHICLE:
                         var newBus = new Bus("buszocska", VolcanicTransport.Model.World.Economy.ProductType.HUMAN);
                         if (GameModelInstance.BuyVehicle(newBus))
                         {
-                            System.Diagnostics.Debug.WriteLine("Vehicle deployed!");
-                            CurrentBuildMode = BuildMode.NONE; 
+                            CurrentBuildMode = BuildMode.NONE;
                         }
                         break;
-                    case BuildMode.NONE:
-                        // Kijelölés vagy infó lekérés
-                        break;
                 }
-
             }
         }
 
@@ -169,7 +198,19 @@ namespace VolcanicTransport_WPF.ViewModel
                 Coordinate spawnPoint = new Coordinate(100, 100);
                 GameModelInstance.BuyVehicle(new Bus("buszocska", VolcanicTransport.Model.World.Economy.ProductType.HUMAN));
             });
-
+            AddStopCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle != null)
+                {
+                    CurrentBuildMode = BuildMode.SELECT_STATION;
+                    System.Diagnostics.Debug.WriteLine("Válassz megállót a térképen!");
+                    System.Diagnostics.Debug.WriteLine($"Siker: Mód átváltva: {CurrentBuildMode}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
+                }
+            });
         }
 
         public void Initialise()
@@ -190,9 +231,12 @@ namespace VolcanicTransport_WPF.ViewModel
                     {
                         var vvm = new VehicleViewModel(newModelVehicle);
                         VehicleViewModels.Add(vvm);
+                        SelectedVehicle = vvm;
+                        System.Diagnostics.Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
                     }
                 });
             };
+            StartGameLoop();
         }
 
         private BuildMode currentBuildMode = BuildMode.NONE;
@@ -206,6 +250,8 @@ namespace VolcanicTransport_WPF.ViewModel
                     currentBuildMode = value;
                     OnPropertyChanged(nameof(IsBuildModeRoad));
                     OnPropertyChanged(nameof(IsBuildModeStation));
+                    OnPropertyChanged(nameof(IsBuildModeBuyVehicle));
+                    OnPropertyChanged(nameof(IsBuildModeSelectStation));
                     OnPropertyChanged(nameof(IsBuildModeBridge));
                     OnPropertyChanged(nameof(IsBuildModeLower));
                     OnPropertyChanged(nameof(IsBuildModeHeighten));
@@ -232,6 +278,10 @@ namespace VolcanicTransport_WPF.ViewModel
         }
         public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
         public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
+
+        public bool IsBuildModeSelectStation => CurrentBuildMode == BuildMode.SELECT_STATION;
+
+        public bool IsBuildModeBuyVehicle => CurrentBuildMode == BuildMode.BUY_VEHICLE;
         public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
@@ -244,6 +294,19 @@ namespace VolcanicTransport_WPF.ViewModel
         public string CurrentMoney
         {
             get => GameModelInstance.PlayerMoney.ToString("F0") + " €$";
+        }
+
+        private DispatcherTimer _gameLoop;
+
+        public void StartGameLoop()
+        {
+            _gameLoop = new DispatcherTimer();
+            _gameLoop.Interval = TimeSpan.FromMilliseconds(16); // Kb. 60 FPS
+            _gameLoop.Tick += (s, e) =>
+            {
+                GameModelInstance.Update();
+            };
+            _gameLoop.Start();
         }
         private void OnSetBuildMode(BuildMode mode)
         {

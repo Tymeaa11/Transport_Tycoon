@@ -10,6 +10,18 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         {
             Paths = new Dictionary<string, List<Vector2>>
             {
+
+                ["North_To_End"] = [new Vector2(24, 0), new Vector2(24, 32)], // Fentről jön, középen megáll
+                ["South_To_End"] = [new Vector2(40, 64), new Vector2(40, 32)], // Lentről jön, középen megáll
+                ["West_To_End"] = [new Vector2(0, 40), new Vector2(32, 40)], // Balról jön, középen megáll
+                ["East_To_End"] = [new Vector2(64, 24), new Vector2(32, 24)], // Jobbról jön, középen megáll
+
+
+                ["Start_To_North"] = [new Vector2(40, 32), new Vector2(40, 0)],
+                ["Start_To_South"] = [new Vector2(24, 32), new Vector2(24, 64)],
+                ["Start_To_East"] = [new Vector2(32, 40), new Vector2(64, 40)],
+                ["Start_To_West"] = [new Vector2(32, 24), new Vector2(0, 24)],
+
                 // ==========================================
                 // 1. EGYENESEK (Kereszteződésen is áthaladva)
                 // ==========================================

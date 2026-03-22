@@ -22,6 +22,7 @@
         <view:ChunkToPixelConverter x:Key="ChunkToPixelConverter" />
         <view:FieldToPixelConverter x:Key="FieldToPixelConverter" />
         <view:BuildabilityToColorConverter x:Key="BuildabilityToColorConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
 
     <Grid x:Name="ViewPort" ClipToBounds="True">
@@ -114,6 +115,32 @@
             </Rectangle>
         </Canvas>
 
+        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+        Width="180" Margin="0,0,20,0" Padding="15"
+        Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5"
+        Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel>
+                <TextBlock Text="{Binding SelectedVehicle.GetName}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+                <Separator Margin="0,0,0,10"/>
+
+                <StackPanel TextBlock.FontSize="13">
+                    <TextBlock Text="{Binding SelectedVehicle.StateDisplay, StringFormat='State: {0}'}" Foreground="DarkBlue" Margin="0,3"/>
+                    <TextBlock Text="{Binding SelectedVehicle.Type, StringFormat='Product type: {0}'}" Margin="0,3"/>
+                    <TextBlock Text="{Binding SelectedVehicle.SpeedDisplay, StringFormat='Max speed: {0}'}" Margin="0,3"/>
+                    <TextBlock Text="{Binding SelectedVehicle.GetCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                </StackPanel>
+
+                <UniformGrid Columns="1" Margin="0,15,0,0">
+                    <Button Content="Add stop" 
+                    Command="{Binding AddStopCommand}" 
+                    Margin="0,2" Padding="5"/>
+
+                    <Button Content="Remove stop" Margin="0,2" Padding="5"/>
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
             <StackPanel Orientation="Horizontal">
                 <StackPanel.Resources>
@@ -128,7 +155,7 @@
                     <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}"/>
                 </StackPanel.Resources>
 
-                <Button Content="Buy Truck (100$)" Command="{Binding BuyVehicleCommand}" />
+                <Button Content="Buy Bus (4000$)" Command="{Binding BuyVehicleCommand}" />
                 <ToggleButton Content="road" 
                       Command="{Binding SetBuildModeRoadCommand}" 
                       IsChecked="{Binding IsBuildModeRoad, Mode=OneWay}">

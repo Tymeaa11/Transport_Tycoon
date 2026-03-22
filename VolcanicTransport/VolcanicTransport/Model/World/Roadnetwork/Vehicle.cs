@@ -12,13 +12,18 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public int Price { get; } = price;
         protected Route? route = null;
 
+        public Route? Route { get { return route; } set { route = value; } }
+
         protected float currentSpeed = 0;
         protected float maxSpeed = maxSpeed;
-        protected int Capacity = capacity;
+        protected int capacity = capacity;
+
+        public float MaxSpeed { get { return maxSpeed; } }
+        public int Capacity { get { return capacity; } }
 
         protected int maintenanceCost = (int)(price * 0.05);
         protected bool active = false;
-        public VehicleState State { get; protected set; } = VehicleState.Moving;
+        public VehicleState State { get; protected set; } = VehicleState.Waiting;
 
         protected List<Field> currentPath = [];
         protected int currentPathIndex;
@@ -43,7 +48,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public void StartJourney(List<Field> path)
         {
-            if (currentEdge == null || route == null) return;
+            if (route == null) return;
             if (path == null || path.Count == 0) return;
 
             currentPath = path;
@@ -62,62 +67,92 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             State = VehicleState.Moving;
         }
 
+        protected double waitTimer = 0;
+        protected const double LOAD_TIME = 2.0;
+
         public void Update(double deltaTime)
         {
-            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
-
-            float targetSpeed = maxSpeed;
-            Vehicle? vehicleAhead = GetVehicleAhead();
-
-            if (vehicleAhead != null)
             {
-                float distanceToFront = Vector2.Distance(this.VisualPosition, vehicleAhead.VisualPosition);
-                if (distanceToFront < 20.0f)
+                if (State == VehicleState.Loading)
                 {
-                    targetSpeed = Math.Min(targetSpeed, vehicleAhead.currentSpeed);
-                }
-            }
+                    currentSpeed = 0;
+                    waitTimer += deltaTime;
 
-            if (currentSpeed < targetSpeed)
-            {
-                currentSpeed += 50.0f * (float)deltaTime;
-                if (currentSpeed > targetSpeed) currentSpeed = targetSpeed;
-            }
-            else if (currentSpeed > targetSpeed)
-            {
-                currentSpeed -= 100.0f * (float)deltaTime;
-                if (currentSpeed < targetSpeed) currentSpeed = targetSpeed;
-            }
-            float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
-
-            while (distanceToTravel > 0)
-            {
-                if (currentWaypointIndex >= currentWaypoints.Count)
-                {
-                    if (!TryTransitionToNextField())
+                    if (waitTimer >= LOAD_TIME)
                     {
-                        currentSpeed = 0;
-                        break;
+                        waitTimer = 0;
+                        if (currentPathIndex + 1 < currentPath.Count)
+                        {
+                            State = VehicleState.Moving;
+                        }
+                        else
+                        {
+                            HandleRouteCycle();
+                        }
+                    }
+                    return;
+                }
+                if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
+
+                float targetSpeed = maxSpeed;
+                Vehicle? vehicleAhead = GetVehicleAhead();
+
+                if (vehicleAhead != null)
+                {
+                    float distanceToFront = Vector2.Distance(this.VisualPosition, vehicleAhead.VisualPosition);
+                    if (distanceToFront < 20.0f)
+                    {
+                        targetSpeed = Math.Min(targetSpeed, vehicleAhead.currentSpeed);
                     }
                 }
 
-                Vector2 targetWaypoint = currentWaypoints[currentWaypointIndex];
-                Vector2 direction = new(targetWaypoint.X - VisualPosition.X, targetWaypoint.Y - VisualPosition.Y);
-                float distanceToWaypoint = direction.Length();
-
-                if (distanceToTravel >= distanceToWaypoint)
+                if (currentSpeed < targetSpeed)
                 {
-                    VisualPosition = targetWaypoint;
-                    distanceToTravel -= distanceToWaypoint;
-                    currentWaypointIndex++;
+                    currentSpeed += 50.0f * (float)deltaTime;
+                    if (currentSpeed > targetSpeed) currentSpeed = targetSpeed;
                 }
-                else
+                else if (currentSpeed > targetSpeed)
                 {
-                    direction = Vector2.Normalize(direction);
-                    VisualPosition += direction * distanceToTravel;
-                    distanceToTravel = 0f;
+                    currentSpeed -= 100.0f * (float)deltaTime;
+                    if (currentSpeed < targetSpeed) currentSpeed = targetSpeed;
+                }
+                float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
+
+                while (distanceToTravel > 0)
+                {
+                    if (currentWaypointIndex >= currentWaypoints.Count)
+                    {
+                        if (!TryTransitionToNextField())
+                        {
+                            currentSpeed = 0;
+                            break;
+                        }
+                    }
+
+                    Vector2 targetWaypoint = currentWaypoints[currentWaypointIndex];
+                    Vector2 direction = new(targetWaypoint.X - VisualPosition.X, targetWaypoint.Y - VisualPosition.Y);
+                    float distanceToWaypoint = direction.Length();
+
+                    if (distanceToTravel >= distanceToWaypoint)
+                    {
+                        VisualPosition = targetWaypoint;
+                        distanceToTravel -= distanceToWaypoint;
+                        currentWaypointIndex++;
+                    }
+                    else
+                    {
+                        direction = Vector2.Normalize(direction);
+                        VisualPosition += direction * distanceToTravel;
+                        distanceToTravel = 0f;
+                    }
                 }
             }
+        }
+
+        private void HandleRouteCycle()
+        {
+            
+            
         }
 
         private bool TryTransitionToNextField()
@@ -237,7 +272,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public int Load(int amount)
         {
-            int spaceLeft = Capacity - CurrentLoad;
+            int spaceLeft = capacity - CurrentLoad;
             int taken = Math.Min(amount, spaceLeft);
             CurrentLoad += taken;
             return taken;

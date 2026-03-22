@@ -165,13 +165,18 @@ namespace VolcanicTransport.Model
                 if (success)
                 {
                     roadBought?.Invoke(this, EventArgs.Empty);
-                    // Jelezzük a világnak, hogy frissítse a szomszédokat is!
                     WorldInstance.UpdateRoadNetworkAround(coord);
+                    Field? f = WorldInstance.GetField(coord);
+                    if (f != null) 
+                    {
+                        WorldInstance.Roadnetwork.RegisterNodeIfNeeded(f);
+                        WorldInstance.Roadnetwork.RebuildEdges();
+                    }
                     return true;
                 }
                 else
                 {
-                    AddMoney(roadPrice); // Ha a PlaceRoad mégis meghiúsulna, visszaadjuk a pénzt
+                    AddMoney(roadPrice);
                 }
             }
             return false;
@@ -208,6 +213,10 @@ namespace VolcanicTransport.Model
                 WorldInstance.GetField(coord).Surface = newStation;
                 WorldInstance.Stations.Add(newStation);
 
+                var field = WorldInstance.GetField(coord);
+                WorldInstance.Roadnetwork.RegisterNodeIfNeeded(field);
+                WorldInstance.Roadnetwork.RebuildEdges();
+
                 var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
                 WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
@@ -216,6 +225,43 @@ namespace VolcanicTransport.Model
 
             return false;
         }
-      
+
+        public void AddStopToVehicle(Vehicle v, Station s)
+        {
+
+            if (v.Route == null) v.Route = new Route();
+
+            v.Route.AddStop(s);
+            System.Diagnostics.Debug.WriteLine($"Megálló hozzáadva: {s.Coordinate}. Összesen: {v.Route.Stops.Count}");
+
+            if (v.Route.Stops.Count < 2)
+            {
+                System.Diagnostics.Debug.WriteLine("Várakozás a második megállóra...");
+                return;
+            }
+            System.Diagnostics.Debug.WriteLine("Két megálló megvan, gráf frissítése...");
+
+            var graph = WorldInstance.Roadnetwork;
+            graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
+            graph.RegisterNodeIfNeeded(s.Field);
+            graph.RebuildEdges();
+
+            if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
+                graph.NodeMap.TryGetValue(s.Field, out var targetNode))
+            {
+                var path = Pathfinder.FindPath(startNode, targetNode);
+                if (path != null && path.Count > 0)
+                {
+                    v.StartJourney(path);
+                    System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
+                }
+            }
+            
+        }
+
     }
 }

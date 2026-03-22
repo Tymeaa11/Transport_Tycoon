@@ -1,3 +1,5 @@
+using VolcanicTransport.Model.World.Economy;
+
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public class RoadNetworkGraph
@@ -5,14 +7,15 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public Dictionary<Field, RoadNode> NodeMap { get; private set; } = [];
         public void RegisterNodeIfNeeded(Field field)
         {
-            if (field.Surface is Road road)
+            if (field.Surface == null) return;
+
+            bool isStation = field.Surface is Station;
+            bool isJunction = field.Surface is Road road && road.RoadType.HasFlag(RoadType.JUNCTION);
+
+            if ((isStation || isJunction) && !NodeMap.ContainsKey(field))
             {
-                bool isJunction = road.RoadType.HasFlag(RoadType.JUNCTION);
-                bool isStation = field.HasStation;
-                if ((isJunction || isStation) && !NodeMap.ContainsKey(field))
-                {
-                    NodeMap.Add(field, new RoadNode(field, isStation));
-                }
+                NodeMap.Add(field, new RoadNode(field, isStation));
+                System.Diagnostics.Debug.WriteLine($"Siker: Node regisztrálva a gráfba: {field.Coordinate} (Típus: {field.Surface.GetType().Name})");
             }
         }
         public void RebuildEdges()
