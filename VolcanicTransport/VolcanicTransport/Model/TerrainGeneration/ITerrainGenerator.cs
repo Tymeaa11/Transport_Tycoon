@@ -6,6 +6,6 @@ namespace VolcanicTransport.Model.TerrainGeneration
     {
         public void ModifyField(Field field, int x, int y);
         // Implementing SetSeed is optional
-        public void SetSeed(int seed) {}
+        public void SetSeed(int seed) { }
     }
 }

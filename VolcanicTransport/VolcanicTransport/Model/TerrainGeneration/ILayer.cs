@@ -3,8 +3,9 @@ namespace VolcanicTransport.Model.TerrainGeneration
     public interface ILayer
     {
         public float Get(float x, float y);
-        
+
         // Implementing SetSeed is optional
-        public void SetSeed(int seed) {}
+        // TODO : SetSeed currently does useless work, doesn't update offsetX, offsetY
+        public void SetSeed(int seed) { }
     }
 }

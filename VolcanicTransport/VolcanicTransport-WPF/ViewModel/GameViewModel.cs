@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
-using VolcanicTransport_WPF.View;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -18,7 +11,7 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
 
-        public ObservableCollection<Chunk> LoadedChunks { get; } = new ObservableCollection<Chunk>();
+        public ObservableCollection<Chunk> LoadedChunks { get; } = [];
 
         private double _lastWidth;
         private double _lastHeight;
@@ -37,10 +30,10 @@ namespace VolcanicTransport_WPF.ViewModel
             // Get visible chunk coordinates (+1 buffer)
             int chunkPX = Chunk.ChunkSize * Field.FieldSize;
 
-            int startX = (int)Math.Floor(bounds.Left     / chunkPX) - 1;
-            int endX   = (int)Math.Ceiling(bounds.Right  / chunkPX) + 1;
-            int startY = (int)Math.Floor(bounds.Top      / chunkPX) - 1;
-            int endY   = (int)Math.Ceiling(bounds.Bottom / chunkPX) + 1;
+            int startX = (int)Math.Floor(bounds.Left / chunkPX) - 1;
+            int endX = (int)Math.Ceiling(bounds.Right / chunkPX) + 1;
+            int startY = (int)Math.Floor(bounds.Top / chunkPX) - 1;
+            int endY = (int)Math.Ceiling(bounds.Bottom / chunkPX) + 1;
 
             HashSet<Coordinate> visibleCoords = [];
 
@@ -48,7 +41,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 for (int y = startY; y <= endY; y++)
                     if (x >= 0 && x < WorldSizeInChunks.X && y >= 0 && y < WorldSizeInChunks.Y)
                         visibleCoords.Add(new Coordinate(x, y));
-                
+
 
             // 1. Remove if outside
             var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();
@@ -69,17 +62,15 @@ namespace VolcanicTransport_WPF.ViewModel
         public Camera Camera { get; }
 
         #region Commands
-        /*
-        public DelegateCommand DecreaseTimeScaleCommand {get; private set; }
-        public DelegateCommand IncreaseTimeScaleCommand {get; private set; }
-        public DelegateCommand BuildRoadCommand {get; private set; }
-        public DelegateCommand BuildBridgeCommand {get; private set; }
-        public DelegateCommand BuildStationCommand {get; private set; }
-        public DelegateCommand BuyVehicleCommand {get; private set; }
-        public DelegateCommand SellVehicleCommand {get; private set; }
-        public DelegateCommand LowerTerrainCommand {get; private set; }
-        public DelegateCommand HeightenTerrainCommand { get; private set; }
-        */
+        public DelegateCommand SetBuildModeRoadCommand { get; private set; }
+        public DelegateCommand SetBuildModeStationCommand { get; private set; }
+        public DelegateCommand SetBuildModeBridgeCommand { get; private set; }
+        public DelegateCommand SetBuildModeLowerCommand { get; private set; }
+        public DelegateCommand SetBuildModeHeightenCommand { get; private set; }
+        public DelegateCommand SetTimescale0Command { get; private set; }
+        public DelegateCommand SetTimescale1Command { get; private set; }
+        public DelegateCommand SetTimescale2Command { get; private set; }
+        public DelegateCommand SetTimescale4Command { get; private set; }   
         #endregion
 
         #region FieldClicked & FieldHovered
@@ -89,6 +80,16 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
             System.Diagnostics.Debug.WriteLine($"Chunks: {LoadedChunks.Count}");
+
+            Field? f = GameModelInstance.WorldInstance.GetField(coord);
+
+            if (f != null && f.IsBuildable()) 
+            {
+                f.Surface = new Mushroom(coord, MushroomGrowthStage.FULLY_GROWN);
+                var chunkCoord = GameModelInstance.WorldInstance.GetChunkCoordinate(coord);
+                GameModelInstance.WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
+
+            }
         }
 
         private Coordinate _hoveredCoordinate;
@@ -128,20 +129,27 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (param is Coordinate coord)
                     OnFieldClicked(coord);
             });
-            SetRoadModeCommand = new DelegateCommand(_ => OnSetRoadMode());
+            SetBuildModeRoadCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.ROAD));
+            SetBuildModeStationCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.STATION));
+            SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
+            SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
+            SetBuildModeHeightenCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.HEIGHTEN));
+            SetTimescale0Command = new DelegateCommand(_ => OnSetTimescale0X());
+            SetTimescale1Command = new DelegateCommand(_ => OnSetTimescale1X());
+            SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
+            SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
+
+            //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
         }
 
+        private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(CurrentMoney));
+        }
 
         public void Initialise()
         {
-            // VisualChunk/ CacheMode = new BitmapCache(); sor engedélyezése csak saját felelősségre!
-            // Kikapcsolva nem zabálja meg a memóriát, cserébe kizoomolva durván laggol
-            // 
-            //GameModel.Initialise(1); // 48 MB
-            //GameModel.Initialise(10); // 474 MB
-            //GameModel.Initialise(20); // 1781 MB
-            //GameModel.Initialise(40); // ~ 8 GB // itt lenne szép a generálás :(
-            GameModel.Initialise(20);
+            GameModel.Initialise(8);
         }
 
         private BuildMode currentBuildMode = BuildMode.NONE;
@@ -153,25 +161,83 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (currentBuildMode != value)
                 {
                     currentBuildMode = value;
-                    OnPropertyChanged(nameof(IsRoadModeActive));
+                    OnPropertyChanged(nameof(IsBuildModeRoad));
+                    OnPropertyChanged(nameof(IsBuildModeStation));
+                    OnPropertyChanged(nameof(IsBuildModeBridge));
+                    OnPropertyChanged(nameof(IsBuildModeLower));
+                    OnPropertyChanged(nameof(IsBuildModeHeighten));
                 }
             }
         }
 
-        public bool IsRoadModeActive => CurrentBuildMode == BuildMode.ROAD;
-
-        public DelegateCommand SetRoadModeCommand { get; private set; }
-
-        private void OnSetRoadMode()
+        private int currentTimescale;
+        public int CurrentTimescale
         {
-            if (CurrentBuildMode == BuildMode.ROAD)
+            get => currentTimescale;
+            set
             {
-                CurrentBuildMode = BuildMode.ROAD;
+                if (currentTimescale != value)
+                {
+                    currentTimescale = value;
+                    OnPropertyChanged(nameof(IsTimescale0));
+                    OnPropertyChanged(nameof(IsTimescale1));
+                    OnPropertyChanged(nameof(IsTimescale2));
+                    OnPropertyChanged(nameof(IsTimescale4));
+                }
+
+            }
+        }
+        public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
+        public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
+        public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
+        public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
+        public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
+
+        public bool IsTimescale0 => CurrentTimescale == 0;
+        public bool IsTimescale1 => CurrentTimescale == 1;
+        public bool IsTimescale2 => CurrentTimescale == 2;
+        public bool IsTimescale4 => CurrentTimescale == 4;
+
+        public string CurrentMoney
+        {
+            get => 1000.ToString() + "€$"; // TODO: get from model
+        }
+        private void OnSetBuildMode(BuildMode mode)
+        {
+            if (CurrentBuildMode == mode)
+            {
+                CurrentBuildMode = BuildMode.NONE;
             }
             else
             {
-                CurrentBuildMode = BuildMode.ROAD;
+                CurrentBuildMode = mode;
             }
+            
+        }
+
+        private void OnSetTimescale0X()
+        {
+            CurrentTimescale = 0;
+            GameModelInstance.Pause();
+
+        }
+
+        private void OnSetTimescale1X()
+        {
+            CurrentTimescale = 1;
+            GameModelInstance.ChangeTimeSpeed1X();
+        }
+
+        private void OnSetTimescale2X()
+        {
+            CurrentTimescale = 2;
+            GameModelInstance.ChangeTimeSpeed2X();
+        }
+
+        private void OnSetTimescale4X()
+        {
+            CurrentTimescale = 4;
+            GameModelInstance.ChangeTimeSpeed4X();
         }
 
 

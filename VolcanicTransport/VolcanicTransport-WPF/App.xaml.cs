@@ -1,7 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-using VolcanicTransport.Model;
+﻿using System.Windows;
 using VolcanicTransport_WPF.View;
 using VolcanicTransport_WPF.ViewModel;
 
@@ -22,11 +19,15 @@ namespace VolcanicTransport_WPF
 
         private void App_Startup(object sender, StartupEventArgs e)
         {
-            _gameViewModel = new GameViewModel();
+            TextureAtlas.Initialize("Assets/Atlas.png");
+            _gameViewModel = new();
             _gameViewModel.Initialise();
 
-            _mainGameWindow = new MainGameWindow();
-            _mainGameWindow.DataContext = _gameViewModel;
+            _mainGameWindow = new()
+            {
+                DataContext = _gameViewModel
+            };
+
             _mainGameWindow.Show();
         }
     }

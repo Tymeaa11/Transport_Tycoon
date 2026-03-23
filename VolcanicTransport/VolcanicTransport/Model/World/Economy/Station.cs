@@ -3,31 +3,22 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public abstract class Station : KnowsNeighbour
+    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
     {
-        protected string name;
-        protected ProductBuffer passangerBuffer;
-        protected Vehicle? vehicle;
-        protected Product PassengerDemand;
-
-
-        public Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : base(coordinate)
-        {
-            this.name = name;
-            this.passangerBuffer = passangerBuffer;
-            this.vehicle = null;
-            PassengerDemand = passengerDemand;
-        }
+        protected string name = name;
+        protected ProductBuffer passangerBuffer = passangerBuffer;
+        protected Vehicle? vehicle = null;
+        protected Product PassengerDemand = passengerDemand;
 
         public abstract bool UnLoadProductFromVehicle();
         public bool Boarding()
         {
-            if (vehicle == null || vehicle.getType() != ProductType.HUMAN)
+            if (vehicle == null || vehicle.Type != ProductType.HUMAN)
             {
                 return false;
             }
 
-            int waitingPassengers = passangerBuffer.CurrentLoad();
+            int waitingPassengers = passangerBuffer.CurrentLoad;
 
             if (waitingPassengers == 0)
             {
@@ -43,7 +34,7 @@ namespace VolcanicTransport.Model.World.Economy
 
         public bool UnBoarding()
         {
-            if (vehicle == null || vehicle.getType() != ProductType.HUMAN) { return false; }
+            if (vehicle == null || vehicle.Type != ProductType.HUMAN) { return false; }
 
             //vehicle.UnBoard() //TODO//
 

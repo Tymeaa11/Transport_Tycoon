@@ -1,10 +1,8 @@
-using System.Linq.Expressions;
-
 namespace VolcanicTransport.Model.Utils
 {
     public class SquareMatrixIterator<T>(int size)
     {
-        
+
         private readonly T[,] _matrix = new T[size, size];
         public int Size => size;
 
@@ -31,7 +29,7 @@ namespace VolcanicTransport.Model.Utils
                 for (var x = 0; x < Size; x++)
                     _matrix[y, x] = func(x, y, _matrix[y, x]);
         }
-        
+
         public void SetEach(Func<int, int, T> func)
         {
             for (var y = 0; y < Size; y++)

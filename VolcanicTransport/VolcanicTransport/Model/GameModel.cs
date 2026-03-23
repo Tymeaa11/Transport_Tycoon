@@ -7,12 +7,10 @@ namespace VolcanicTransport.Model
 {
     public class GameModel
     {
-        private double playerMoney;
-        private bool isPaused;
-        private DateTime currentTime;
-        private ISaveFileManager savefileManager;
-        public List<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
-
+        private double _playerMoney;
+        private bool _isPaused;
+        private readonly DateTime _currentTime;
+        private readonly ISaveFileManager _savefileManager;
         public World.World WorldInstance { get => World.World.Instance; }
 
         public event EventHandler? moneyChanged;
@@ -39,9 +37,13 @@ namespace VolcanicTransport.Model
         private GameModel(int worldSize)
         {
             World.World.Initialise(worldSize);
-            savefileManager = new SaveFileManager();
+            _savefileManager = new SaveFileManager();
 
-            WorldInstance.gameWorldGenerator = new GameWorldGenerator(new TerrainHeightGenerator());
+            WorldInstance.GameWorldGenerator = new GameWorldGenerator(
+                new TerrainHeightGenerator(),
+                new MushroomGenerator(),
+                new FactoryAndCityGenerator(5, 10)
+                );
             WorldInstance.Generate();
         }
 
@@ -58,13 +60,13 @@ namespace VolcanicTransport.Model
 
         public void Pause()
         {
-            isPaused = true;
+            _isPaused = true;
             gamePaused?.Invoke(this, EventArgs.Empty);
         }
 
         public void UnPause()
         {
-            isPaused = false;
+            _isPaused = false;
             gameUnpaused?.Invoke(this, EventArgs.Empty);
         }
 
@@ -72,17 +74,17 @@ namespace VolcanicTransport.Model
         public void ChangeTimeSpeed2X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
         public void ChangeTimeSpeed4X() { /* Időkezelő logika */ timescaleChanged?.Invoke(this, EventArgs.Empty); }
 
-        public void Update(float deltaTime)
+        public void Update()
         {
-            if (isPaused) return;
+            if (_isPaused) return;
             // Itt frissül a játékidő és a járművek mozgása
         }
 
         public bool BuyVehicle(Vehicle v)
         {
-            if (TryPurchase(v.Price()))
+            if (TryPurchase(v.Price))
             {
-                Vehicles.Add(v);
+                WorldInstance.AddVehicle(v);
                 vehicleBought?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -91,19 +93,19 @@ namespace VolcanicTransport.Model
 
         public void SellVehicle(Vehicle v)
         {
-            if (Vehicles.Contains(v))
+            if (WorldInstance.HasVehicle(v))
             {
-                AddMoney(v.Price() * 0.5);
-                Vehicles.Remove(v);
+                AddMoney(v.Price * 0.5);
+                WorldInstance.RemoveVehicle(v);
                 vehicleSelled?.Invoke(this, EventArgs.Empty);
             }
         }
 
         public bool TryPurchase(int amount)
         {
-            if (playerMoney >= amount)
+            if (_playerMoney >= amount)
             {
-                playerMoney -= amount;
+                _playerMoney -= amount;
                 moneyChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
@@ -112,7 +114,7 @@ namespace VolcanicTransport.Model
 
         public void AddMoney(double amount)
         {
-            playerMoney += amount;
+            _playerMoney += amount;
             moneyChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -127,7 +129,7 @@ namespace VolcanicTransport.Model
 
         private void CheckBankruptcy()
         {
-            if (playerMoney < 0)
+            if (_playerMoney < 0)
             {
                 gameOver?.Invoke(this, EventArgs.Empty);
             }
