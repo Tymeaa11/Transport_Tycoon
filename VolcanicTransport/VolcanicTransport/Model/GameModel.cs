@@ -294,7 +294,6 @@ namespace VolcanicTransport.Model
                 WorldInstance.Stations.Add(newStation);
 
                 WorldInstance.Roadnetwork.RegisterNodeIfNeeded(coord);
-                WorldInstance.Roadnetwork.RebuildEdges();
 
                 var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
                 WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();

@@ -19,17 +19,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 NodeMap.Add(surface, new RoadNode(coord, isStation));
                 System.Diagnostics.Debug.WriteLine($"Siker: Node regisztrálva a gráfba: {coord} (Típus: {surface.GetType().Name})");
+                RebuildEdges();
             }
         }
         public void RebuildEdges()
         {
             System.Diagnostics.Debug.WriteLine($"--- GRÁF ÉPÍTÉS INDUL (Csomópontok száma: {NodeMap.Count}) ---");
 
-            if (NodeMap.Count < 2)
-            {
-                System.Diagnostics.Debug.WriteLine("HIBA: Nincs elég csomópont a gráfban! (Regisztráltad az állomásokat/kereszteződéseket?)");
-                return;
-            }
+            if (NodeMap.Count < 2) return;
 
             foreach (KeyValuePair<KnowsNeighbour, RoadNode> kvp in NodeMap)
             {
@@ -38,67 +35,63 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
                 System.Diagnostics.Debug.WriteLine($"Vizsgálom a csomópontot: {node.Coordinate} (Típus: {kvp.Key.GetType().Name})");
 
-                if (node.North?.Surface is KnowsNeighbour n && IsValidPathSurface(n)) ExploreAndConnect(node, n, "Észak");
-                if (node.South?.Surface is KnowsNeighbour s && IsValidPathSurface(s)) ExploreAndConnect(node, s, "Dél");
-                if (node.East?.Surface is KnowsNeighbour e && IsValidPathSurface(e)) ExploreAndConnect(node, e, "Kelet");
-                if (node.West?.Surface is KnowsNeighbour w && IsValidPathSurface(w)) ExploreAndConnect(node, w, "Nyugat");
-
-                System.Diagnostics.Debug.WriteLine($"  -> Kész. Talált élek száma: {node.Edges.Count}");
+                if (node.North?.Surface is KnowsNeighbour n && IsValidPathSurface(n)) StartTrace(node, n, kvp.Key);
+                if (node.South?.Surface is KnowsNeighbour s && IsValidPathSurface(s)) StartTrace(node, s, kvp.Key);
+                if (node.East?.Surface is KnowsNeighbour e && IsValidPathSurface(e)) StartTrace(node, e, kvp.Key);
+                if (node.West?.Surface is KnowsNeighbour w && IsValidPathSurface(w)) StartTrace(node, w, kvp.Key);
             }
         }
 
-        private void ExploreAndConnect(RoadNode startNode, KnowsNeighbour currentSurface, string dirDebug)
+        private void StartTrace(RoadNode startNode, KnowsNeighbour firstStep, KnowsNeighbour startSurface)
         {
-            int totalWeight = 0;
-            List<Road> pathTaken = [];
+            Trace(startNode, firstStep, startSurface, new List<Road>(), 0, new HashSet<Coordinate>());
+        }
 
-            KnowsNeighbour? previousSurface = World.Instance.GetField(startNode.Coordinate)?.Surface as KnowsNeighbour;
-            if (previousSurface == null) return;
+        private void Trace(RoadNode startNode, KnowsNeighbour current, KnowsNeighbour cameFrom, List<Road> currentPath, int currentWeight, HashSet<Coordinate> visited)
+        {
+            if (visited.Contains(current.Coordinate)) return;
+            visited.Add(current.Coordinate);
 
-            KnowsNeighbour? iterSurface = currentSurface;
-
-            System.Diagnostics.Debug.WriteLine($"  Elindultam {dirDebug} felé a {currentSurface.Coordinate} koordinátán...");
-
-            while (iterSurface != null)
+            if (NodeMap.TryGetValue(current, out RoadNode? targetNode))
             {
-
-                if (iterSurface is Road r)
+                if (current is Road r && !(current is Station))
                 {
-                    pathTaken.Add(r);
-                    totalWeight += r.IsSlope ? 2 : 1;
+                    currentPath.Add(r);
+                    currentWeight += r.IsSlope ? 2 : 1;
                 }
-                else if (iterSurface is Station)
-                {
-                    totalWeight += 1;
-                }
+                else if (current is Station) currentWeight += 1;
 
-                if (NodeMap.TryGetValue(iterSurface, out RoadNode? targetNode))
-                {
-                    startNode.Edges.Add(new RoadEdge(targetNode, totalWeight, pathTaken));
-                    System.Diagnostics.Debug.WriteLine($"    [SIKER] Megtaláltam a célcsomópontot: {targetNode.Coordinate} (Táv: {totalWeight})");
-                    return;
-                }
+                startNode.Edges.Add(new RoadEdge(targetNode, currentWeight, new List<Road>(currentPath)));
+                return;
+            }
 
-                KnowsNeighbour? nextSurface = GetNextNeighbor(iterSurface, previousSurface);
+            if (current is Road currentRoad)
+            {
+                currentPath.Add(currentRoad);
+                currentWeight += currentRoad.IsSlope ? 2 : 1;
 
-                if (nextSurface == null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"    [ZÁKUTCA] Elakadtam a {iterSurface.Coordinate} koordinátánál. (Típus: {iterSurface.GetType().Name})");
-                }
+                CheckAndAddAdjacentStation(startNode, currentRoad.North?.Surface, currentPath, currentWeight);
+                CheckAndAddAdjacentStation(startNode, currentRoad.South?.Surface, currentPath, currentWeight);
+                CheckAndAddAdjacentStation(startNode, currentRoad.East?.Surface, currentPath, currentWeight);
+                CheckAndAddAdjacentStation(startNode, currentRoad.West?.Surface, currentPath, currentWeight);
 
-                previousSurface = iterSurface;
-                iterSurface = nextSurface;
+                if (currentRoad.North?.Surface is Road rN && rN != cameFrom) Trace(startNode, rN, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
+                if (currentRoad.South?.Surface is Road rS && rS != cameFrom) Trace(startNode, rS, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
+                if (currentRoad.East?.Surface is Road rE && rE != cameFrom) Trace(startNode, rE, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
+                if (currentRoad.West?.Surface is Road rW && rW != cameFrom) Trace(startNode, rW, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
             }
         }
 
-        private KnowsNeighbour? GetNextNeighbor(KnowsNeighbour current, KnowsNeighbour cameFrom)
+        private void CheckAndAddAdjacentStation(RoadNode startNode, ISurface? adjacentSurface, List<Road> currentPath, int weight)
         {
-            if (current.North?.Surface is KnowsNeighbour n && IsValidPathSurface(n) && n.Coordinate != cameFrom.Coordinate) return n;
-            if (current.South?.Surface is KnowsNeighbour s && IsValidPathSurface(s) && s.Coordinate != cameFrom.Coordinate) return s;
-            if (current.East?.Surface is KnowsNeighbour e && IsValidPathSurface(e) && e.Coordinate != cameFrom.Coordinate) return e;
-            if (current.West?.Surface is KnowsNeighbour w && IsValidPathSurface(w) && w.Coordinate != cameFrom.Coordinate) return w;
-
-            return null;
+            if (adjacentSurface is Station st && st.Coordinate != startNode.Coordinate)
+            {
+                if (NodeMap.TryGetValue((KnowsNeighbour)st, out RoadNode? stationNode))
+                {
+                    startNode.Edges.Add(new RoadEdge(stationNode, weight + 1, new List<Road>(currentPath)));
+                    System.Diagnostics.Debug.WriteLine($"    [REJTETT ÁLLOMÁS MEGTALÁLVA] Út bejegyezve: {startNode.Coordinate} -> {stationNode.Coordinate}");
+                }
+            }
         }
 
         private bool IsValidPathSurface(ISurface? surface)

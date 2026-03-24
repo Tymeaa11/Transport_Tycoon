@@ -236,6 +236,13 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             else
             {
                 System.Diagnostics.Debug.WriteLine($"HIÁNYZÓ WAYPOINT KULCS: {entryDir} -> {exitDir}");
+
+                //Vészmegoldás
+
+                float startX = CurrentRoad.Coordinate.X * WaypointManager.TILE_SIZE;
+                float startY = CurrentRoad.Coordinate.Y * WaypointManager.TILE_SIZE;
+
+                currentWaypoints.Add(new Vector2(startX + 16, startY + 16));
             }
         }
 

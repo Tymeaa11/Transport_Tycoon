@@ -410,6 +410,8 @@ namespace VolcanicTransport_WPF.ViewModel
         }
         private void OnSetBuildMode(BuildMode mode)
         {
+            BuildMode previousMode = CurrentBuildMode;
+
             if (CurrentBuildMode == mode)
             {
                 CurrentBuildMode = BuildMode.NONE;
@@ -418,7 +420,14 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 CurrentBuildMode = mode;
             }
-            
+
+            if (previousMode == BuildMode.ROAD && CurrentBuildMode != BuildMode.ROAD)
+            {
+                System.Diagnostics.Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
+
+                GameModelInstance.WorldInstance.Roadnetwork.RebuildEdges();
+            }
+
         }
 
         private void OnSetTimescale0X()

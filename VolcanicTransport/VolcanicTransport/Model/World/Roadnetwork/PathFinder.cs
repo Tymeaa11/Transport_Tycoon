@@ -38,6 +38,9 @@
                     if (closedSet.Contains(neighbor))
                         continue;
 
+                    if (neighbor.IsStation && neighbor != targetNode)
+                        continue;
+
                     int tentativeGScore = gScore[current] + edge.Weight;
 
                     if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor])
