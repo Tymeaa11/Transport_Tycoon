@@ -26,11 +26,6 @@ namespace VolcanicTransport.Model.World
 
         public ISurface? Surface { get; set; }
 
-        public bool HasStation { get; set; } = false;
-
-        public List<Vehicle> VehiclesOnField { get; } = [];
-
-        public Vehicle? ReservedBy { get; set; } = null;
 
         public void SetFieldTypeTo(Field f) => Type = f.Type;
         public void SetFieldHeight(float height)
