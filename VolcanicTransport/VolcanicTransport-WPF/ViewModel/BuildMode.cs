@@ -7,6 +7,8 @@
         STATION,
         BRIDGE,
         LOWER,
-        HEIGHTEN
+        HEIGHTEN,
+        BUY_VEHICLE,
+        SELECT_STATION
     }
 }

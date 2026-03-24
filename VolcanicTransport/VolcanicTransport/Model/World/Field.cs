@@ -21,17 +21,11 @@ namespace VolcanicTransport.Model.World
             50000
         ];
 
-        public Coordinate Coordinate { get; set; }
 
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 
         public ISurface? Surface { get; set; }
 
-        public bool HasStation { get; set; } = false;
-
-        public List<Vehicle> VehiclesOnField { get; } = [];
-
-        public Vehicle? ReservedBy { get; set; } = null;
 
         public void SetFieldTypeTo(Field f) => Type = f.Type;
         public void SetFieldHeight(float height)

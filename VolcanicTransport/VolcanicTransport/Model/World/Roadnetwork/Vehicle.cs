@@ -12,23 +12,46 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public int Price { get; } = price;
         protected Route? route = null;
 
+        private float _visualAngle;
+        public float VisualAngle
+        {
+            get => _visualAngle;
+            set
+            {
+                if (_visualAngle != value)
+                {
+                    _visualAngle = value;
+                    OnPropertyChanged(nameof(VisualAngle));
+                }
+            }
+        }
+
+
+        public Route? Route { get { return route; } set { route = value; } }
+
         protected float currentSpeed = 0;
         protected float maxSpeed = maxSpeed;
-        protected int Capacity = capacity;
+        protected int capacity = capacity;
+
+        public float MaxSpeed { get { return maxSpeed; } }
+        public int Capacity { get { return capacity; } }
 
         protected int maintenanceCost = (int)(price * 0.05);
         protected bool active = false;
-        public VehicleState State { get; protected set; } = VehicleState.Moving;
+        public VehicleState State { get; protected set; } = VehicleState.Waiting;
 
-        protected List<Field> currentPath = [];
+        protected List<Road> currentPath = [];
         protected int currentPathIndex;
-        public Field? CurrentField { get; protected set; }
+        public Road? CurrentRoad { get; protected set; }
 
         protected RoadEdge? currentEdge = null;
         protected Coordinate? currentCoordinate = null;
 
         protected List<Vector2> currentWaypoints = [];
         protected int currentWaypointIndex = 0;
+
+        public float VisualX => VisualPosition.X;
+        public float VisualY => VisualPosition.Y;
 
         private Vector2 _visualPosition;
         public Vector2 VisualPosition
@@ -38,19 +61,23 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 _visualPosition = value;
                 OnPropertyChanged(nameof(VisualPosition));
+                OnPropertyChanged(nameof(VisualX));
+                OnPropertyChanged(nameof(VisualY));
             }
         }
 
-        public void StartJourney(List<Field> path)
+
+
+        public void StartJourney(List<Road> path)
         {
-            if (currentEdge == null || route == null) return;
+            //if (route == null) return;
             if (path == null || path.Count == 0) return;
 
             currentPath = path;
             currentPathIndex = 0;
-            CurrentField = currentPath[0];
+            CurrentRoad = currentPath[0];
 
-            CurrentField.VehiclesOnField.Add(this);
+            currentSpeed = maxSpeed;
 
             LoadWaypointsForField();
 
@@ -58,99 +85,124 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 VisualPosition = currentWaypoints[0];
             }
+            else {
+                VisualPosition = new System.Numerics.Vector2(CurrentRoad.Coordinate.X * 32, CurrentRoad.Coordinate.Y * 32);
+                System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {VisualPosition} pixelre.");
+            }
 
             State = VehicleState.Moving;
         }
 
-        public void Update(float deltaTime)
+        protected double waitTimer = 0;
+        protected const double LOAD_TIME = 2.0;
+
+        public void Update(double deltaTime)
         {
+            if (State == VehicleState.Loading)
+            {
+                currentSpeed = 0;
+                waitTimer += deltaTime;
+                if (waitTimer >= LOAD_TIME)
+                {
+                    waitTimer = 0;
+                    if (currentPathIndex + 1 < currentPath.Count)
+                    {
+                        State = VehicleState.Moving;
+                        currentSpeed = maxSpeed;
+                    }
+                    else HandleRouteCycle();
+                }
+                return;
+            }
+
             if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
 
-            float targetSpeed = maxSpeed;
-            Vehicle? vehicleAhead = GetVehicleAhead();
+            currentSpeed = maxSpeed;
+            float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
 
-            if (vehicleAhead != null)
-            {
-                float distanceToFront = Vector2.Distance(this.VisualPosition, vehicleAhead.VisualPosition);
-                if (distanceToFront < 20.0f)
-                {
-                    targetSpeed = Math.Min(targetSpeed, vehicleAhead.currentSpeed);
-                }
-            }
-
-            if (currentSpeed < targetSpeed)
-            {
-                currentSpeed += 50.0f * deltaTime;
-                if (currentSpeed > targetSpeed) currentSpeed = targetSpeed;
-            }
-            else if (currentSpeed > targetSpeed)
-            {
-                currentSpeed -= 100.0f * deltaTime;
-                if (currentSpeed < targetSpeed) currentSpeed = targetSpeed;
-            }
-            float distanceToTravel = (currentSpeed / 3.6f) * deltaTime;
-
-            while (distanceToTravel > 0)
-            {
+            int safetyCounter = 0;
+            while (distanceToTravel > 0 && safetyCounter < 10)
+       
+      {
+                safetyCounter++;
                 if (currentWaypointIndex >= currentWaypoints.Count)
                 {
-                    if (!TryTransitionToNextField())
+                    if (!TryTransitionToNextRoad())
                     {
-                        currentSpeed = 0;
-                        break;
+                        distanceToTravel = 0;
+                        continue;
                     }
+                    if (currentWaypointIndex >= currentWaypoints.Count) { distanceToTravel = 0; continue; }
                 }
 
-                Vector2 targetWaypoint = currentWaypoints[currentWaypointIndex];
-                Vector2 direction = new(targetWaypoint.X - VisualPosition.X, targetWaypoint.Y - VisualPosition.Y);
-                float distanceToWaypoint = direction.Length();
+                Vector2 target = currentWaypoints[currentWaypointIndex];
+                Vector2 diff = target - VisualPosition;
+                float dist = diff.Length();
 
-                if (distanceToTravel >= distanceToWaypoint)
+                if (dist > 0.001f)
                 {
-                    VisualPosition = targetWaypoint;
-                    distanceToTravel -= distanceToWaypoint;
+                    VisualAngle = (float)(System.Math.Atan2(diff.Y, diff.X) * (180.0 / System.Math.PI));
+                }
+
+                if (dist < 0.01f)
+                {
+                    VisualPosition = target;
+                    currentWaypointIndex++;
+                }
+                else if (distanceToTravel >= dist)
+                {
+                    VisualPosition = target;
+                    distanceToTravel -= dist;
                     currentWaypointIndex++;
                 }
                 else
                 {
-                    direction = Vector2.Normalize(direction);
-                    VisualPosition += direction * distanceToTravel;
-                    distanceToTravel = 0f;
+                    VisualPosition += Vector2.Normalize(diff) * distanceToTravel;
+                    distanceToTravel = 0;
                 }
             }
         }
 
-        private bool TryTransitionToNextField()
+        private void HandleRouteCycle()
+        {
+            System.Diagnostics.Debug.WriteLine($"{Name} elérte a végállomást. Törlés a világból...");
+            World.Instance.RemoveVehicle(this);
+        }
+
+        private bool TryTransitionToNextRoad()
         {
             if (currentPathIndex + 1 >= currentPath.Count)
             {
                 State = VehicleState.Loading;
-                if (CurrentField == null) throw new Exception();
-                ReleaseJunctionLock(CurrentField);
+                if (CurrentRoad != null)
+                    ReleaseJunctionLock(CurrentRoad);
                 return false;
             }
-            Field nextField = currentPath[currentPathIndex + 1];
-            bool isNextJunction = IsFieldJunction(nextField);
+            Road nextRoad = currentPath[currentPathIndex + 1];
+            bool isNextJunction = IsFieldJunction(nextRoad);
 
             if (isNextJunction)
             {
-                if (nextField.ReservedBy != null && nextField.ReservedBy != this)
+                if (nextRoad.IsReserved)
                 {
                     return false;
                 }
-                nextField.ReservedBy = this;
+                nextRoad.IsReserved = true;
             }
 
-            if (CurrentField == null) throw new Exception();
-            ReleaseJunctionLock(CurrentField);
+            if (CurrentRoad == null) throw new Exception();
+            ReleaseJunctionLock(CurrentRoad);
 
-            CurrentField.VehiclesOnField.Remove(this);
-            nextField.VehiclesOnField.Add(this);
-
-            CurrentField = nextField;
+            CurrentRoad = nextRoad;
             currentPathIndex++;
 
             LoadWaypointsForField();
+            if (currentWaypoints.Count > 0)
+            {
+                VisualPosition = currentWaypoints[0];
+                currentWaypointIndex = 1;
+            }
+
             return true;
         }
 
@@ -159,25 +211,20 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             currentWaypoints.Clear();
             currentWaypointIndex = 0;
 
-            Field? previousField = (currentPathIndex > 0) ? currentPath[currentPathIndex - 1] : null;
-            Field? nextField = (currentPathIndex < currentPath.Count - 1) ? currentPath[currentPathIndex + 1] : null;
+            Road? previousRoad = (currentPathIndex > 0) ? currentPath[currentPathIndex - 1] : null;
+            Road? nextRoad = (currentPathIndex < currentPath.Count - 1) ? currentPath[currentPathIndex + 1] : null;
 
+            if (CurrentRoad == null) throw new Exception();
 
+            PathDirection entryDir = previousRoad == null ? PathDirection.Start : GetRelativeDirection(CurrentRoad.Coordinate, previousRoad.Coordinate);
+            PathDirection exitDir = nextRoad == null ? PathDirection.End : GetRelativeDirection(CurrentRoad.Coordinate, nextRoad.Coordinate);
 
-            if (CurrentField == null) throw new Exception();
-
-            string entryDirection = GetRelativeDirection(CurrentField, previousField);
-            string exitDirection = GetRelativeDirection(CurrentField, nextField);
-
-            string pathKey = $"{entryDirection}_To_{exitDirection}";
-
-            if (previousField == null) pathKey = $"Start_To_{exitDirection}";
-            if (nextField == null) pathKey = $"{entryDirection}_To_End";
+            var pathKey = (entryDir, exitDir);
 
             if (WaypointManager.Paths.TryGetValue(pathKey, out List<Vector2>? localPoints))
             {
-                float startX = CurrentField.Coordinate.X * 64;
-                float startY = CurrentField.Coordinate.Y * 64;
+                float startX = CurrentRoad.Coordinate.X * WaypointManager.TILE_SIZE;
+                float startY = CurrentRoad.Coordinate.Y * WaypointManager.TILE_SIZE;
 
                 Vector2 fieldOffset = new(startX, startY);
 
@@ -186,58 +233,44 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     currentWaypoints.Add(p + fieldOffset);
                 }
             }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"HIÁNYZÓ WAYPOINT KULCS: {entryDir} -> {exitDir}");
+            }
         }
 
-        private string GetRelativeDirection(Field center, Field target)
+        private PathDirection GetRelativeDirection(Coordinate center, Coordinate target)
         {
-            if (target == null) return "None";
-            if (target.Coordinate.Y < center.Coordinate.Y) return "North";
-            if (target.Coordinate.Y > center.Coordinate.Y) return "South";
-            if (target.Coordinate.X > center.Coordinate.X) return "East";
-            if (target.Coordinate.X < center.Coordinate.X) return "West";
-            return "None";
+            if (target.Y < center.Y) return PathDirection.North;
+            if (target.Y > center.Y) return PathDirection.South;
+            if (target.X > center.X) return PathDirection.East;
+            if (target.X < center.X) return PathDirection.West;
+
+            return PathDirection.Start;
         }
 
         private Vehicle? GetVehicleAhead()
         {
-            if (CurrentField == null) throw new Exception();
-            foreach (var other in CurrentField.VehiclesOnField)
-            {
-                if (other != this && other.State == VehicleState.Moving)
-                {
-                    if (other.currentPathIndex >= this.currentPathIndex)
-                    {
-                        return other;
-                    }
-                }
-            }
+            //TODO// globális járműkezelő
             return null;
         }
-        private void ReleaseJunctionLock(Field field)
+        private void ReleaseJunctionLock(Road road)
         {
-            if (IsFieldJunction(field) && field.ReservedBy == this)
+            if (IsFieldJunction(road))
             {
-                field.ReservedBy = null;
+                road.IsReserved = false;
             }
         }
 
-        private bool IsFieldJunction(Field field)
-        {
-            if (field.Surface is Road road)
-            {
-                return road.RoadType.HasFlag(RoadType.JUNCTION);
-            }
-            return false;
-        }
-
-        private void RecalculatePath()
+        private bool IsFieldJunction(Road road)
         {
 
+            return road.RoadType.HasFlag(RoadType.JUNCTION);
         }
 
         public int Load(int amount)
         {
-            int spaceLeft = Capacity - CurrentLoad;
+            int spaceLeft = capacity - CurrentLoad;
             int taken = Math.Min(amount, spaceLeft);
             CurrentLoad += taken;
             return taken;

@@ -1,0 +1,45 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using VolcanicTransport.Model.World.Roadnetwork;
+
+namespace VolcanicTransport_WPF.ViewModel
+{
+    public class VehicleViewModel : ViewModelBase
+    {
+        private readonly Vehicle _vehicle;
+
+        public VehicleViewModel(Vehicle vehicle)
+        {
+            _vehicle = vehicle;
+
+            _vehicle.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(Vehicle.VisualPosition))
+                {
+                    OnPropertyChanged(nameof(PixelX));
+                    OnPropertyChanged(nameof(PixelY));
+                }
+            };
+        }
+
+        public double PixelX => _vehicle.VisualPosition.X;
+        public double PixelY => _vehicle.VisualPosition.Y;
+
+        public string GetName => _vehicle.Name;
+
+        public Vehicle GetVehicle => _vehicle; 
+
+        public string Type => _vehicle.Type.ToString();
+        
+        public string GetCapacity =>  _vehicle.Capacity.ToString(); 
+        public string SpeedDisplay => _vehicle.MaxSpeed.ToString() + " km/h";
+
+        public string StateDisplay => _vehicle.State.ToString();
+
+        // Később ide jöhet a forgatás is, ha a téglalapot az út irányába akarod állítani
+        // public double Rotation => ... 
+    }
+}

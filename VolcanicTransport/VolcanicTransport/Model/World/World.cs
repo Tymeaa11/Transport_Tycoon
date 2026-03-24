@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -30,10 +31,12 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; set; } = [];
         public List<Factory> Factories { get; set; } = [];
         public List<Station> Stations { get; set; } = [];
-        private List<Vehicle> Vehicles { get; set; } = [];
+        public ObservableCollection<Vehicle> Vehicles { get; } = new ObservableCollection<Vehicle>();
 
         public GameWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
+
+        public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
         #endregion
 
@@ -121,25 +124,48 @@ namespace VolcanicTransport.Model.World
         public void RemoveVehicle(Vehicle v) => Vehicles.Remove(v);
         public bool HasVehicle(Vehicle v) => Vehicles.Contains(v);
 
-        public void ActivateVehicle(Vehicle v)
+        #region Road Placement Logic
+
+        public void UpdateRoadNetworkAround(Coordinate c)
         {
-            if (!Vehicles.Contains(v)) return;
-            //v.Activate();
+            List<Coordinate> targets = new()
+            {
+                c,
+                c + Direction.North,
+                c + Direction.South,
+                c + Direction.East,
+                c + Direction.West
+            };
+
+            HashSet<Chunk> chunksToRender = new HashSet<Chunk>();
+
+            foreach (var coord in targets)
+            {
+                var chunkCoord = GetChunkCoordinate(coord);
+                var chunk = GetChunk(chunkCoord);
+                if (chunk != null)
+                {
+                    chunksToRender.Add(chunk);
+                }
+            }
+
+            foreach (var chunk in chunksToRender)
+            {
+                chunk.TriggerRerender();
+            }
         }
 
-        public void DeactivateVehicle(Vehicle v)
+        #endregion
+
+
+        public void Update(double gameDt)
         {
-            if (!Vehicles.Contains(v)) return;
-            //v.DeActivate();
-        }
+            foreach (var vehicle in Vehicles.ToList())
+            {
+                vehicle.Update(gameDt);
+            }
 
-        public bool PlaceRoad(Coordinate c)
-        {
-
-
-
-
-            return true;
+            // Itt jöhetnének késõbb az épületek frissítései (termelés, stb.)
         }
     }
 }
