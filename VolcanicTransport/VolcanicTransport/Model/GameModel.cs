@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
@@ -29,6 +31,7 @@ namespace VolcanicTransport.Model
         public event EventHandler? timescaleChanged;
         public event EventHandler? fieldChanged;
         public event EventHandler? vehicleSelectedIndex;
+        public event EventHandler? onPlacementFailed;
 
 
 
@@ -37,10 +40,12 @@ namespace VolcanicTransport.Model
 
         private static GameModel? _instance;
 
-        private GameModel(int worldSize)
+        private GameModel(int worldSize, int seed)
         {
-            World.World.Initialise(worldSize);
+            World.World.Initialise(worldSize, seed);
             _savefileManager = new SaveFileManager();
+
+            _instance = this;
 
             WorldInstance.GameWorldGenerator = new GameWorldGenerator(
                 new TerrainHeightGenerator(),
@@ -53,17 +58,16 @@ namespace VolcanicTransport.Model
             _gameTickTimer.TimeScale = 1;
             _gameTickTimer.Elapsed += (s, e) => OnTimerTick();
             _gameTickTimer.Start();
-            _playerMoney = 10000;
             _playerMoney = 100000;
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
-        public static void Initialise(int worldSize)
+        public static void Initialise(int worldSize, int seed)
         {
             if (_instance != null) throw new InvalidOperationException("World already initialised");
 
-            _instance = new GameModel(worldSize);
+            _instance = new GameModel(worldSize, seed);
         }
         #endregion
 
@@ -110,6 +114,13 @@ namespace VolcanicTransport.Model
             if (_isPaused) return;
             WorldInstance.Update(deltaTime);
             gameAdvanced?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void Update(double deltaTime)
+        {
+            WorldInstance.Update(1.0);
+            gameAdvanced?.Invoke(this, EventArgs.Empty);
+            WorldInstance.Update(deltaTime);
         }
 
         public bool BuyVehicle(Vehicle v)
@@ -169,29 +180,12 @@ namespace VolcanicTransport.Model
 
         public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
 
-        public bool PlaceRoad(Coordinate coord)
+        public void OnRoadBecameJunction(object? sender, Road.FieldEventArgs e)
         {
-            const double roadPrice = 50;
+            System.Diagnostics.Debug.WriteLine($"[ESEMÉNY] Új kereszteződés alakult ki itt: {e.Coordinate}");
+            WorldInstance.Roadnetwork.RegisterNodeIfNeeded(e.Coordinate);
+        }
 
-            if (IsBuildable(coord) && TryPurchase(roadPrice))
-            {
-                bool success = WorldInstance.PlaceRoad(coord);
-                if (success)
-                {
-                    roadBought?.Invoke(this, EventArgs.Empty);
-                    WorldInstance.UpdateRoadNetworkAround(coord);
-                    Field? f = WorldInstance.GetField(coord);
-                    if (f != null) 
-                    {
-                        WorldInstance.Roadnetwork.RegisterNodeIfNeeded(f);
-                        WorldInstance.Roadnetwork.RebuildEdges();
-                    }
-                    return true;
-                }
-                else
-                {
-                    AddMoney(roadPrice);
-                }
         private Road? CanPlaceRoadHere(Coordinate coord, Field field)
         {
             if (null == field)
@@ -225,20 +219,11 @@ namespace VolcanicTransport.Model
 
         public void PlaceRoad(Coordinate coord)
         {
-            double roadPrice = 50;
-            const double mushroomPricePerUnit = 20;
-            double extraCost = 0;
+            const double roadPrice = 50;
             Field? field = WorldInstance.GetField(coord);
             if (null == field) 
                 return;
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                double stage = (double)mushroom.GrowthStage+1;
-                extraCost = stage * mushroomPricePerUnit;
-                roadPrice += extraCost;
-               
-            }
 
             if (!TryPurchase(roadPrice)) 
                 return;
@@ -260,8 +245,10 @@ namespace VolcanicTransport.Model
                 onPlacementFailed?.Invoke(this, EventArgs.Empty);
                 return;
             }
-            return false;
+            roadBought?.Invoke(this, EventArgs.Empty);
+            WorldInstance.UpdateRoadNetworkAround(coord);
         }
+
         public bool PlaceStation(Coordinate coord)
         {
             double stationCost = 500;
@@ -307,8 +294,7 @@ namespace VolcanicTransport.Model
                 WorldInstance.GetField(coord).Surface = newStation;
                 WorldInstance.Stations.Add(newStation);
 
-                var field = WorldInstance.GetField(coord);
-                WorldInstance.Roadnetwork.RegisterNodeIfNeeded(field);
+                WorldInstance.Roadnetwork.RegisterNodeIfNeeded(coord);
                 WorldInstance.Roadnetwork.RebuildEdges();
 
                 var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
@@ -334,26 +320,26 @@ namespace VolcanicTransport.Model
                 return;
             }
             System.Diagnostics.Debug.WriteLine("Két megálló megvan, gráf frissítése...");
-
+            
             var graph = WorldInstance.Roadnetwork;
-            graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
-            graph.RegisterNodeIfNeeded(s.Field);
+            //graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
+            graph.RegisterNodeIfNeeded(s.Coordinate);
             graph.RebuildEdges();
 
-            if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
-                graph.NodeMap.TryGetValue(s.Field, out var targetNode))
-            {
-                var path = Pathfinder.FindPath(startNode, targetNode);
-                if (path != null && path.Count > 0)
-                {
-                    v.StartJourney(path);
-                    System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-                }
-            }
+            //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
+            //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
+            //{
+                //var path = Pathfinder.FindPath(startNode, targetNode);
+               // if (path != null && path.Count > 0)
+              //  {
+                //    v.StartJourney(path);
+               //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
+              //  }
+               // else
+              //  {
+              //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
+               // }
+           // }
             
         }
 

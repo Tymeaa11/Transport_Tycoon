@@ -3,6 +3,7 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport;
@@ -12,7 +13,7 @@ class Program
     private static void Main()
     {
         Console.WriteLine(@"Creating preview at bin\Debug\net9.0\");
-        World.Initialise(40);
+        World.Initialise(40, 0);
         World.Instance.GameWorldGenerator = new GameWorldGenerator(
             new TerrainHeightGenerator(),
             new MushroomGenerator(),

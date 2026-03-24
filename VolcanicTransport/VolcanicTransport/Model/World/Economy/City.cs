@@ -47,10 +47,10 @@ namespace VolcanicTransport.Model.World.Economy
             return true;
         }
 
-        public int RecieveProduct(ProductType type, int amount)
+        /* TODOOO public int RecieveProduct(ProductType type, int amount)
         {
             //TODO//
             return 0;
-        }
+        }*/
     }
 }

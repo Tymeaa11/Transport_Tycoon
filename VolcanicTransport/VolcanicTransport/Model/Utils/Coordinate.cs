@@ -1,5 +1,5 @@
 using VolcanicTransport.Model.World;
-using static VolcanicTransport.Model.TerrainGeneration.FactoryAndCityGenerator;
+using static VolcanicTransport.Model.TerrainGeneration.Generators.FactoryAndCityGenerator;
 
 namespace VolcanicTransport.Model.Utils
 {

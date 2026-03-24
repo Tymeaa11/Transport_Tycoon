@@ -1,6 +1,6 @@
-namespace VolcanicTransport.Model.TerrainGeneration
+namespace VolcanicTransport.Model.TerrainGeneration.Layers
 {
-    public class Perlin
+    public class Perlin : ISeedable
     {
         // Large part of this Perlin noise generation was taken from Processing 4 then converted to C# 
 
@@ -137,7 +137,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
 
         }
 
-        public void NoiseSeed(int seed)
+        public void SetSeed(int seed, Random nextRandom)
         {
             _perlinRandom = new Random(seed);
 

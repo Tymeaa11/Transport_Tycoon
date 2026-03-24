@@ -2,7 +2,7 @@
 {
     public static class Pathfinder
     {
-        public static List<Field>? FindPath(RoadNode startNode, RoadNode targetNode)
+        public static List<Road>? FindPath(RoadNode startNode, RoadNode targetNode)
         {
             if (startNode == targetNode)
                 return [];
@@ -59,12 +59,13 @@
 
         private static int GetHeuristicDistance(RoadNode a, RoadNode b)
         {
-            return Math.Abs(a.Field.Coordinate.X - b.Field.Coordinate.X) +
-                   Math.Abs(a.Field.Coordinate.Y - b.Field.Coordinate.Y);
+            return Math.Abs(a.Coordinate.X - b.Coordinate.X) +
+                   Math.Abs(a.Coordinate.Y - b.Coordinate.Y);
         }
-        private static List<Field> ReconstructPath(Dictionary<RoadNode, PathTrace> cameFrom, RoadNode current)
+
+        private static List<Road> ReconstructPath(Dictionary<RoadNode, PathTrace> cameFrom, RoadNode current)
         {
-            List<List<Field>> pathSegments = [];
+            List<List<Road>> pathSegments = [];
 
             while (cameFrom.ContainsKey(current))
             {
@@ -75,7 +76,7 @@
 
             pathSegments.Reverse();
 
-            List<Field> finalPath = [];
+            List<Road> finalPath = [];
             foreach (var segment in pathSegments)
             {
                 finalPath.AddRange(segment);
@@ -83,6 +84,7 @@
 
             return finalPath;
         }
+
         private class PathTrace(RoadNode parent, RoadEdge edge)
         {
             public RoadNode ParentNode { get; } = parent;

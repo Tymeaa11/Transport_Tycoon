@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -8,13 +9,21 @@ namespace VolcanicTransport.Model.World
     public class World
     {
         public class NoWorldGeneratorProvidedException : Exception {}
-        
-        #region static fields
-        public static readonly Random SharedRandom = new();
-        #endregion
+
 
         #region Fields
-        public int WorldSeed { get; private set; }
+
+        private int _worldSeed;
+        public int WorldSeed { 
+            get => _worldSeed;
+            private set
+            {
+                _worldSeed = value;
+                SharedRandom = new Random(WorldSeed);
+            }
+            
+        }
+        public Random SharedRandom { get; private set; } = new Random();
 
         public Coordinate SizeInChunks { get; init; }
         public Coordinate SizeInFields { get; init; }
@@ -22,7 +31,7 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; set; } = [];
         public List<Factory> Factories { get; set; } = [];
         public List<Station> Stations { get; set; } = [];
-        private List<Vehicle> Vehicles { get; set; } = [];
+        public ObservableCollection<Vehicle> Vehicles { get; } = new ObservableCollection<Vehicle>();
 
         public GameWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
@@ -36,13 +45,15 @@ namespace VolcanicTransport.Model.World
 
         private static World? _instance;
 
-        private World(int worldSize)
+        private World(int worldSize, int seed)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(worldSize);
 
             SizeInChunks = new Coordinate(worldSize);
             SizeInFields = SizeInChunks * Chunk.ChunkSize;
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
+
+            WorldSeed = seed;
 
             InitialiseWorld();
 
@@ -51,11 +62,11 @@ namespace VolcanicTransport.Model.World
 
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
 
-        public static void Initialise(int worldSize)
+        public static void Initialise(int worldSize, int seed)
         {
             if (_instance != null) throw new InvalidOperationException("World already initialised");
 
-            _instance = new World(worldSize);
+            _instance = new World(worldSize, seed);
         }
         #endregion
         
@@ -100,25 +111,20 @@ namespace VolcanicTransport.Model.World
             GameWorldGenerator.GenerateCitiesAndFactories();
         }
 
+        public void Generate(int seed)
+        {
+            WorldSeed = seed;
+            GameWorldGenerator?.SetSeed(seed, SharedRandom);
+            Generate();
+        }
+
+
+
         public void AddVehicle(Vehicle v) => Vehicles.Add(v);
         public void RemoveVehicle(Vehicle v) => Vehicles.Remove(v);
         public bool HasVehicle(Vehicle v) => Vehicles.Contains(v);
 
         #region Road Placement Logic
-
-        public bool PlaceRoad(Coordinate c)
-        {
-            Field? f = GetField(c);
-
-            if (f == null || !f.IsBuildable()) return false;
-
-            Road newRoad = new Road(c);
-            f.Surface = newRoad;
-
-            UpdateRoadNetworkAround(c);
-
-            return true;
-        }
 
         public void UpdateRoadNetworkAround(Coordinate c)
         {
@@ -131,20 +137,26 @@ namespace VolcanicTransport.Model.World
                 c + Direction.West
             };
 
+            HashSet<Chunk> chunksToRender = new HashSet<Chunk>();
+
             foreach (var coord in targets)
             {
-                Field? field = GetField(coord);
-                if (field?.Surface is Road road)
+                var chunkCoord = GetChunkCoordinate(coord);
+                var chunk = GetChunk(chunkCoord);
+                if (chunk != null)
                 {
-                    road.Update();
-
-                    var chunkCoord = GetChunkCoordinate(coord);
-                    GetChunk(chunkCoord)?.TriggerRerender();
+                    chunksToRender.Add(chunk);
                 }
+            }
+
+            foreach (var chunk in chunksToRender)
+            {
+                chunk.TriggerRerender();
             }
         }
 
         #endregion
+
 
         public void Update(double gameDt)
         {
