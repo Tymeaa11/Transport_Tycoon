@@ -9,7 +9,7 @@ namespace VolcanicTransport.Model.World
         : KnowsNeighbour(coordinate)
     {
         private const int SpreadChance = 50; // 0-100 %
-        private static bool SpreadAttempt() => World.SharedRandom.Next(100) > SpreadChance;
+        private static bool SpreadAttempt() => World.Instance.SharedRandom.Next(100) > SpreadChance;
         private static bool IsFieldSpreadable(Field? f) => SpreadAttempt() && f is { Surface: null };
 
         public MushroomGrowthStage GrowthStage { get; private set; } = growthStage; // 1 - 4

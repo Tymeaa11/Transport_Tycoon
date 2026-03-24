@@ -16,6 +16,7 @@
         <KeyBinding Key="S" Command="{Binding Camera.MoveDown}" />
         <KeyBinding Key="A" Command="{Binding Camera.MoveLeft}" />
         <KeyBinding Key="D" Command="{Binding Camera.MoveRight}" />
+        <KeyBinding Key="G" Command="{Binding ReGenerateWithRandomSeed}" />
     </Window.InputBindings>
 
     <Window.Resources>

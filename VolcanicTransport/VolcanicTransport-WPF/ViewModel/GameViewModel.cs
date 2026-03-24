@@ -99,6 +99,10 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale2Command { get; private set; }
         public DelegateCommand SetTimescale4Command { get; private set; }   
 
+
+
+        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }   
+
         public DelegateCommand BuyVehicleCommand { get; private set; }
 
         public DelegateCommand AddStopCommand { get; }
@@ -265,6 +269,22 @@ namespace VolcanicTransport_WPF.ViewModel
                     System.Diagnostics.Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
                 }
             });
+
+            ReGenerateWithRandomSeed = new DelegateCommand(_ =>
+            {
+                GameModelInstance.WorldInstance.Generate(new Random().Next());
+                LoadedChunks.Clear();
+                GameModelInstance.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
+                UpdateVisibleChunks(_lastWidth, _lastHeight);
+            }
+            );
+
+            //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
+        }
+
+        private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(CurrentMoney));
         }
 
         public void Initialise()

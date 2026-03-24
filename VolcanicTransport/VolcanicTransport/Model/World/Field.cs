@@ -17,7 +17,7 @@ namespace VolcanicTransport.Model.World
             290,
             300,
             400,
-            450,
+            520,
             50000
         ];
 
