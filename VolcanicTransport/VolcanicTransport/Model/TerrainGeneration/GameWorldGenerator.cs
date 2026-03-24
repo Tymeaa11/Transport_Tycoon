@@ -1,3 +1,4 @@
+using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.TerrainGeneration
@@ -6,7 +7,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
         TerrainHeightGenerator terrainHeightGenerator,
         MushroomGenerator mushroomGenerator,
         FactoryAndCityGenerator factoryAndCityGenerator
-        )
+        ) : ISeedable
     {
 
         public void GenerateField(Field field, int x, int y)
@@ -18,5 +19,10 @@ namespace VolcanicTransport.Model.TerrainGeneration
         public void GenerateCitiesAndFactories() 
             => factoryAndCityGenerator.Generate();
 
+        public void SetSeed(int seed, Random nextRandom)
+        {
+            terrainHeightGenerator.SetSeed(seed, nextRandom);
+            mushroomGenerator.SetSeed(seed, nextRandom);
+        }
     }
 }

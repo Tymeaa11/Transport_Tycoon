@@ -11,6 +11,7 @@ namespace VolcanicTransport.Model.World
         public SquareMatrixIterator<Field> FieldMatrix { get; init; } = new(ChunkSize);
 
         public event EventHandler? Changed;
-        public void TriggerRerender() => Changed?.Invoke(null, EventArgs.Empty);
+        public void TriggerRerender() => Changed?.Invoke(this, EventArgs.Empty);
+        public void RemoveAllUpdateTriggers() { Changed = null; }
     }
 }

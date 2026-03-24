@@ -1,4 +1,4 @@
-namespace VolcanicTransport.Model.TerrainGeneration
+namespace VolcanicTransport.Model.TerrainGeneration.Layers
 {
     public class LayeredTerrain : ILayer
     {
@@ -15,7 +15,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
         public void AddLayer(ILayer layer) => _layers.Add(layer);
         public void AddLayer(ILayer[] layers) => _layers.AddRange(layers);
         public float Get(float x, float y) => _layers.Sum(layer => layer.Get(x, y));
-        public void SetSeed(int seed) => _layers.ForEach(layer => layer.SetSeed(seed));
+        public void SetSeed(int seed, Random nextRandom) => _layers.ForEach(layer => layer.SetSeed(seed, nextRandom));
         #endregion
     }
 }

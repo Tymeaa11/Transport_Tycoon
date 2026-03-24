@@ -15,8 +15,6 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public event EventHandler? CameraChanged;
 
-        private int _zoomLevel;
-
         public Matrix ProjectionMatrix
         {
             get => _projectionMatrix;
@@ -36,9 +34,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public Camera(Matrix initialMatrix)
         {
             ProjectionMatrix = initialMatrix;
-
-            _zoomLevel = 0;
-
+            
             MoveUp = new DelegateCommand(_ => Pan(0, PanSpeed));
             MoveDown = new DelegateCommand(_ => Pan(0, -PanSpeed));
             MoveLeft = new DelegateCommand(_ => Pan(PanSpeed, 0));

@@ -1,4 +1,4 @@
-using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 
 namespace VolcanicTransport.Model.World.Economy
 {
