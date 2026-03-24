@@ -54,10 +54,6 @@ namespace VolcanicTransport.Model
                 );
             WorldInstance.Generate();
 
-            _gameTickTimer = new ScalableTimer();
-            _gameTickTimer.TimeScale = 1;
-            _gameTickTimer.Elapsed += (s, e) => OnTimerTick();
-            _gameTickTimer.Start();
             _playerMoney = 100000;
         }
 
@@ -86,7 +82,7 @@ namespace VolcanicTransport.Model
 
         public void ChangeTimeSpeed1X()
         {
-            UnPause(); // Ha le volt állítva, induljon el
+            UnPause();
             timescaleChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -101,6 +97,7 @@ namespace VolcanicTransport.Model
             UnPause();
             timescaleChanged?.Invoke(this, EventArgs.Empty);
         }
+
         /*
         public void Update()
         {
@@ -114,13 +111,6 @@ namespace VolcanicTransport.Model
             if (_isPaused) return;
             WorldInstance.Update(deltaTime);
             gameAdvanced?.Invoke(this, EventArgs.Empty);
-        }
-
-        public void Update(double deltaTime)
-        {
-            WorldInstance.Update(1.0);
-            gameAdvanced?.Invoke(this, EventArgs.Empty);
-            WorldInstance.Update(deltaTime);
         }
 
         public bool BuyVehicle(Vehicle v)
@@ -219,11 +209,20 @@ namespace VolcanicTransport.Model
 
         public void PlaceRoad(Coordinate coord)
         {
-            const double roadPrice = 50;
+            double roadPrice = 50;
+            const double mushroomPricePerUnit = 20;
+            double extraCost = 0;
+
             Field? field = WorldInstance.GetField(coord);
             if (null == field) 
                 return;
 
+            if (field.Surface is Mushroom mushroom)
+            {
+                double stage = (double)mushroom.GrowthStage+1;
+                extraCost = stage * mushroomPricePerUnit;
+                roadPrice += extraCost;
+            }
 
             if (!TryPurchase(roadPrice)) 
                 return;
@@ -276,7 +275,7 @@ namespace VolcanicTransport.Model
 
             if (field.Surface is Mushroom mushroom)
             {
-                double stage = (double)mushroom.GrowthStage;
+                double stage = (double)mushroom.GrowthStage+1;
                 extraCost = stage * mushroomPricePerUnit;
                 stationCost += extraCost;
             }

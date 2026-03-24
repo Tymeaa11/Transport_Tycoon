@@ -370,7 +370,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public string CurrentMoney
         {
-            get => GameModelInstance.PlayerMoney.ToString("F0") + " €$";
+            get => GameModelInstance.PlayerMoney.ToString("F0") + " $";
         }
 
         private readonly object _vehiclesLock = new object();
