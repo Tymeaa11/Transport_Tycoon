@@ -179,6 +179,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
             Camera.CameraChanged += (s, e) => UpdateVisibleChunks(_lastWidth, _lastHeight);
 
+            CurrentTimescale = 1;
+
             FieldClickedCommand = new DelegateCommand(param =>
             {
                 if (param is Coordinate coord)
@@ -265,14 +267,13 @@ namespace VolcanicTransport_WPF.ViewModel
             get => currentTimescale;
             set
             {
-                if (currentTimescale != value)
-                {
-                    currentTimescale = value;
-                    OnPropertyChanged(nameof(IsTimescale0));
-                    OnPropertyChanged(nameof(IsTimescale1));
-                    OnPropertyChanged(nameof(IsTimescale2));
-                    OnPropertyChanged(nameof(IsTimescale4));
-                }
+                if (currentTimescale == value) return;
+
+                currentTimescale = value;
+                OnPropertyChanged(nameof(IsTimescale0));
+                OnPropertyChanged(nameof(IsTimescale1));
+                OnPropertyChanged(nameof(IsTimescale2));
+                OnPropertyChanged(nameof(IsTimescale4));
 
             }
         }
@@ -300,13 +301,32 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void StartGameLoop()
         {
-            _gameLoop = new DispatcherTimer();
-            _gameLoop.Interval = TimeSpan.FromMilliseconds(16); // Kb. 60 FPS
-            _gameLoop.Tick += (s, e) =>
+            _stopwatch = new System.Diagnostics.Stopwatch();
+            _stopwatch.Start();
+
+            CompositionTarget.Rendering += OnCompositionTargetRendering;
+        }
+        private const double BASE_SPEED_MULTIPLIER = 10.0;
+        private void OnCompositionTargetRendering(object? sender, EventArgs e)
+        {
+            TimeSpan currentRenderTime = _stopwatch.Elapsed;
+            double deltaTime = (currentRenderTime - _lastRenderTime).TotalSeconds;
+            _lastRenderTime = currentRenderTime;
+
+            if (CurrentTimescale == 0)
             {
-                GameModelInstance.Update();
-            };
-            _gameLoop.Start();
+                _accumulator = 0;
+            }
+
+            if (deltaTime > 0.1) deltaTime = 0.1;
+
+            _accumulator += deltaTime * CurrentTimescale * BASE_SPEED_MULTIPLIER;
+
+            while (_accumulator >= FIXED_DELTA_TIME)
+            {
+                GameModelInstance.Update(FIXED_DELTA_TIME);
+                _accumulator -= FIXED_DELTA_TIME;
+            }
         }
         private void OnSetBuildMode(BuildMode mode)
         {
@@ -331,18 +351,21 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnSetTimescale1X()
         {
             CurrentTimescale = 1;
+            GameModelInstance.UnPause();
             GameModelInstance.ChangeTimeSpeed1X();
         }
 
         private void OnSetTimescale2X()
         {
             CurrentTimescale = 2;
+            GameModelInstance.UnPause();
             GameModelInstance.ChangeTimeSpeed2X();
         }
 
         private void OnSetTimescale4X()
         {
             CurrentTimescale = 4;
+            GameModelInstance.UnPause();
             GameModelInstance.ChangeTimeSpeed4X();
         }
 

@@ -12,7 +12,6 @@ namespace VolcanicTransport.Model
         private bool _isPaused = false;
         private readonly DateTime _currentTime;
         private readonly ISaveFileManager _savefileManager;
-        private readonly ScalableTimer _gameTickTimer;
 
         public double PlayerMoney {  get { return _playerMoney; } }
         public World.World WorldInstance { get => World.World.Instance; }
@@ -55,12 +54,7 @@ namespace VolcanicTransport.Model
             _gameTickTimer.Elapsed += (s, e) => OnTimerTick();
             _gameTickTimer.Start();
             _playerMoney = 10000;
-        }
-
-        private void OnTimerTick()
-        {
-            if (_isPaused) return;
-            Update();
+            _playerMoney = 100000;
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
@@ -77,24 +71,44 @@ namespace VolcanicTransport.Model
         public void Pause()
         {
             _isPaused = true;
-            _gameTickTimer.Stop();
             gamePaused?.Invoke(this, EventArgs.Empty);
         }
 
         public void UnPause()
         {
             _isPaused = false;
-            _gameTickTimer.Start();
             gameUnpaused?.Invoke(this, EventArgs.Empty);
         }
 
-        public void ChangeTimeSpeed1X() { _gameTickTimer.TimeScale = 1; timescaleChanged?.Invoke(this, EventArgs.Empty); }
-        public void ChangeTimeSpeed2X() { _gameTickTimer.TimeScale = 2; timescaleChanged?.Invoke(this, EventArgs.Empty); }
-        public void ChangeTimeSpeed4X() { _gameTickTimer.TimeScale = 4; timescaleChanged?.Invoke(this, EventArgs.Empty); }
+        public void ChangeTimeSpeed1X()
+        {
+            UnPause(); // Ha le volt állítva, induljon el
+            timescaleChanged?.Invoke(this, EventArgs.Empty);
+        }
 
+        public void ChangeTimeSpeed2X()
+        {
+            UnPause();
+            timescaleChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void ChangeTimeSpeed4X()
+        {
+            UnPause();
+            timescaleChanged?.Invoke(this, EventArgs.Empty);
+        }
+        /*
         public void Update()
         {
+            if (_isPaused) return;
             WorldInstance.Update(1.0);
+            gameAdvanced?.Invoke(this, EventArgs.Empty);
+        }*/
+
+        public void Update(double deltaTime)
+        {
+            if (_isPaused) return;
+            WorldInstance.Update(deltaTime);
             gameAdvanced?.Invoke(this, EventArgs.Empty);
         }
 
@@ -178,12 +192,81 @@ namespace VolcanicTransport.Model
                 {
                     AddMoney(roadPrice);
                 }
+        private Road? CanPlaceRoadHere(Coordinate coord, Field field)
+        {
+            if (null == field)
+                return null;
+
+            if (!field.IsBuildable())
+                return null;
+
+            //creating a temporal to see if a road can be place here
+            Coordinate a = coord;
+            Road tempRoad = new(coord);
+
+            tempRoad.RoadLayoutChanged += OnRoadBecameJunction;
+
+            field.Surface = tempRoad;
+            tempRoad.Update();
+            
+
+            if (tempRoad.RoadType == RoadType.INVALID)
+            {
+                field.Surface = null;
+
+                tempRoad.RoadLayoutChanged -= OnRoadBecameJunction;
+                onPlacementFailed?.Invoke(this, EventArgs.Empty);
+                return null;
+            }
+
+            return tempRoad;
+        }
+
+
+        public void PlaceRoad(Coordinate coord)
+        {
+            double roadPrice = 50;
+            const double mushroomPricePerUnit = 20;
+            double extraCost = 0;
+            Field? field = WorldInstance.GetField(coord);
+            if (null == field) 
+                return;
+
+            if (field.Surface is Mushroom mushroom)
+            {
+                double stage = (double)mushroom.GrowthStage+1;
+                extraCost = stage * mushroomPricePerUnit;
+                roadPrice += extraCost;
+               
+            }
+
+            if (!TryPurchase(roadPrice)) 
+                return;
+
+            Road? road = CanPlaceRoadHere(coord, field);
+            if (null == road)
+            {
+                AddMoney(roadPrice);
+                return;
+            }
+
+
+            if (!road.TryUpdateNeighbours())
+            {
+                field.Surface = null;
+                road.UpdateNeighbours();
+
+                AddMoney(roadPrice);
+                onPlacementFailed?.Invoke(this, EventArgs.Empty);
+                return;
             }
             return false;
         }
         public bool PlaceStation(Coordinate coord)
         {
-            const int stationCost = 500;
+            double stationCost = 500;
+            const double mushroomPricePerUnit = 20;
+            double extraCost = 0;
 
             if (!IsBuildable(coord) || _playerMoney < stationCost) return false;
 
@@ -200,9 +283,20 @@ namespace VolcanicTransport.Model
             }
             if (!nearRoad) return false;
 
+            Field? field = WorldInstance.GetField(coord);
+
+            if (field == null) return false;
+
+            if (field.Surface is Mushroom mushroom)
+            {
+                double stage = (double)mushroom.GrowthStage;
+                extraCost = stage * mushroomPricePerUnit;
+                stationCost += extraCost;
+            }
+
             var city = WorldInstance.Cities.FirstOrDefault(c => c.CenterCoordinate.Distance(coord) <= 4);
 
-            var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 3);
+            var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 4);
 
             Station? newStation = null;
             if (city != null) newStation = new CityStation(city, coord, "CityStation");
