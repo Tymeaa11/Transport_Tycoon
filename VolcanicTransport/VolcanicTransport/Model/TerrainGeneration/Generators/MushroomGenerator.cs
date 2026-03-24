@@ -1,7 +1,8 @@
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 
-namespace VolcanicTransport.Model.TerrainGeneration
+namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class MushroomGenerator : ITerrainGenerator
     {
@@ -10,13 +11,10 @@ namespace VolcanicTransport.Model.TerrainGeneration
         private const float Stage2MinHeight = 0.6f;
         private const float Stage3MinHeight = 0.65f;
 
-        private readonly Random _random = new(World.World.Instance.WorldSeed);
-        private float GetOffset() => _random.NextSingle() * 1000;
-
         private readonly PerlinLayer _mushroomLayer;
         public MushroomGenerator()
         {
-            _mushroomLayer = new PerlinLayer(new Perlin(), 0.02f, 1f, GetOffset(), GetOffset());
+            _mushroomLayer = new PerlinLayer(new Perlin(), 0.02f, 1f, World.World.Instance.SharedRandom);
         }
 
         public void ModifyField(Field field, int x, int y)
@@ -44,6 +42,6 @@ namespace VolcanicTransport.Model.TerrainGeneration
             }
         }
 
-        public void SetSeed(int seed) => _mushroomLayer.SetSeed(seed);
+        public void SetSeed(int seed, Random nextRandom) => _mushroomLayer.SetSeed(seed, nextRandom);
     }
 }

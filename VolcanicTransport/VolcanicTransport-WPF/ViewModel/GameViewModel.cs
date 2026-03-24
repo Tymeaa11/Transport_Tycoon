@@ -71,6 +71,10 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale1Command { get; private set; }
         public DelegateCommand SetTimescale2Command { get; private set; }
         public DelegateCommand SetTimescale4Command { get; private set; }   
+
+
+
+        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }   
         #endregion
 
         #region FieldClicked & FieldHovered
@@ -139,6 +143,15 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
             SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
 
+            ReGenerateWithRandomSeed = new DelegateCommand(_ =>
+            {
+                GameModelInstance.WorldInstance.Generate(new Random().Next());
+                LoadedChunks.Clear();
+                GameModelInstance.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
+                UpdateVisibleChunks(_lastWidth, _lastHeight);
+            }
+            );
+
             //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
         }
 
@@ -149,7 +162,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(8);
+            GameModel.Initialise(8, 0);
         }
 
         private BuildMode currentBuildMode = BuildMode.NONE;

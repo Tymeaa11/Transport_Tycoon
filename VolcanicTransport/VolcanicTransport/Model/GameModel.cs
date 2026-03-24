@@ -1,4 +1,5 @@
 using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Roadnetwork;
@@ -34,9 +35,9 @@ namespace VolcanicTransport.Model
 
         private static GameModel? _instance;
 
-        private GameModel(int worldSize)
+        private GameModel(int worldSize, int seed)
         {
-            World.World.Initialise(worldSize);
+            World.World.Initialise(worldSize, seed);
             _savefileManager = new SaveFileManager();
 
             WorldInstance.GameWorldGenerator = new GameWorldGenerator(
@@ -49,11 +50,11 @@ namespace VolcanicTransport.Model
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
-        public static void Initialise(int worldSize)
+        public static void Initialise(int worldSize, int seed)
         {
             if (_instance != null) throw new InvalidOperationException("World already initialised");
 
-            _instance = new GameModel(worldSize);
+            _instance = new GameModel(worldSize, seed);
         }
         #endregion
 

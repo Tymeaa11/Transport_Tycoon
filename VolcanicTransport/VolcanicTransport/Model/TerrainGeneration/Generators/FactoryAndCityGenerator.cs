@@ -2,7 +2,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 
-namespace VolcanicTransport.Model.TerrainGeneration
+namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class FactoryAndCityGenerator(int cityCount, int factoryCount)
     {
@@ -50,8 +50,8 @@ namespace VolcanicTransport.Model.TerrainGeneration
             for (int i = 0; i < MaxAttemps; i++)
             {
                 Coordinate potential = new(
-                     World.World.SharedRandom.Next(WorldEdgeBufferZone, PossibleArea.X),
-                     World.World.SharedRandom.Next(2, PossibleArea.Y)
+                     World.World.Instance.SharedRandom.Next(WorldEdgeBufferZone, PossibleArea.X),
+                     World.World.Instance.SharedRandom.Next(2, PossibleArea.Y)
                     );
 
                 if (IsAreaSuitable(potential))
@@ -120,7 +120,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
 
         private void CreateFactory(Coordinate origin)
         {
-            int factoryType = World.World.SharedRandom.Next(0, 7);
+            int factoryType = World.World.Instance.SharedRandom.Next(0, 7);
             Factory newFactory = factoryType switch
             {
                 0 => new CondensatorFactory(origin),
