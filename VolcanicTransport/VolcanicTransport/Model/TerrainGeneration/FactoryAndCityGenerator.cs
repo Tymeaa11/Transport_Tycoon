@@ -1,6 +1,7 @@
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
+using VolcanicTransport.Model;
 
 namespace VolcanicTransport.Model.TerrainGeneration
 {
@@ -112,7 +113,10 @@ namespace VolcanicTransport.Model.TerrainGeneration
             fields.ForEach(f =>
             {
                 if (f.Surface is Road r)
+                {
+                    r.RoadLayoutChanged += GameModel.Instance.OnRoadBecameJunction;
                     r.Update();
+                }
             });
 
             World.World.Instance.Cities.Add(newCity);

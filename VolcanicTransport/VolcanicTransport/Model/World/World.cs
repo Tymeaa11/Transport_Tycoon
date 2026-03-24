@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -22,7 +23,7 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; set; } = [];
         public List<Factory> Factories { get; set; } = [];
         public List<Station> Stations { get; set; } = [];
-        private List<Vehicle> Vehicles { get; set; } = [];
+        public ObservableCollection<Vehicle> Vehicles { get; } = new ObservableCollection<Vehicle>();
 
         public GameWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
@@ -106,20 +107,6 @@ namespace VolcanicTransport.Model.World
 
         #region Road Placement Logic
 
-        public bool PlaceRoad(Coordinate c)
-        {
-            Field? f = GetField(c);
-
-            if (f == null || !f.IsBuildable()) return false;
-
-            Road newRoad = new Road(c);
-            f.Surface = newRoad;
-
-            UpdateRoadNetworkAround(c);
-
-            return true;
-        }
-
         public void UpdateRoadNetworkAround(Coordinate c)
         {
             List<Coordinate> targets = new()
@@ -131,20 +118,26 @@ namespace VolcanicTransport.Model.World
                 c + Direction.West
             };
 
+            HashSet<Chunk> chunksToRender = new HashSet<Chunk>();
+
             foreach (var coord in targets)
             {
-                Field? field = GetField(coord);
-                if (field?.Surface is Road road)
+                var chunkCoord = GetChunkCoordinate(coord);
+                var chunk = GetChunk(chunkCoord);
+                if (chunk != null)
                 {
-                    road.Update();
-
-                    var chunkCoord = GetChunkCoordinate(coord);
-                    GetChunk(chunkCoord)?.TriggerRerender();
+                    chunksToRender.Add(chunk);
                 }
+            }
+
+            foreach (var chunk in chunksToRender)
+            {
+                chunk.TriggerRerender();
             }
         }
 
         #endregion
+
 
         public void Update(double gameDt)
         {

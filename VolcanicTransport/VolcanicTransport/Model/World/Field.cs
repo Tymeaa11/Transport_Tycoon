@@ -21,7 +21,6 @@ namespace VolcanicTransport.Model.World
             50000
         ];
 
-        public Coordinate Coordinate { get; set; }
 
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
 

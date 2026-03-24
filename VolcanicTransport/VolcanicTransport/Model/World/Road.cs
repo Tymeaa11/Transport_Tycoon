@@ -2,28 +2,43 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Road(Coordinate coordinate, bool isPermanent = false) : KnowsNeighbour(coordinate)
+    public class Road : KnowsNeighbour
     {
+
+        public Road(Coordinate coordinate, bool isPermanent = false) : base(coordinate)
+        {
+            IsPermanent = isPermanent;
+        }
+
         #region fields
-        public bool IsPermanent { get; } = isPermanent;
+        public bool IsPermanent { get; }
+
+        public bool IsReserved { get; set; } = false;
         public RoadType RoadType { get; private set; }
         #endregion
 
         #region methods
 
-        public class FieldEventArgs(Field field) : EventArgs
+        public class FieldEventArgs(Coordinate coordinate) : EventArgs
         {
-            public Field Field { get; } = field;
+            public Coordinate Coordinate { get; } = coordinate;
         }
 
         public event EventHandler<FieldEventArgs>? RoadLayoutChanged;
 
-        protected virtual void OnRoadLayoutChanged(Field field)
+        protected virtual void OnRoadLayoutChanged(Coordinate coord)
         {
-            RoadLayoutChanged?.Invoke(this, new FieldEventArgs(field));
+            RoadLayoutChanged?.Invoke(this, new FieldEventArgs(coord));
         } //TODO feliratkozni az eseményre
         public void Update()
         {
+            var heightDiffNorth = 0;
+            var heightDiffSouth = 0;
+            var heightDiffEast = 0;
+            var heightDiffWest = 0;
+
+            var thisField = World.Instance.GetField(Coordinate);
+
             var roadNorth = North?.Surface is Road;
             var roadSouth = South?.Surface is Road;
             var roadEast = East?.Surface is Road;
@@ -31,10 +46,26 @@ namespace VolcanicTransport.Model.World
 
             RoadType = 0;
             var neighbourCount = CountSidesThatSatisfy((n) => n?.Surface is Road);
-            if (roadNorth) RoadType |= RoadType.NORTH;
-            if (roadSouth) RoadType |= RoadType.SOUTH;
-            if (roadEast) RoadType |= RoadType.EAST;
-            if (roadWest) RoadType |= RoadType.WEST;
+            if (roadNorth)
+            {
+                RoadType |= RoadType.NORTH;
+                heightDiffNorth = thisField?.GetHeightDifference(North) ?? 0;
+            }
+            if (roadSouth)
+            {
+                RoadType |= RoadType.SOUTH;
+                heightDiffSouth = thisField?.GetHeightDifference(South) ?? 0;
+            }
+            if (roadEast)
+            {
+                RoadType |= RoadType.EAST;
+                heightDiffEast = thisField?.GetHeightDifference(East) ?? 0;
+            }
+            if (roadWest)
+            {
+                RoadType |= RoadType.WEST;
+                heightDiffWest = thisField?.GetHeightDifference(West) ?? 0;
+            }
 
             switch (neighbourCount)
             {
@@ -59,14 +90,6 @@ namespace VolcanicTransport.Model.World
 
             }
 
-
-            var thisField = World.Instance.GetField(Coordinate);
-
-            var heightDiffNorth = thisField?.GetHeightDifference(North) ?? 0;
-            var heightDiffSouth = thisField?.GetHeightDifference(South) ?? 0;
-            var heightDiffEast = thisField?.GetHeightDifference(East) ?? 0;
-            var heightDiffWest = thisField?.GetHeightDifference(West) ?? 0;
-
             if ((RoadType & RoadType.STRAIGHT) != 0)
             {
                 RoadType |= RoadType.SLOPE;
@@ -87,9 +110,9 @@ namespace VolcanicTransport.Model.World
                 return;
             }
 
-            if (RoadType.JUNCTION == RoadType)
+            if (neighbourCount >= 3)
             {
-                OnRoadLayoutChanged(Field);
+                OnRoadLayoutChanged(Coordinate);
             }
 
         }
@@ -101,29 +124,6 @@ namespace VolcanicTransport.Model.World
         public bool IsSlope => (RoadType & RoadType.SLOPE) != 0;
 
         public event EventHandler? onPlacementFailed;
-        private Road? CanPlaceRoadHere(Field field)
-        {
-            if (field == null)
-                return null;
-
-            if (!field.IsBuildable())
-                return null;
-
-            //creating a temporal to see if a road can be place here
-            Road tempRoad = new(field.Coordinate);
-            field.Surface = tempRoad;
-            tempRoad.Update();
-            field.Surface = null;
-
-            if (RoadType == RoadType.INVALID)
-            {
-                onPlacementFailed?.Invoke(this, EventArgs.Empty);
-                return null;
-            }
-
-
-            return tempRoad;
-        }
 
         public bool TryUpdateNeighbours()
         {
@@ -135,7 +135,7 @@ namespace VolcanicTransport.Model.World
                     return false;
                 }
             }
-            if (North?.Surface is Road southR)
+            if (South?.Surface is Road southR)
             {
                 southR.Update();
                 if (southR.RoadType == RoadType.INVALID)
@@ -143,7 +143,7 @@ namespace VolcanicTransport.Model.World
                     return false;
                 }
             }
-            if (North?.Surface is Road eastR)
+            if (East?.Surface is Road eastR)
             {
                 eastR.Update();
                 if (eastR.RoadType == RoadType.INVALID)
@@ -151,7 +151,7 @@ namespace VolcanicTransport.Model.World
                     return false;
                 }
             }
-            if (North?.Surface is Road westR)
+            if (West?.Surface is Road westR)
             {
                 westR.Update();
                 if (westR.RoadType == RoadType.INVALID)
@@ -170,18 +170,6 @@ namespace VolcanicTransport.Model.World
             if (West?.Surface is Road westR) westR.Update();
         }
 
-        public void PlaceRoad(Field field)
-        {
-            Road? road = CanPlaceRoadHere(field);
-            if (road == null) return;
-            field.Surface = road;
-            if (!road.TryUpdateNeighbours())
-            {
-                field.Surface = null;
-                road.UpdateNeighbours();
-                onPlacementFailed?.Invoke(this, EventArgs.Empty);
-            }
-        }
 
 
         #endregion
