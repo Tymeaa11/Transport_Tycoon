@@ -36,7 +36,7 @@ namespace VolcanicTransport.Model.World
             Type = (FieldType)i;
         }
 
-        public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && Surface == null;
+        public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && (Surface == null  || Surface is Mushroom);
 
         public int GetHeightDifference(Field? field) => Type - field?.Type ?? 0;
     }

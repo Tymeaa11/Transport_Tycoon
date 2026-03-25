@@ -37,6 +37,11 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 [(PathDirection.West, PathDirection.End)] = [new Vector2(0, L2), new Vector2(MID, L2)],
                 [(PathDirection.East, PathDirection.End)] = [new Vector2(END, L1), new Vector2(MID, L1)],
 
+                [(PathDirection.North, PathDirection.Start)] = [new Vector2(L1, 0), new Vector2(L1, MID)],
+                [(PathDirection.South, PathDirection.Start)] = [new Vector2(L2, END), new Vector2(L2, MID)],
+                [(PathDirection.West, PathDirection.Start)] = [new Vector2(0, L2), new Vector2(MID, L2)],
+                [(PathDirection.East, PathDirection.Start)] = [new Vector2(END, L1), new Vector2(MID, L1)],
+
                 // ==========================================
                 // STARTPONTOK (Indulás az állomásról)
                 // ==========================================
@@ -45,6 +50,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 [(PathDirection.Start, PathDirection.East)] = [new Vector2(MID, L2), new Vector2(END, L2)],
                 [(PathDirection.Start, PathDirection.West)] = [new Vector2(MID, L1), new Vector2(0, L1)],
 
+                [(PathDirection.End, PathDirection.North)] = [new Vector2(L2, MID), new Vector2(L2, 0)],
+                [(PathDirection.End, PathDirection.South)] = [new Vector2(L1, MID), new Vector2(L1, END)],
+                [(PathDirection.End, PathDirection.East)] = [new Vector2(MID, L2), new Vector2(END, L2)],
+                [(PathDirection.End, PathDirection.West)] = [new Vector2(MID, L1), new Vector2(0, L1)],
                 // ==========================================
                 // 1. EGYENESEK
                 // ==========================================
@@ -53,6 +62,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 [(PathDirection.West, PathDirection.East)] = [new Vector2(0, L2), new Vector2(END, L2)],
                 [(PathDirection.East, PathDirection.West)] = [new Vector2(END, L1), new Vector2(0, L1)],
 
+                [(PathDirection.North, PathDirection.North)] = [new Vector2(L1, 0), new Vector2(L1, MID), new Vector2(L1, END)],
+                [(PathDirection.South, PathDirection.South)] = [new Vector2(L2, END), new Vector2(L2, MID), new Vector2(L2, 0)],
+                [(PathDirection.West, PathDirection.West)] = [new Vector2(0, L2), new Vector2(MID, L2), new Vector2(END, L2)],
+                [(PathDirection.East, PathDirection.East)] = [new Vector2(END, L1), new Vector2(MID, L1), new Vector2(0, L1)],
                 // ==========================================
                 // 2. JOBBRA KANYAROK
                 // ==========================================
