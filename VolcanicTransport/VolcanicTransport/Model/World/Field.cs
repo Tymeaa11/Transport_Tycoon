@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -28,6 +29,7 @@ namespace VolcanicTransport.Model.World
 
 
         public void SetFieldTypeTo(Field f) => Type = f.Type;
+        public void SetFieldTypeTo(FieldType ftype) => Type = ftype;
         public void SetFieldHeight(float height)
         {
             int i = 0;
@@ -37,7 +39,8 @@ namespace VolcanicTransport.Model.World
         }
 
         public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && (Surface == null  || Surface is Mushroom);
-
+        public bool IsLowerable() => Type > FieldType.DEEP_LAVA_OCEAN && (Surface == null || Surface is Mushroom);
+        public bool IsHeightenable() => Type < FieldType.HIGH_MOUNTAINS && (Surface == null || Surface is Mushroom);
         public int GetHeightDifference(Field? field) => Type - field?.Type ?? 0;
     }
 }

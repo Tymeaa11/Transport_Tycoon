@@ -189,7 +189,7 @@ namespace VolcanicTransport_WPF.ViewModel
                     System.Diagnostics.Debug.WriteLine("Kérlek egy állomásra kattints!");
                 }
             }
-    
+
 
             if (f.IsBuildable())
             {
@@ -206,6 +206,16 @@ namespace VolcanicTransport_WPF.ViewModel
                     case BuildMode.BUY_VEHICLE:
                         break;
                 }
+            }
+
+            if (CurrentBuildMode == BuildMode.HEIGHTEN)
+            {
+                GameModelInstance.HeightenField(coord);
+            }
+
+            if (CurrentBuildMode == BuildMode.LOWER)
+            {
+                GameModelInstance.LowerField(coord);
             }
         }
 
@@ -230,7 +240,21 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
-            IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
+            switch(CurrentBuildMode)
+            {
+                case BuildMode.HEIGHTEN:
+                    IsHoveredFieldBuildable = GameModelInstance.IsHeightenable(HoveredCoordinate);
+                    break;
+                case BuildMode.LOWER:
+                    IsHoveredFieldBuildable = GameModelInstance.IsLowerable(HoveredCoordinate);
+                    break;
+                default:
+                    IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
+                    break;
+
+            }
+
+            
         }
         #endregion
 

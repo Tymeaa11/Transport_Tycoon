@@ -169,6 +169,8 @@ namespace VolcanicTransport.Model
         }
 
         public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
+        public bool IsHeightenable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsHeightenable() ?? false;
+        public bool IsLowerable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsLowerable() ?? false;
 
         public void OnRoadBecameJunction(object? sender, Road.FieldEventArgs e)
         {
@@ -340,6 +342,43 @@ namespace VolcanicTransport.Model
            // }
             
         }
+
+        private void TerraformField (Coordinate coord, int deltaHeight)
+        {
+            double terraformingPrice = 50;
+            const double mushroomPricePerUnit = 20;
+
+
+            Field? field = WorldInstance.GetField(coord);
+            if (null == field)
+                return;
+
+            if (! ((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
+            {
+                return;
+            }
+
+            if (field.Surface is Mushroom mushroom)
+            {
+                double stage = (double)mushroom.GrowthStage + 1;
+                terraformingPrice += stage * mushroomPricePerUnit;
+            }
+
+            FieldType newFieldType = (FieldType)((int)field.Type + deltaHeight);
+
+            if (FieldType.DEEP_LAVA_OCEAN <= newFieldType && newFieldType <= FieldType.HIGH_MOUNTAINS)
+            {
+                if (TryPurchase(terraformingPrice))
+                {
+                    field.SetFieldTypeTo(newFieldType);
+                    var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
+                    WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
+                }
+            }
+
+        }
+        public void HeightenField(Coordinate coord) => TerraformField(coord, +1);
+        public void LowerField(Coordinate coord) => TerraformField(coord, -1);
 
     }
 }
