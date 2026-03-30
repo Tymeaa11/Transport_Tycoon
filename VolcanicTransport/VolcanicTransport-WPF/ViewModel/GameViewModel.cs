@@ -195,9 +195,31 @@ namespace VolcanicTransport_WPF.ViewModel
             IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
 
             _hoveredField = GameModelInstance.WorldInstance.GetField(HoveredCoordinate);
-            ToolTipText = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  " 
-                + (_hoveredField == null ? "-" : $"{ _hoveredField.Type} ({(int)_hoveredField.Type})");
 
+            var text = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  ";
+
+            if (_hoveredField != null)
+            {
+                text += $"{_hoveredField.Type} ({(int)_hoveredField.Type})";
+
+                if (_hoveredField.Surface != null)
+                {
+                    text += " - ";
+
+                    text += _hoveredField.Surface switch
+                    {
+                        Mushroom m => $"M({m.GrowthStage})",
+                        Road r => $"R({r.RoadType})",
+                        Station _ => $"S",
+                        CityBuilding _ => $"C",
+                        FactoryBuilding _ => $"F",
+                        _ => "Not listed"
+                    };
+                }
+            }
+            else text += "-";
+
+                ToolTipText = text;
         }
 
         public int TileSize => Field.FieldSize; //used to size the hovered field highlight
@@ -212,7 +234,6 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 _hoveredCoordinate = value;
                 OnPropertyChanged();
-
             }
         }
 
