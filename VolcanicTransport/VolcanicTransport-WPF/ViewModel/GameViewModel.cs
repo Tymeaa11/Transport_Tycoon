@@ -195,7 +195,9 @@ namespace VolcanicTransport_WPF.ViewModel
             IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
 
             _hoveredField = GameModelInstance.WorldInstance.GetField(HoveredCoordinate);
-            ToolTipText = "Testing";
+            ToolTipText = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  " 
+                + (_hoveredField == null ? "-" : $"{ _hoveredField.Type} ({(int)_hoveredField.Type})");
+
         }
 
         private Field? _hoveredField;
