@@ -50,7 +50,7 @@ namespace VolcanicTransport_WPF.View
         private void MainGameWindow_MouseMove(object sender, MouseEventArgs e)
         {
             if (DataContext is GameViewModel vm)
-                vm.HoveredCoordinate = vm.Camera.ScreenToField(e.GetPosition(ViewPort));
+                vm.UpdateHoveredCoordinateAndTooltips(e.GetPosition(ViewPort));
         }
     }
 }
