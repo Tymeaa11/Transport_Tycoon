@@ -200,6 +200,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         }
 
+        public int TileSize => Field.FieldSize; //used to size the hovered field highlight
+
         private Field? _hoveredField;
 
         private Coordinate _hoveredCoordinate;
