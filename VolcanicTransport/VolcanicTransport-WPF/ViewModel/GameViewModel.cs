@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using VolcanicTransport.Model;
@@ -15,33 +16,8 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
 
+        #region Chunks
         public ObservableCollection<Chunk> LoadedChunks { get; } = [];
-
-        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
-
-        public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
-
-        private Station? _firstSelectedStation = null;
-
-        private VehicleViewModel? _selectedVehicle;
-        public VehicleViewModel? SelectedVehicle
-        {
-            get => _selectedVehicle;
-            set
-            {
-                _selectedVehicle = value;
-                OnPropertyChanged(nameof(SelectedVehicle));
-                OnPropertyChanged(nameof(IsVehiclePanelVisible));
-            }
-        }
-
-        private double _accumulator = 0;
-        private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
-
-        public bool IsVehiclePanelVisible => SelectedVehicle != null;
-
-        private double _lastWidth;
-        private double _lastHeight;
 
         public void SetViewDimensions(double width, double height)
         {
@@ -83,9 +59,9 @@ namespace VolcanicTransport_WPF.ViewModel
                 }
         }
 
-        public Coordinate WorldSizeInChunks => GameModelInstance.WorldInstance.SizeInChunks;
-        public int TileSize => Field.FieldSize;
+        #endregion
 
+        public Coordinate WorldSizeInChunks => GameModelInstance.WorldInstance.SizeInChunks;
         public Camera Camera { get; }
 
         #region Commands
@@ -108,7 +84,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand AddStopCommand { get; }
         #endregion
 
-        #region FieldClicked & FieldHovered
+        #region FieldClicked
         public DelegateCommand FieldClickedCommand { get; private set; }
 
         private void OnFieldClicked(Coordinate coord)
@@ -209,6 +185,47 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
+        #endregion
+
+        #region Hovered field & Tooltips
+
+        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
+        {
+            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+            IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
+
+            _hoveredField = GameModelInstance.WorldInstance.GetField(HoveredCoordinate);
+
+            var text = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  ";
+
+            if (_hoveredField != null)
+            {
+                text += $"{_hoveredField.Type} ({(int)_hoveredField.Type})";
+
+                if (_hoveredField.Surface != null)
+                {
+                    text += " - ";
+
+                    text += _hoveredField.Surface switch
+                    {
+                        Mushroom m => $"M({m.GrowthStage})",
+                        Road r => $"R({r.RoadType})",
+                        Station _ => $"S",
+                        CityBuilding _ => $"C",
+                        FactoryBuilding _ => $"F",
+                        _ => "Not listed"
+                    };
+                }
+            }
+            else text += "-";
+
+                ToolTipText = text;
+        }
+
+        public int TileSize => Field.FieldSize; //used to size the hovered field highlight
+
+        private Field? _hoveredField;
+
         private Coordinate _hoveredCoordinate;
         public Coordinate HoveredCoordinate
         {
@@ -217,7 +234,17 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 _hoveredCoordinate = value;
                 OnPropertyChanged();
-                UpdateBuildability();
+            }
+        }
+
+        private string _toolTipText;
+        public string ToolTipText 
+        {
+            get => _toolTipText;
+            set 
+            {
+                _toolTipText = value;
+                OnPropertyChanged();
             }
         }
 
@@ -227,13 +254,37 @@ namespace VolcanicTransport_WPF.ViewModel
             get => _isHoveredFieldBuildable;
             set { _isHoveredFieldBuildable = value; OnPropertyChanged(); }
         }
-
-        private void UpdateBuildability()
-        {
-            IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
-        }
         #endregion
 
+
+        #region Vehicles
+        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
+
+        public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
+
+        private Station? _firstSelectedStation = null;
+
+        private VehicleViewModel? _selectedVehicle;
+        public VehicleViewModel? SelectedVehicle
+        {
+            get => _selectedVehicle;
+            set
+            {
+                _selectedVehicle = value;
+                OnPropertyChanged(nameof(SelectedVehicle));
+                OnPropertyChanged(nameof(IsVehiclePanelVisible));
+            }
+        }
+
+        private double _accumulator = 0;
+        private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
+
+        public bool IsVehiclePanelVisible => SelectedVehicle != null;
+
+        #endregion
+
+        private double _lastWidth;
+        private double _lastHeight;
 
         public GameViewModel()
         {
