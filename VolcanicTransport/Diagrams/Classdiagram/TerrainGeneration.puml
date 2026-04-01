@@ -1,0 +1,207 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor #f3dbb6
+}
+
+set namespaceSeparator ::
+
+namespace Model::World #aaf1ee {
+    class World <<Singleton>> #8ffdd3 {}
+}
+
+
+namespace Model::TerrainGeneration #bbf58b {
+
+    namespace Generators #CCDDCC {
+        interface ITerrainGenerator {
+            + ModifyField(field:Field, x:int, y:int) : void
+        }
+        Model::TerrainGeneration::ISeedable <|-- ITerrainGenerator
+
+        class FactoryAndCityGenerator {
+            - <<const>> MinimumDistance : double = 15.0
+            - <<const>> MaxAttemps : int = 100
+            - <<const>> WorldEdgeBufferZone : int = 2
+            ..
+            + CityCount : int <<get>>
+            + FactoryCount : int <<get>>
+            --
+            + FactoryAndCityGenerator(cityCount,factoryCount:int)
+            ..
+            - GetField(coordinate:Coordinate) : Field
+            + Generate() : void
+            - FindValidLocation() : Coordinate?
+            - IsAreaSuitable(center:Coordinate) : bool
+            - CreateCity(center:Coordinate) : void
+            - CreateFactory(origin:Coordinate) : void
+        }
+        class GenerationErrorException {
+        }
+        FactoryAndCityGenerator +-- GenerationErrorException
+        Exception <|-- GenerationErrorException
+
+        class MushroomGenerator {
+            - <<const>> Stage0MinHeight : float = 0.5f
+            - <<const>> Stage1MinHeight : float = 0.55f
+            - <<const>> Stage2MinHeight : float = 0.6f
+            - <<const>> Stage3MinHeight : float = 0.65f
+            ..
+            - <<readonly>> _mushroomLayer : PerlinLayer
+            --
+            + MushroomGenerator()
+            ..
+            + ModifyField(field:Field, x:int, y:int) : void
+            + SetSeed(seed:int, nextRandom:Random) : void
+        }
+        ITerrainGenerator <|-- MushroomGenerator
+
+        class TerrainHeightGenerator {
+            - <<readonly>> _perlin : Perlin
+            - <<readonly>> _positiveTerrain : LayeredTerrain
+            - <<readonly>> _rivers : LayeredTerrain
+            - <<readonly>> _falloff : Falloff
+            --
+            + TerrainHeightGenerator()
+            ..
+            - PLayer(frequency:float, amplitude:float) : PerlinLayer
+            + Initialise() : void
+            + ModifyField(field:Field, x:int, y:int) : void
+            + SetSeed(seed:int, nextRandom:Random) : void
+        }
+        ITerrainGenerator <|-- TerrainHeightGenerator
+
+
+    }
+
+    namespace Layers #CCDDCC { 
+
+        interface ILayer {
+            + Get(x:float, y:float) : float
+        }
+        ISeedable <|-- ILayer
+
+        class CompositeLayer {
+            - layer0 : ILayer
+            - layer1 : ILayer
+            - layer2 : ILayer
+            --
+            + CompositeLayer(ILayer, ILayer, ILayer)
+            ..
+            + Get(x:float, y:float) : float
+            + SetSeed(seed:int, nextRandom:Random) : void
+        }
+        ILayer <|-- CompositeLayer
+
+        class Falloff {
+            + Get(x:float, y:float) : float
+            + SetSeed(seed:int, nextRandom:Random) : void
+        }
+        ILayer <|-- Falloff
+
+        class LayeredTerrain {
+            - <<readonly>> _layers : List<ILayer>
+            --
+            + LayeredTerrain(layers:List<ILayer>)
+            + LayeredTerrain()
+            ..
+            + AddLayer(layer:ILayer) : void
+            + AddLayer(layers:ILayer[]) : void
+            + Get(x:float, y:float) : float
+            + SetSeed(seed:int, nextRandom:Random) : void
+        }
+        ILayer <|-- LayeredTerrain
+
+        class Perlin {
+            - <<const>> TwoPi : int = 720
+            - <<const>> Pi : int = 360
+            - {static} <<readonly>> CosTable : float[]
+            {static} - Perlin()
+            - {static} Noise_fsc(i:float) : float
+            ..
+            - <<readonly>> _perlin : float[]
+            - _perlinRandom : Random
+            - _octaves : int
+            - _fallOff : float
+            --
+            + Perlin()
+            + Perlin(lod:int, fallOff:float)
+            ..
+            + Noise(x:float, y:float, z:float) : float
+            + NoiseDetail(lod:int) : void
+            + NoiseDetail(lod:int, falloff:float) : void
+            + SetSeed(seed:int, nextRandom:Random) : void
+        }
+        ISeedable <|-- Perlin
+
+        class PerlinLayer {
+            - <<readonly>> _perlin : Perlin
+            --
+            + PerlinLayer(perlin:Perlin, frequency:float, amplitude:float, offsetX:float, offsetY:float)
+            + PerlinLayer(perlin:Perlin, frequency:float, amplitude:float, nextRandom:Random)
+            ..
+            # <<override>> Calculate(x:float, y:float) : float
+        }
+        ScalableLayer <|-- PerlinLayer
+
+        abstract class ScalableLayer {
+            - {static} GetNewOffset(r:Random) : float
+            ..
+            - <<readonly>> _frequency : float
+            - <<readonly>> _amplitude : float
+            - _offsetX : float = 0
+            - _offsetY : float = 0
+            --
+            + ScalableLayer(frequency:float, amplitude:float, offsetX:float, offsetY:float)
+            + ScalableLayer(frequency:float, amplitude:float, nextRandom:Random)
+            ..
+            # {abstract} Calculate(x:float, y:float) : float
+            + SetSeed(seed:int, nextRandom:Random) : void
+            + Get(x:float, y:float) : float
+        }
+        ILayer <|-- ScalableLayer
+
+        class Worley {
+        }
+
+        class WorleyLayer {
+        }
+
+    }
+
+    interface ISeedable {
+        + SetSeed(seed:int, nextRandom:Random) : void
+    }   
+
+    class GameWorldGenerator {
+        - terrainHeightGenerator : TerrainHeightGenerator
+        - mushroomGenerator : MushroomGenerator
+        - factoryAndCityGenerator : FactoryAndCityGenerator 
+        --
+        + GameWorldGenerator(TerrainHeightGenerator, MushroomGenerator, FactoryAndCityGenerator)
+        ..
+        + GenerateField(field:Field, x:int, y:int) : void
+        + GenerateCitiesAndFactories() : void
+        + SetSeed(seed:int, nextRandom:Random) : void
+    }
+
+    ISeedable <|-- GameWorldGenerator
+
+    TerrainHeightGenerator <-- PerlinLayer
+    TerrainHeightGenerator <-- LayeredTerrain
+    TerrainHeightGenerator <-- Perlin
+    TerrainHeightGenerator <-- Falloff
+
+    GameWorldGenerator <-- TerrainHeightGenerator
+    GameWorldGenerator <-- MushroomGenerator
+    GameWorldGenerator <-- FactoryAndCityGenerator
+
+    Model::World::World <-- GameWorldGenerator
+}
+
+@enduml
