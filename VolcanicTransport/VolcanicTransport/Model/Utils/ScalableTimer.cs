@@ -4,9 +4,15 @@ namespace VolcanicTransport.Model.Utils
 {
     public class ScalableTimer : IDisposable
     {
+        private const int BaseScale = 100;
+        
+        #region Fields
+        public event EventHandler? Elapsed;
         private readonly Timer _timer;
         private int _timeScale;
-        private readonly int _baseScale = 100;
+        #endregion
+        
+        #region Properties
         public bool Enabled
         {
             get => _timer.Enabled;
@@ -26,13 +32,14 @@ namespace VolcanicTransport.Model.Utils
                 }
                 else
                 {
-                    _timer.Interval = (double)_baseScale / _timeScale;
+                    _timer.Interval = (double)BaseScale / _timeScale;
                     _timer.Start();
                 }
             }
         }
-        public event EventHandler? Elapsed;
-
+        #endregion
+    
+        #region Constructors
         public ScalableTimer()
         {
             _timer = new Timer();
@@ -41,20 +48,12 @@ namespace VolcanicTransport.Model.Utils
                 Elapsed?.Invoke(sender, e);
             };
         }
+        #endregion
 
-        public void Start()
-        {
-            _timer.Start();
-        }
-
-        public void Stop()
-        {
-            _timer.Stop();
-        }
-
-        public void Dispose()
-        {
-            _timer.Dispose();
-        }
+        #region Methods
+        public void Start() => _timer.Start();
+        public void Stop() => _timer.Stop();
+        public void Dispose() => _timer.Dispose();
+        #endregion
     }
 }

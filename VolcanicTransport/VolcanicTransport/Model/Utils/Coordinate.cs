@@ -1,5 +1,3 @@
-using VolcanicTransport.Model.World;
-using static VolcanicTransport.Model.TerrainGeneration.Generators.FactoryAndCityGenerator;
 
 namespace VolcanicTransport.Model.Utils
 {
@@ -16,6 +14,7 @@ namespace VolcanicTransport.Model.Utils
         public Coordinate() : this(0, 0) { }
         #endregion
 
+        #region Methods
         public double Magnitude => Math.Sqrt(X * X + Y * Y);
 
         public double Distance(Coordinate o) => (this-o).Magnitude;
@@ -38,13 +37,13 @@ namespace VolcanicTransport.Model.Utils
                 return [];
 
             List<Coordinate> coords = [];
-            for (int y = topLeft.Y; y <= topRight.Y; y++)
-                for (int x = topLeft.X; x <= topRight.X; x++)
-                    coords.Add(new(x, y));
+            for (var y = topLeft.Y; y <= topRight.Y; y++)
+                for (var x = topLeft.X; x <= topRight.X; x++)
+                    coords.Add(new Coordinate(x, y));
 
             return coords;
         }
-
+        #endregion
 
         #region Equals & HashCode
         public override bool Equals(object? obj)
