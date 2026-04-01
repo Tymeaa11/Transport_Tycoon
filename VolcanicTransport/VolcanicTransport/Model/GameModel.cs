@@ -268,7 +268,7 @@ namespace VolcanicTransport.Model
 
             WorldInstance.Roadnetwork.RegisterNodeIfNeeded(coord);
 
-            var chunkCoord = World.World.GetChunkCoordinate(coord);
+            var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
             WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
             return true;

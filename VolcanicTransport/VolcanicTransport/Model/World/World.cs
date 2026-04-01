@@ -67,10 +67,10 @@ namespace VolcanicTransport.Model.World
         #endregion
 
         #region FieldGetters
-        public static Coordinate GetChunkCoordinate(Coordinate fieldCoordinate)
+        public Coordinate GetChunkCoordinate(Coordinate fieldCoordinate)
             => fieldCoordinate / Chunk.ChunkSize;
 
-        public static Coordinate GetFieldCoordinateInChunk(Coordinate fieldCoordinate)
+        public Coordinate GetFieldCoordinateInChunk(Coordinate fieldCoordinate)
             => fieldCoordinate % Chunk.ChunkSize;
 
         private Field GetFieldNoChecks(Coordinate fieldCoordinate)
