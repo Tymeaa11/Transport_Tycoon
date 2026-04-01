@@ -54,14 +54,14 @@ namespace VolcanicTransport_WPF.ViewModel
             foreach (var coord in visibleCoords)
                 if (!LoadedChunks.Any(c => c.Coordinate.Equals(coord)))
                 {
-                    var chunk = GameModelInstance.WorldInstance.GetChunk(coord);
+                    var chunk = GameModel.WorldInstance.GetChunk(coord);
                     if (chunk != null) LoadedChunks.Add(chunk);
                 }
         }
 
         #endregion
 
-        public Coordinate WorldSizeInChunks => GameModelInstance.WorldInstance.SizeInChunks;
+        public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public Camera Camera { get; }
 
         #region Commands
@@ -90,7 +90,7 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
-            Field? f = GameModelInstance.WorldInstance.GetField(coord);
+            Field? f = GameModel.WorldInstance.GetField(coord);
             if (f == null) return;
 
             if (CurrentBuildMode == BuildMode.SELECT_STATION)
@@ -104,7 +104,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         if (v != null)
                         {
                             System.Diagnostics.Debug.WriteLine("Station megvan, küldöm a modellnek!");
-                            GameModelInstance.AddStopToVehicle(v, clickedStation);
+                            GameModel.AddStopToVehicle(v, clickedStation);
                         }
                     }
                     CurrentBuildMode = BuildMode.NONE;
@@ -133,7 +133,7 @@ namespace VolcanicTransport_WPF.ViewModel
                             return;
                         }
 
-                        var nodes = GameModelInstance.WorldInstance.Roadnetwork.NodeMap;
+                        var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
                         RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == _firstSelectedStation.Coordinate);
                         RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondSelectedStation.Coordinate);
 
@@ -192,9 +192,9 @@ namespace VolcanicTransport_WPF.ViewModel
         public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
         {
             HoveredCoordinate = Camera.ScreenToField(mouseXY);
-            IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
+            IsHoveredFieldBuildable = GameModel.IsBuildable(HoveredCoordinate);
 
-            _hoveredField = GameModelInstance.WorldInstance.GetField(HoveredCoordinate);
+            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
 
             var text = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  ";
 
@@ -325,9 +325,9 @@ namespace VolcanicTransport_WPF.ViewModel
 
             ReGenerateWithRandomSeed = new DelegateCommand(_ =>
             {
-                GameModelInstance.WorldInstance.Generate(new Random().Next());
+                GameModel.WorldInstance.Generate(new Random().Next());
                 LoadedChunks.Clear();
-                GameModelInstance.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
+                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
                 UpdateVisibleChunks(_lastWidth, _lastHeight);
             }
             );
@@ -346,16 +346,16 @@ namespace VolcanicTransport_WPF.ViewModel
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
-            GameModelInstance.moneyChanged += (s, e) =>
+            GameModelInstance.MoneyChanged += (s, e) =>
             {
                 Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(CurrentMoney)));
             };
 
-            GameModelInstance.vehicleBought += (s, e) =>
+            GameModelInstance.VehicleBought += (s, e) =>
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var newModelVehicle = GameModelInstance.WorldInstance.GetLatestVehicle();
+                    var newModelVehicle = GameModel.WorldInstance.GetLatestVehicle();
                     if (newModelVehicle != null)
                     {
                         var vvm = new VehicleViewModel(newModelVehicle);
@@ -476,7 +476,7 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 System.Diagnostics.Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
 
-                GameModelInstance.WorldInstance.Roadnetwork.RebuildEdges();
+                GameModel.WorldInstance.Roadnetwork.RebuildEdges();
             }
 
         }

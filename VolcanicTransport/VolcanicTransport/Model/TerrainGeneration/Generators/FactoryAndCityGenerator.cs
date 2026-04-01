@@ -102,7 +102,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 switch (f.Surface)
                 {
                     case Road r:
-                        r.RoadLayoutChanged += GameModel.Instance.OnRoadBecameJunction;
+                        r.RoadLayoutChanged += GameModel.OnRoadBecameJunction;
                         r.Update();
                         break;
                 }
