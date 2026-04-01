@@ -243,5 +243,10 @@
             </TextBlock>
         </Border>
 
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,0" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
+            <TextBlock Text ="{Binding ToolTipText}" FontSize="16" Margin="4">
+            </TextBlock>
+        </Border>
+
     </Grid>
 </Window>
