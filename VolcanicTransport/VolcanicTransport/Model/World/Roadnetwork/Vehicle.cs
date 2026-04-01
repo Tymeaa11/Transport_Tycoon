@@ -18,23 +18,24 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             get => _visualAngle;
             set
             {
-                if (_visualAngle != value)
-                {
-                    _visualAngle = value;
-                    OnPropertyChanged(nameof(VisualAngle));
-                }
+                if (!(Math.Abs(_visualAngle - value) > 0.01)) return;
+                _visualAngle = value;
+                OnPropertyChanged(nameof(VisualAngle));
             }
         }
 
 
-        public Route? Route { get { return route; } set { route = value; } }
+        public Route? Route { 
+            get => route;
+            set => route = value;
+        }
 
         protected float currentSpeed = 0;
         protected float maxSpeed = maxSpeed;
         protected int capacity = capacity;
 
-        public float MaxSpeed { get { return maxSpeed; } }
-        public int Capacity { get { return capacity; } }
+        public float MaxSpeed => maxSpeed;
+        public int Capacity => capacity;
 
         protected int maintenanceCost = (int)(price * 0.05);
         protected bool active = false;
@@ -47,7 +48,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         protected RoadEdge? currentEdge = null;
         protected Coordinate? currentCoordinate = null;
 
-        protected List<Vector2> currentWaypoints = [];
+        protected readonly List<Vector2> currentWaypoints = [];
         protected int currentWaypointIndex = 0;
 
         public float VisualX => VisualPosition.X;
@@ -68,7 +69,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
 
 
-        public void StartJourney(List<Road> path)
+        public void StartJourney(List<Road>? path)
         {
             //if (route == null) return;
             if (path == null || path.Count == 0) return;
@@ -141,7 +142,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
                 if (dist > 0.001f)
                 {
-                    VisualAngle = (float)(System.Math.Atan2(diff.Y, diff.X) * (180.0 / System.Math.PI));
+                    VisualAngle = (float)(Math.Atan2(diff.Y, diff.X) * (180.0 / Math.PI));
                 }
 
                 if (dist < 0.01f)
