@@ -5,19 +5,21 @@ namespace VolcanicTransport.Model.World
     public class Road : KnowsNeighbour
     {
 
+        #region Constructors
         public Road(Coordinate coordinate, bool isPermanent = false) : base(coordinate)
         {
             IsPermanent = isPermanent;
         }
+        #endregion
 
-        #region fields
+        #region Fields
         public bool IsPermanent { get; }
 
         public bool IsReserved { get; set; } = false;
         public RoadType RoadType { get; private set; }
         #endregion
 
-        #region methods
+        #region Methods
 
         public class FieldEventArgs(Coordinate coordinate) : EventArgs
         {
@@ -96,7 +98,7 @@ namespace VolcanicTransport.Model.World
                 return;
             }
 
-            // No neightbour can be heigher if curved or junction
+            // No neighbor can be higher if curved or junction
             if (heightDiffNorth < 0 || heightDiffSouth < 0 || heightDiffEast < 0 || heightDiffWest < 0)
             {
                 RoadType = RoadType.INVALID;
@@ -123,7 +125,7 @@ namespace VolcanicTransport.Model.World
         public bool IsJunction => (RoadType & RoadType.JUNCTION) != 0;
         public bool IsSlope => (RoadType & RoadType.SLOPE) != 0;
 
-        public event EventHandler? onPlacementFailed;
+        public event EventHandler? OnPlacementFailed;
 
         public bool TryUpdateNeighbours()
         {

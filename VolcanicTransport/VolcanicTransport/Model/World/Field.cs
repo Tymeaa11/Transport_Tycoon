@@ -32,7 +32,7 @@ namespace VolcanicTransport.Model.World
         public void SetFieldTypeTo(FieldType ftype) => Type = ftype;
         public void SetFieldHeight(float height)
         {
-            int i = 0;
+            var i = 0;
             while (i < MaxFieldTypeHeights.Length && height > MaxFieldTypeHeights[i]) i++;
 
             Type = (FieldType)i;

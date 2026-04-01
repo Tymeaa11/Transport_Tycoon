@@ -11,12 +11,10 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
         private const float Stage2MinHeight = 0.6f;
         private const float Stage3MinHeight = 0.65f;
 
-        private readonly PerlinLayer _mushroomLayer;
-        public MushroomGenerator()
-        {
-            _mushroomLayer = new PerlinLayer(new Perlin(), 0.02f, 1f, World.World.Instance.SharedRandom);
-        }
+        private readonly PerlinLayer _mushroomLayer 
+            = new(new Perlin(), 0.02f, 1f, World.World.Instance.SharedRandom);
 
+        
         public void ModifyField(Field field, int x, int y)
         {
             var height = _mushroomLayer.Get(x, y); // 0.0-1.0 range

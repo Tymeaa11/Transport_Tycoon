@@ -16,7 +16,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     {
         public const int TILE_SIZE = 32;
 
-        private const float END = (float)TILE_SIZE;
+        private const float END = TILE_SIZE;
         private const float MID = TILE_SIZE / 2f;
 
         private const float OFFSET = TILE_SIZE / 8f;

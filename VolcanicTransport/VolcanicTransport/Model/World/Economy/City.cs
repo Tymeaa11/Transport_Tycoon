@@ -6,19 +6,18 @@ namespace VolcanicTransport.Model.World.Economy
     {
         private readonly string _name;
         private readonly List<Product> _products;
-        private readonly Coordinate _centerCoordinate;
         private readonly List<Field> _fields;
 
         public City(string name, Coordinate coord)
         {
             _name = name;
-            _centerCoordinate = coord;
+            CenterCoordinate = coord;
             _fields = [];
             _products = [];
             RandomizeNeeds();
         }
 
-        public Coordinate CenterCoordinate { get { return _centerCoordinate; } }
+        public Coordinate CenterCoordinate { get; }
 
         public void AddField(Field f)
         {
@@ -42,10 +41,7 @@ namespace VolcanicTransport.Model.World.Economy
         }
 
         public bool IsProductNeeded(ProductType productType)
-        {
-            if (_products.Where(f => f.ProductType == productType).Count() == 0) { return false; }
-            return true;
-        }
+            => _products.Count(f => f.ProductType == productType) != 0;
 
         /* TODOOO public int RecieveProduct(ProductType type, int amount)
         {

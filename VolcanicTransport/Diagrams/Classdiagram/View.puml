@@ -1,0 +1,152 @@
+@startuml
+
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor #f5e5b3
+}
+
+set namespaceSeparator ::
+
+namespace Model {
+    namespace World #aaf1ee {
+
+    class Chunk  #8ffdd3 {}
+    class Road #8ffdd3 {}
+    class Mushroom #8ffdd3 {}
+
+
+
+    namespace Economy #fad4d4 {
+        class Station #f7e180 {}
+        class CityBuilding #f7e180 {}
+        class FactoryBuilding #f7e180 {}
+    }
+}
+
+    class GameModel <<Singleton>> #d9a6fc {}
+}
+
+
+namespace WPF {
+namespace View #f1c2c2 {
+
+    class BuildabilityToColorConverter implements IValueConverter {
+        + Convert(value:object, targetType:Type, parameter:object, culture:System.Globalization.CultureInfo) : object
+        + ConvertBack(value:object, targetType:Type, parameter:object, culture:System.Globalization.CultureInfo) : object
+    }
+    class ChunkToPixelConverter implements IValueConverter {
+        + Convert(value:object, targetType:Type, parameter:object, culture:System.Globalization.CultureInfo) : object
+        + ConvertBack(value:object, targetType:Type, parameter:object, culture:System.Globalization.CultureInfo) : object
+    }
+
+    class FieldToPixelConverter implements IValueConverter {
+        + Convert(value:object?, targetType:Type, parameter:object, culture:System.Globalization.CultureInfo) : object
+        + ConvertBack(value:object, targetType:Type, parameter:object, culture:System.Globalization.CultureInfo) : object
+    }
+
+    class FieldBrushProvider <<static>> {
+        - {static} <<readonly>> _brushes : Dictionary<FieldType, Brush>
+        --
+        {static} - FieldBrushProvider()
+        ..
+        - {static} Map(type:FieldType, color:Color) : void
+        + {static} GetBrush(type:FieldType) : Brush
+    }
+
+    class GameOverWindow <<partial>> extends Window {
+        + GameOverWindow()
+    }
+
+    class MainGameWindow <<partial>> extends Window {
+        + MainGameWindow()
+        - MainGameWindow_MouseWheel(sender:object, e:MouseWheelEventArgs) : void
+        - MainGameWindow_MouseLeftButtonDown(sender:object, e:MouseButtonEventArgs) : void
+        - MainGameWindow_MouseMove(sender:object, e:MouseEventArgs) : void
+    }
+
+    class MainMenuWindow <<partial>> extends Window {
+        + MainMenuWindow()
+    }
+
+    class PausedGameWindow <<partial>> extends Window {
+        + PausedGameWindow()
+    }
+
+    struct ImageWithRotation {
+        + ImageSource : ImageSource <<get>>
+        + AngleDegrees : int <<get>>
+        + ImageWithRotation(src:ImageSource, deg:int)
+    }
+
+    class TextureAtlas <<static>> {
+        + {static} MushroomTextures : ImageSource[] <<get>>
+        - {static} cityBuildingTexture : ImageSource?
+        + {static} CityBuildingTexture : ImageSource <<get>>
+        - {static} factoryBuildingTexture : ImageSource?
+        + {static} FactoryBuildingTexture : ImageSource <<get>>
+        - {static} stationTexture : ImageSource?
+        + {static} StationTexture : ImageSource <<get>>
+        - {static} invalidTexture : ImageSource?
+        + {static} InvalidTexture : ImageSource <<get>>
+        + {static} RoadTextures : Dictionary<RoadType, ImageWithRotation> <<get>>
+        - {static} _isLoaded : bool = false
+        --
+        + {static} Initialize(atlasPath:string) : void
+        - {static} GetTile(atlas:BitmapSource, row:int, col:int) : ImageSource
+    }
+    class TextureAtlasNotInitialisedException {
+    }
+    TextureAtlas +-- TextureAtlasNotInitialisedException
+    Exception <|-- TextureAtlasNotInitialisedException
+
+    class VisualChunk extends FrameworkElement {
+        - {static} <<readonly>> Dpi : int = 96
+        - {static} <<readonly>> FieldSize : int
+        - {static} <<readonly>> HalfFieldSize : int
+        - {static} <<readonly>> ChunkSizeInFields : int
+        - {static} <<readonly>> ChunkBoundries : Rect
+        ..
+        - <<readonly>> _visual : DrawingVisual
+        --
+        + VisualChunk()
+        ..
+        - OnChunkDataChanged(sender:object?, e:EventArgs) : void
+        + PreRender(chunkData:Chunk) : void
+        - RenderInvalid() : ImageWithRotation
+        - RenderMushroom(m:Mushroom) : ImageWithRotation
+        - RenderRoad(r:Road) : ImageWithRotation
+        - RenderCityBuilding() : ImageWithRotation
+        - RenderFactoryBuilding() : ImageWithRotation
+        - RenderStation() : ImageWithRotation
+        ..
+        # <<override>> VisualChildrenCount : int <<get>>
+        # <<override>> GetVisualChild(index:int) : Visual
+    }
+
+    ImageWithRotation --> TextureAtlas
+    ImageWithRotation --> VisualChunk
+    FieldBrushProvider --> VisualChunk
+
+    VisualChunk --|> MainGameWindow
+
+    ChunkToPixelConverter -- MainGameWindow
+    FieldToPixelConverter -- MainGameWindow
+    BuildabilityToColorConverter -- MainGameWindow
+
+
+    MainGameWindow --*"1" Model::GameModel
+    Model::World::Road ..> VisualChunk
+    Model::World::Mushroom ..> VisualChunk
+    Model::World::Economy::Station ..> VisualChunk
+    Model::World::Economy::CityBuilding ..> VisualChunk
+    Model::World::Economy::FactoryBuilding ..> VisualChunk
+    Model::World::Chunk ..> VisualChunk
+
+
+}
+}

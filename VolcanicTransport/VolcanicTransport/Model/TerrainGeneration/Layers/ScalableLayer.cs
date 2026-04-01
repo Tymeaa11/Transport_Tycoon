@@ -6,10 +6,10 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
 
         private readonly float _frequency;
         private readonly float _amplitude;
-        private float _offsetX = 0;
-        private float _offsetY = 0;
+        private float _offsetX;
+        private float _offsetY;
 
-        public ScalableLayer(float frequency, float amplitude, float offsetX, float offsetY)
+        protected ScalableLayer(float frequency, float amplitude, float offsetX, float offsetY)
         {
             _frequency = frequency;
             _amplitude = amplitude;
@@ -17,7 +17,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
             _offsetY = offsetY;
         }
 
-        public ScalableLayer(float frequency, float amplitude, Random nextRandom)
+        protected ScalableLayer(float frequency, float amplitude, Random nextRandom)
         {
             _frequency = frequency;
             _amplitude = amplitude;

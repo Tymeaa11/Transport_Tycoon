@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -8,9 +9,6 @@ namespace VolcanicTransport.Model.World
 {
     public class World
     {
-        public class NoWorldGeneratorProvidedException : Exception {}
-
-
         #region Fields
 
         private int _worldSeed;
@@ -21,17 +19,16 @@ namespace VolcanicTransport.Model.World
                 _worldSeed = value;
                 SharedRandom = new Random(WorldSeed);
             }
-            
         }
-        public Random SharedRandom { get; private set; } = new Random();
+        public Random SharedRandom { get; private set; } = new();
 
-        public Coordinate SizeInChunks { get; init; }
-        public Coordinate SizeInFields { get; init; }
-        public RoadNetworkGraph Roadnetwork { get; set; }
-        public List<City> Cities { get; set; } = [];
-        public List<Factory> Factories { get; set; } = [];
-        public List<Station> Stations { get; set; } = [];
-        public ObservableCollection<Vehicle> Vehicles { get; } = new ObservableCollection<Vehicle>();
+        public Coordinate SizeInChunks { get; }
+        public Coordinate SizeInFields { get; }
+        public RoadNetworkGraph Roadnetwork { get; }
+        public List<City> Cities { get; } = [];
+        public List<Factory> Factories { get; } = [];
+        public List<Station> Stations { get; } = [];
+        public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
         public GameWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
@@ -41,8 +38,6 @@ namespace VolcanicTransport.Model.World
         #endregion
 
         #region Instance
-        public class WorldNotInitialisedException : Exception { }
-
         private static World? _instance;
 
         private World(int worldSize, int seed)
@@ -64,12 +59,14 @@ namespace VolcanicTransport.Model.World
 
         public static void Initialise(int worldSize, int seed)
         {
-            if (_instance != null) throw new InvalidOperationException("World already initialised");
+            if (_instance != null) 
+                throw new InvalidOperationException("World already initialised");
 
             _instance = new World(worldSize, seed);
         }
         #endregion
-        
+
+        #region FieldGetters
         public Coordinate GetChunkCoordinate(Coordinate fieldCoordinate)
             => fieldCoordinate / Chunk.ChunkSize;
 
@@ -94,10 +91,12 @@ namespace VolcanicTransport.Model.World
             => chunkCoordinate.IsInside(SizeInChunks)
             ? ChunkMatrix[chunkCoordinate]
             : null;
+        
+        #endregion
 
         private void InitialiseWorld()
         {
-            ChunkMatrix.SetEach((x, y) => new Chunk(new(x, y)));
+            ChunkMatrix.SetEach((x, y) => new Chunk(new Coordinate(x, y)));
             ChunkMatrix.ReadEach((_, _, c) => c.FieldMatrix.SetEach((_, _) => new Field()));
         }
 
@@ -128,16 +127,16 @@ namespace VolcanicTransport.Model.World
 
         public void UpdateRoadNetworkAround(Coordinate c)
         {
-            List<Coordinate> targets = new()
-            {
+            List<Coordinate> targets =
+            [
                 c,
                 c + Direction.North,
                 c + Direction.South,
                 c + Direction.East,
                 c + Direction.West
-            };
+            ];
 
-            HashSet<Chunk> chunksToRender = new HashSet<Chunk>();
+            HashSet<Chunk> chunksToRender = [];
 
             foreach (var coord in targets)
             {

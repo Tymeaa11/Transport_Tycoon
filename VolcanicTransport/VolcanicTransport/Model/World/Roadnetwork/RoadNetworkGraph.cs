@@ -1,6 +1,5 @@
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
-using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
@@ -86,7 +85,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         {
             if (adjacentSurface is Station st && st.Coordinate != startNode.Coordinate)
             {
-                if (NodeMap.TryGetValue((KnowsNeighbour)st, out RoadNode? stationNode))
+                if (NodeMap.TryGetValue(st, out RoadNode? stationNode))
                 {
                     startNode.Edges.Add(new RoadEdge(stationNode, weight + 1, new List<Road>(currentPath)));
                     System.Diagnostics.Debug.WriteLine($"    [REJTETT ÁLLOMÁS MEGTALÁLVA] Út bejegyezve: {startNode.Coordinate} -> {stationNode.Coordinate}");
@@ -96,7 +95,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         private bool IsValidPathSurface(ISurface? surface)
         {
-            return surface is Road || surface is Station;
+            return surface is Road or Station;
         }
     }
 }

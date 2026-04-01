@@ -1,0 +1,48 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+set namespaceSeparator ::
+
+
+namespace WPF {
+
+namespace ViewModel #f1c2c2 {
+
+}
+
+namespace View #f1c2c2 {
+    class GameOverWindow <<partial>> extends Window {}
+    class MainGameWindow <<partial>> extends Window {}
+    class MainMenuWindow <<partial>> extends Window {}
+    class PausedGameWindow <<partial>> extends Window {}
+}
+
+class App <<partial>> extends Application {
+    - _gameViewModel : GameViewModel?
+    - _mainGameWindow : MainGameWindow?
+    - _mainMenuWidow : MainMenuWindow?
+    - _pausedGameWindow : PausedGameWindow?
+    - _gameOverWindow : GameOverWindow?
+    --
+    + App()
+    ..
+    - App_Startup(sender:object, e:StartupEventArgs) : void
+    - OnLoadGame(object, EventArgs) : void
+    - OnSaveGame(object, EventArgs) : void
+    - OnPauseGame(object, EventArgs) : void
+    - OnGameOver(object, EventArgs) : void
+    - OnStartNewGame(object, EventArgs) : void 
+}
+
+App <-- ViewModel::GameViewModel
+App <-- View::GameOverWindow
+App <-- View::MainGameWindow
+App <-- View::MainMenuWindow
+App <-- View::PausedGameWindow
+
+}
+@enduml

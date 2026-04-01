@@ -1,0 +1,198 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor #d9a6fc
+}
+
+set namespaceSeparator ::
+namespace Model {
+
+namespace TerrainGeneration #bbf58b  {
+namespace Layers #CCDDCC{
+    class Perlin #f3dbb6 {}
+}
+}
+
+namespace World #aaf1ee {
+    
+class World <<Singleton>> #8ffdd3 {}
+class Road #8ffdd3 {}
+class KnowsNeighbour #8ffdd3 {}
+
+
+
+namespace Economy #fad4d4 {
+    class Station #f7e180 {}
+    class ProductBuffer #f7e180 {}
+
+}
+
+namespace RoadNetwork #f9d0fa {
+
+    class RoadNetworkGraph {
+        + NodeMap : Dictionary<KnowsNeighbour, RoadNode> <<get>>
+        + RegisterNodeIfNeeded(coord:Coordinate) : void
+        + RebuildEdges() : void
+        - ExploreAndConnect(startNode:RoadNode, currentSurface:KnowsNeighbour, dirDebug:string) : void
+        - GetNextNeighbor(current:KnowsNeighbour, cameFrom:KnowsNeighbour) : KnowsNeighbour?
+        - IsValidPathSurface(surface:ISurface?) : bool
+    }
+
+    class Pathfinder <<static>> {
+        + {static} FindPath(startNode:RoadNode, targetNode:RoadNode) : List<Road>?
+        - {static} GetHeuristicDistance(a:RoadNode, b:RoadNode) : int
+        - {static} ReconstructPath(cameFrom:Dictionary<RoadNode, PathTrace>, current:RoadNode) : List<Road>
+    }
+    class PathTrace {
+        + ParentNode : RoadNode <<get>>
+        + TakenEdge : RoadEdge <<get>>
+    }
+    Pathfinder +-- PathTrace
+
+    class RoadEdge {
+        + TargetNode : RoadNode <<get>> <<set>>
+        + Weight : int <<get>> <<set>>
+        + Path : List<Road> <<get>> <<set>>
+        --
+        + RoadEdge(target:RoadNode, weight:int, path:List<Road>)
+    }
+
+    class RoadNode {
+        + IsStation : bool <<get>> <<set>>
+        + Edges : List<RoadEdge> <<get>> <<set>>
+        --
+        + RoadNode(coord:Coordinate, isStation:bool)
+    }
+    KnowsNeighbour <|-- RoadNode
+
+    class Route {
+        - <<readonly>> _stops : List<Station>
+        + Stops : IReadOnlyList<Station> <<get>>
+        - <<readonly>> _roadToNextStation : List<Road>
+        - <<readonly>> _isLoop : bool
+        --
+        + Route()
+        ..
+        + AddStop(station:Station) : void
+        + GetNextStop(current:Station) : Station?
+        + GetRoadsToNextStation() : List<Road>
+    }
+
+    abstract class Vehicle {
+        + Name : string <<get>>
+        + Type : ProductType <<get>> <<protected set>>
+        + CurrentLoad : int <<get>> <<protected set>> = 0
+        + Price : int <<get>>
+        # route : Route? = null
+        + Route : Route? <<get>> <<set>>
+        # currentSpeed : float = 0
+        # maxSpeed : float
+        # capacity : int
+        + MaxSpeed : float <<get>>
+        + Capacity : int <<get>>
+        # maintenanceCost : int
+        # active : bool = false
+        + State : VehicleState <<get>> <<protected set>>
+        # currentPath : List<Road>
+        # currentPathIndex : int
+        + CurrentRoad : Road? <<get>> <<protected set>>
+        # currentEdge : RoadEdge? = null
+        # currentCoordinate : Coordinate? = null
+        # currentWaypoints : List<Vector2>
+        # currentWaypointIndex : int = 0
+        + StartJourney(path:List<Road>) : void
+        # waitTimer : double = 0
+        # <<const>> LOAD_TIME : double = 2.0
+        --
+        + Vehicle(name:string, maxSpeed:float, capacity,price:int, type:ProductType)
+        ..
+        + Update(deltaTime:double) : void
+        - HandleRouteCycle() : void
+        - TryTransitionToNextRoad() : bool
+        - LoadWaypointsForField() : void
+        - GetRelativeDirection(center:Coordinate, target:Coordinate) : PathDirection
+        - GetVehicleAhead() : Vehicle?
+        - ReleaseJunctionLock(road:Road) : void
+        - IsFieldJunction(road:Road) : bool
+        + Load(amount:int) : int
+        + Unload(amountNeeded:int) : int
+    }
+
+    enum VehicleState {
+        Moving,
+        Waiting,
+        Loading,
+    }
+
+    enum PathDirection {
+        North,
+        South,
+        East,
+        West,
+        Start,
+        End,
+    }
+    class WaypointManager <<static>> {
+        + <<const>> TILE_SIZE : int = 32
+        - <<const>> END : float
+        - <<const>> MID : float
+        - <<const>> OFFSET : float
+        - <<const>> L1 : float
+        - <<const>> L2 : float
+        + {static} Paths : Dictionary<(PathDirection, PathDirection), List<Vector2>> <<get>>
+        {static} - WaypointManager()
+    }
+
+
+    class Bus extends Vehicle {
+    }
+
+    class MiniBus extends Vehicle {
+    }
+
+    class CargoTruck extends Vehicle {
+    }
+
+    class TankerTruck extends Vehicle {
+    }
+
+    WaypointManager ..> Vehicle
+
+    PathDirection --> WaypointManager
+    PathDirection --> Vehicle
+
+    VehicleState --> Vehicle
+
+    Vehicle --|> Model::World::World
+    Vehicle ..> Model::World::Economy::ProductBuffer
+    Vehicle ..> Model::World::Economy::Station
+
+    RoadEdge --> Pathfinder
+    RoadEdge --> RoadNetworkGraph
+    RoadEdge --|> RoadNode
+
+    RoadNetworkGraph --*"1" Model::World::World
+
+    RoadNode --|> Pathfinder 
+    RoadNode --*"1" RoadEdge
+    RoadNode --|> RoadNetworkGraph 
+
+    Model::World::Road --|> Pathfinder
+    Model::World::Road --|> RoadNetworkGraph
+    Model::World::Road --* Route
+    Model::World::Road --* Vehicle
+
+
+
+}
+
+
+}
+}
+
+@enduml

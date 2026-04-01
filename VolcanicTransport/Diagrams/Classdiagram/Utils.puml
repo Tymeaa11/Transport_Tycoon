@@ -1,0 +1,99 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor #f3dbb6
+}
+
+set namespaceSeparator ::
+
+namespace Model::Utils #DDDDDD {
+
+    struct Coordinate {
+        + X : int <<get>>
+        + Y : int <<get>>
+        --
+        + Coordinate(c:Coordinate)
+        + Coordinate(value:int)
+        + Coordinate()
+        ..
+        + Magnitude : double <<get>>
+        + Distance(o:Coordinate) : double
+        + IsInside(topLeft:Coordinate, bottomRight:Coordinate) : bool
+        + IsInside(bottomRight:Coordinate) : bool
+        + IsInside(bottomRight:int) : bool
+        ..
+        + <<override>> ToString() : string
+        + <<override>> Equals(obj:object?) : bool
+        + Equals(other:Coordinate) : bool
+        + <<override>> GetHashCode() : int
+        ..
+        + {static} GetArea(topLeft:Coordinate, topRight:Coordinate) : List<Coordinate>
+
+    }
+    "IEquatable" "<Coordinate>" <|-- Coordinate
+
+    class Direction <<static>> {
+        + {static} <<readonly>> North : Coordinate
+        + {static} <<readonly>> South : Coordinate
+        + {static} <<readonly>> East : Coordinate
+        + {static} <<readonly>> West : Coordinate
+    }
+
+    struct WeightedWord {
+        + Word : string <<get>>
+        + Weight : float <<get>>
+        --
+        + <<override>> ToString() : string
+    }
+
+    class RandomNameGenerator {
+        - {static} adjectives : List<WeightedWord>
+        - {static} nouns : List<WeightedWord>
+        - {static} cityEndings : List<WeightedWord>
+        - {static} factoryEndings : List<WeightedWord>
+        ...
+        - SharedRandom : Random
+        +RandomNameGenerator(Random)
+
+        +Generate(before, main, after : List<WeightedWord>)
+
+    }
+
+
+    RandomNameGenerator *-- WeightedWord
+
+    class "SquareMatrixIterator"<T> {
+        - <<readonly>> _matrix : T[,]
+        + Size : int <<get>>
+        --
+        + MatrixIterator(size : int)
+        ..
+        + Get(c : Coordinate) : T
+        + Set(c : Coordinate, T) : void
+        + ReadEach(action:Action<int, int, T>) : void
+        + ModifyEach(func:Func<int, int, T, T>) : void
+        + SetEach(func:Func<int, int, T>) : void
+    }
+
+    class ScalableTimer {
+        - <<readonly>> _timer : Timer
+        - _timeScale : int
+        - <<readonly>> _baseScale : int = 100
+        + Enabled : bool <<get>> <<set>>
+        + TimeScale : int <<get>> <<set>>
+        +  <<event>> Elapsed : EventHandler? 
+        --
+        + ScalableTimer()
+        ..
+        + Start() : void
+        + Stop() : void
+        + Dispose() : void
+    }
+    IDisposable <|-- ScalableTimer
+}
+@enduml
