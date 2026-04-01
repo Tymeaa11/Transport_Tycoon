@@ -13,18 +13,12 @@ namespace VolcanicTransport.Model.World.Economy
                 return false;
             }
 
-            int amount = vehicle.CurrentLoad;
-
-            int provided = vehicle.Unload(amount);
-
-            if (provided == 0)
-            {
-                return false;
-            }
-
+            var amount = vehicle.CurrentLoad;
+            var provided = vehicle.Unload(amount);
+            
+            return provided != 0;
             //int moneyGiven = city.RecieveProduct(vehicle.getType(), provided);
             //hogy legyen a pénz?
-            return true;
         }
     }
 }

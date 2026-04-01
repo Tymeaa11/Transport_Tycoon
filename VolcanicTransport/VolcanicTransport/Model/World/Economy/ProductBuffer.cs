@@ -10,7 +10,7 @@ namespace VolcanicTransport.Model.World.Economy
 
         public int AmountNeeded() => _maxCapacity - CurrentLoad;
 
-        public int ReciveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
+        public int ReceiveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
         {
             if (_productType != type) return 0;
 
@@ -20,11 +20,11 @@ namespace VolcanicTransport.Model.World.Economy
 
             return canReceive;
         }
-        public int FillVehicle(Vehicle vehicle)
+        public int FillVehicle(Vehicle? vehicle)
         {
             if (vehicle == null || CurrentLoad <= 0) { return 0; }
 
-            int taken = vehicle.Load(CurrentLoad);
+            var taken = vehicle.Load(CurrentLoad);
 
             CurrentLoad -= taken;
 

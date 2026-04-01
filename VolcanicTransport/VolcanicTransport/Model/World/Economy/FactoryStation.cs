@@ -40,7 +40,7 @@ namespace VolcanicTransport.Model.World.Economy
                 return false;
             }
 
-            _factory.BaseProductBuffer.ReciveProduct(vehicle.Type, provided);
+            _factory.BaseProductBuffer.ReceiveProduct(vehicle.Type, provided);
 
             return true;
         }

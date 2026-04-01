@@ -6,35 +6,34 @@ namespace VolcanicTransport.Model.World.Economy
     public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
     {
         protected string name = name;
-        protected ProductBuffer passangerBuffer = passangerBuffer;
+        protected readonly ProductBuffer passangerBuffer = passangerBuffer;
         protected Vehicle? vehicle = null;
-        protected Product PassengerDemand = passengerDemand;
+        protected Product passengerDemand = passengerDemand;
 
         public abstract bool UnLoadProductFromVehicle();
         public bool Boarding()
         {
-            if (vehicle == null || vehicle.Type != ProductType.HUMAN)
+            if (vehicle is not { Type: ProductType.HUMAN })
             {
                 return false;
             }
 
-            int waitingPassengers = passangerBuffer.CurrentLoad;
+            var waitingPassengers = passangerBuffer.CurrentLoad;
 
             if (waitingPassengers == 0)
             {
                 return false;
             }
 
-            int taken = passangerBuffer.FillVehicle(vehicle);
+            var taken = passangerBuffer.FillVehicle(vehicle);
 
-            if (taken == 0) return false;
-
-            return true;
+            return taken != 0;
         }
 
         public bool UnBoarding()
         {
-            if (vehicle == null || vehicle.Type != ProductType.HUMAN) { return false; }
+            if (vehicle is not { Type: ProductType.HUMAN }) 
+                return false;
 
             //vehicle.UnBoard() //TODO//
 
