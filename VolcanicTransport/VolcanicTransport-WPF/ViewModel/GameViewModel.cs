@@ -202,7 +202,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
         {
             HoveredCoordinate = Camera.ScreenToField(mouseXY);
-            IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
+            
+            UpdateBuildability();
 
             _hoveredField = GameModelInstance.WorldInstance.GetField(HoveredCoordinate);
 
