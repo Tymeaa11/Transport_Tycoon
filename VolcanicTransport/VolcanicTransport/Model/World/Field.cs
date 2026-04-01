@@ -1,5 +1,3 @@
-using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World
 {
@@ -30,13 +28,13 @@ namespace VolcanicTransport.Model.World
         public void SetFieldTypeTo(Field f) => Type = f.Type;
         public void SetFieldHeight(float height)
         {
-            int i = 0;
+            var i = 0;
             while (i < MaxFieldTypeHeights.Length && height > MaxFieldTypeHeights[i]) i++;
 
             Type = (FieldType)i;
         }
 
-        public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && (Surface == null  || Surface is Mushroom);
+        public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && Surface is null or Mushroom;
 
         public int GetHeightDifference(Field? field) => Type - field?.Type ?? 0;
     }
