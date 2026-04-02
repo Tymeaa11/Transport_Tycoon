@@ -60,7 +60,8 @@ public static class GameSettings
         ProductType BaseProduct,
         Product FinalProduct,
         int BaseProductBufferCapacity,
-        int FinalProductBufferCapacity) {}
+        int FinalProductBufferCapacity
+    ) {}
 
     public static readonly FactoryData AshProducerFactoryData = new(
         BaseProduct : ProductType.NONE,
@@ -110,22 +111,33 @@ public static class GameSettings
         BaseProductBufferCapacity: 5000, 
         FinalProductBufferCapacity: 5000
     );
-    
-    
-    
-    #endregion
-    public readonly record struct StationData(
-        string Name, 
-        ProductBuffer PassengerBuffer,
-        Product PassengerDemand) {}
     #endregion
     
     #region Vehicles
     public readonly record struct VehicleData(
         float MaxSpeed, 
         int Capacity,
-        int Price,
-        ProductType ProductType) {}
+        int Price) {}
+
+    public static readonly VehicleData BusData = new(
+        MaxSpeed: 2.0f,
+        Capacity: 50,
+         Price: 4000
+    );
+    
+    public static readonly VehicleData MiniBusData = new(
+        MaxSpeed: 100.0f,
+        Capacity: 15,
+        Price: 6000
+    );
+    
+    public static readonly VehicleData TankerTruckData = new(
+        MaxSpeed: 60.0f,
+        Capacity: 800,
+        Price: 10000
+    );
+    
+    #endregion
     #endregion
     
     static GameSettings()

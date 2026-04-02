@@ -6,6 +6,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type) : INotifyPropertyChanged
     {
+        
+        public Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType type)
+        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, type) {}
+        
         public string Name { get; } = name;
         public ProductType Type { get; protected set; } = type;
         public int CurrentLoad { get; protected set; } = 0;
