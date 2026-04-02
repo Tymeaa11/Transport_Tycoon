@@ -94,6 +94,7 @@ namespace VolcanicTransport.Model.World
         
         #endregion
 
+        #region Methods
         private void InitialiseWorld()
         {
             ChunkMatrix.SetEach((x, y) => new Chunk(new Coordinate(x, y)));
@@ -166,5 +167,7 @@ namespace VolcanicTransport.Model.World
 
             // Itt jöhetnének késõbb az épületek frissítései (termelés, stb.)
         }
+        
+        #endregion
     }
 }

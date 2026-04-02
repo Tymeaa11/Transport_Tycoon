@@ -4,11 +4,14 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
     {
         private static float GetNewOffset(Random r) => r.NextSingle() * 1000;
 
+        #region Fields
         private readonly float _frequency;
         private readonly float _amplitude;
         private float _offsetX;
         private float _offsetY;
-
+        #endregion
+        
+        #region Constuctors
         protected ScalableLayer(float frequency, float amplitude, float offsetX, float offsetY)
         {
             _frequency = frequency;
@@ -23,7 +26,9 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
             _amplitude = amplitude;
             SetSeed(0, nextRandom);
         }
+        #endregion
 
+        #region Methods
         protected abstract float Calculate(float x, float y);
 
         public void SetSeed(int seed, Random nextRandom) 
@@ -34,5 +39,6 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
 
         public float Get(float x, float y)
             => _amplitude * Calculate(_frequency * (x + _offsetX), _frequency * (y + _offsetY));
+        #endregion
     }
 }
