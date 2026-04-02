@@ -13,7 +13,7 @@ class Program
     private static void Main()
     {
         Console.WriteLine(@"Creating preview at bin\Debug\net9.0\");
-        World.Initialise(40, 0);
+        World.Initialise(2, 0);
         World.Instance.GameWorldGenerator = new GameWorldGenerator(
             new TerrainHeightGenerator(),
             new MushroomGenerator(),
@@ -48,16 +48,16 @@ class Program
                     };
 
                     ctx.Fill(c, new Rectangle(
-                        cx * Chunk.ChunkSize * fieldSize + fx * fieldSize,
-                        cy * Chunk.ChunkSize * fieldSize + fy * fieldSize,
+                        cx * GameSettings.ChunkSize * fieldSize + fx * fieldSize,
+                        cy * GameSettings.ChunkSize * fieldSize + fy * fieldSize,
                         fieldSize, fieldSize
                     ));
 
                     if (field.Surface is Mushroom m)
                     {
                         ctx.Fill(Color.Magenta.WithAlpha(1.0f / (int)(5 - m.GrowthStage)), new Rectangle(
-                            cx * Chunk.ChunkSize * fieldSize + fx * fieldSize + offset,
-                            cy * Chunk.ChunkSize * fieldSize + fy * fieldSize + offset,
+                            cx * GameSettings.ChunkSize * fieldSize + fx * fieldSize + offset,
+                            cy * GameSettings.ChunkSize * fieldSize + fy * fieldSize + offset,
                             fieldSize - offset, fieldSize - offset
                         ));
                     }

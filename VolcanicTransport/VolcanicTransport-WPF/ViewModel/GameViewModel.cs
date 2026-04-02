@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using VolcanicTransport;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -31,7 +32,7 @@ namespace VolcanicTransport_WPF.ViewModel
             Rect bounds = Camera.GetVisibleWorldBounds(width, height);
 
             // Get visible chunk coordinates (+1 buffer)
-            int chunkPX = Chunk.ChunkSize * Field.FieldSize;
+            int chunkPX = GameSettings.ChunkSize * GameSettings.FieldSize;
 
             int startX = (int)Math.Floor(bounds.Left / chunkPX) - 1;
             int endX = (int)Math.Ceiling(bounds.Right / chunkPX) + 1;
@@ -233,7 +234,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 ToolTipText = text;
         }
 
-        public int TileSize => Field.FieldSize; //used to size the hovered field highlight
+        public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
 
         private Field? _hoveredField;
 

@@ -15,8 +15,8 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
-        private bool _isPaused;
-        private readonly DateTime _currentTime;
+        public bool IsPaused { get; private set; }
+        public double Time { get; private set; } = 0;
         private readonly ISaveFileManager _savefileManager;
 
         public double PlayerMoney { get; private set; }
@@ -71,13 +71,13 @@ namespace VolcanicTransport.Model
         #region  Methods
         public void Pause()
         {
-            _isPaused = true;
+            IsPaused = true;
             GamePaused?.Invoke(this, EventArgs.Empty);
         }
 
         public void UnPause()
         {
-            _isPaused = false;
+            IsPaused = false;
             GameUnpaused?.Invoke(this, EventArgs.Empty);
         }
 
@@ -101,9 +101,10 @@ namespace VolcanicTransport.Model
 
         public void Update(double deltaTime)
         {
-            if (_isPaused) return;
+            if (IsPaused) return;
             WorldInstance.Update(deltaTime);
             GameAdvanced?.Invoke(this, EventArgs.Empty);
+            Time += deltaTime;
         }
 
         public bool BuyVehicle(Vehicle v)

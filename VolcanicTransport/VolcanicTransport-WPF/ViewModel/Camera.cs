@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
+using VolcanicTransport;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 
@@ -72,8 +73,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public Coordinate WorldToField(Point worldPoint)
             => new(
-                (int)Math.Floor(worldPoint.X / Field.FieldSize),
-                (int)Math.Floor(worldPoint.Y / Field.FieldSize)
+                (int)Math.Floor(worldPoint.X / GameSettings.FieldSize),
+                (int)Math.Floor(worldPoint.Y / GameSettings.FieldSize)
             );
         public Coordinate ScreenToField(Point screenPoint) => WorldToField(ScreenToWorld(screenPoint));
 

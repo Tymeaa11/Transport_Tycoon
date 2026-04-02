@@ -7,15 +7,6 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class FactoryAndCityGenerator(int cityCount, int factoryCount)
     {
-        // Városok és gyárak közötti minimális távolság mezőkben
-        private const double MinimumDistance = 15.0; 
-
-        // Keresési próbálkozások száma
-        private const int MaxAttempts = 100;
-
-        // Minimum távolság a világ szélétől
-        private const int WorldEdgeBufferZone = 2;
-
         private static Field GetField(Coordinate coordinate) 
             => World.World.Instance.GetField(coordinate) ?? throw new GenerationErrorException();
 
@@ -40,12 +31,12 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
         private static Coordinate? FindValidLocation()
         {
-            var possibleArea = World.World.Instance.SizeInFields - WorldEdgeBufferZone;
+            var possibleArea = World.World.Instance.SizeInFields - GameSettings.WorldEdgeBufferZone;
 
-            for (var i = 0; i < MaxAttempts; i++)
+            for (var i = 0; i < GameSettings.MaxAttempts; i++)
             {
                 Coordinate potential = new(
-                     World.World.Instance.SharedRandom.Next(WorldEdgeBufferZone, possibleArea.X),
+                     World.World.Instance.SharedRandom.Next(GameSettings.WorldEdgeBufferZone, possibleArea.X),
                      World.World.Instance.SharedRandom.Next(2, possibleArea.Y)
                     );
 
@@ -63,8 +54,8 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                         return false;
 
             // Távolság ellenőrzése a már meglévő városoktól/gyáraktól
-            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < MinimumDistance)) 
-                   && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < MinimumDistance));
+            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance)) 
+                   && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistance));
         }
 
         private static void CreateCity(Coordinate center)
