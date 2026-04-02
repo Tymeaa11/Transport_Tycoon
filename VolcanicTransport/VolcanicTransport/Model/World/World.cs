@@ -45,7 +45,7 @@ namespace VolcanicTransport.Model.World
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(worldSize);
 
             SizeInChunks = new Coordinate(worldSize);
-            SizeInFields = SizeInChunks * Chunk.ChunkSize;
+            SizeInFields = SizeInChunks * GameSettings.ChunkSize;
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
 
             WorldSeed = seed;
@@ -68,10 +68,10 @@ namespace VolcanicTransport.Model.World
 
         #region FieldGetters
         public Coordinate GetChunkCoordinate(Coordinate fieldCoordinate)
-            => fieldCoordinate / Chunk.ChunkSize;
+            => fieldCoordinate / GameSettings.ChunkSize;
 
         public Coordinate GetFieldCoordinateInChunk(Coordinate fieldCoordinate)
-            => fieldCoordinate % Chunk.ChunkSize;
+            => fieldCoordinate % GameSettings.ChunkSize;
 
         private Field GetFieldNoChecks(Coordinate fieldCoordinate)
             => ChunkMatrix[GetChunkCoordinate(fieldCoordinate)]
@@ -105,7 +105,7 @@ namespace VolcanicTransport.Model.World
             if (GameWorldGenerator == null) throw new NoWorldGeneratorProvidedException();
             ChunkMatrix.ReadEach(
                 (cx, cy, c) => c.FieldMatrix.ReadEach(
-                    (x, y, f) => GameWorldGenerator.GenerateField(f, cx * Chunk.ChunkSize + x, cy * Chunk.ChunkSize + y)));
+                    (x, y, f) => GameWorldGenerator.GenerateField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
 
             GameWorldGenerator.GenerateCitiesAndFactories();
         }
