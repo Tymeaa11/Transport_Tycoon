@@ -137,6 +137,12 @@ public static class GameSettings
         Price: 10000
     );
     
+    public static readonly VehicleData CargoTruckData = new(
+        MaxSpeed: 70.0f,
+        Capacity: 900,
+        Price: 11000
+    );
+    
     #endregion
     #endregion
     
