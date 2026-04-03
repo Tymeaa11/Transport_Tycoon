@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading.Channels;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
@@ -12,6 +13,7 @@ namespace VolcanicTransport.Model
     public class GameModel
     {
         public static World.World WorldInstance => World.World.Instance;
+        private readonly ScalableTimer _mushroomGrowthTimer;
 
         #region Fields
 
@@ -56,6 +58,13 @@ namespace VolcanicTransport.Model
             WorldInstance.Generate();
 
             PlayerMoney = 100000;
+
+            _mushroomGrowthTimer = new ScalableTimer();
+            _mushroomGrowthTimer.TimeScale = 1; 
+            _mushroomGrowthTimer.Elapsed += (s, e) => {
+                UpdateMushroomsOnTimer();
+            };
+            _mushroomGrowthTimer.Start();
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
@@ -72,6 +81,7 @@ namespace VolcanicTransport.Model
         public void Pause()
         {
             IsPaused = true;
+            _mushroomGrowthTimer.TimeScale = 0;
             GamePaused?.Invoke(this, EventArgs.Empty);
         }
 
@@ -84,21 +94,27 @@ namespace VolcanicTransport.Model
         public void ChangeTimeSpeed1X()
         {
             UnPause();
+            _mushroomGrowthTimer.TimeScale = 1;
             TimescaleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void ChangeTimeSpeed2X()
         {
             UnPause();
+            _mushroomGrowthTimer.TimeScale = 2;
             TimescaleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void ChangeTimeSpeed4X()
         {
             UnPause();
+            _mushroomGrowthTimer.TimeScale = 4;
             TimescaleChanged?.Invoke(this, EventArgs.Empty);
         }
-
+        private void UpdateMushroomsOnTimer()
+        {
+            UpdateAllMushrooms(0.1);
+        }
         public void Update(double deltaTime)
         {
             if (IsPaused) return;
@@ -311,7 +327,45 @@ namespace VolcanicTransport.Model
            // }
             
         }
-        
+
+        private void UpdateAllMushrooms(double deltaTime)
+        {
+            HashSet<Chunk> chunksToRedraw = new HashSet<Chunk>();
+
+            WorldInstance.ChunkMatrix.ReadEach((cx, cy, chunk) =>
+            {
+                bool chunkChanged = false;
+
+                chunk.FieldMatrix.ReadEach((fx, fy, field) =>
+                {
+                    if (field.Surface is Mushroom mushroom)
+                    {
+                        int globalX = cx * GameSettings.ChunkSize + fx;
+                        int globalY = cy * GameSettings.ChunkSize + fy;
+                        Coordinate globalCoord = new Coordinate(globalX, globalY);
+
+                        bool changed = mushroom.UpdateMushroom(globalCoord, deltaTime);
+
+                        if (changed) chunkChanged = true;
+                    }
+                });
+
+                if (chunkChanged)
+                {
+                    // Csak ha latszik a chunk epp
+                    {
+                        chunksToRedraw.Add(chunk);
+                    }
+                }
+
+            });
+
+            foreach (var chunk in chunksToRedraw)
+            {
+                chunk.TriggerRerender();
+            }
+        }
+
         #endregion
 
         private void TerraformField (Coordinate coord, int deltaHeight)

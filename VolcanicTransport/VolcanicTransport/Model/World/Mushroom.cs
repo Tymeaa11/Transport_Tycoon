@@ -2,12 +2,9 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Mushroom(
-        Coordinate coordinate,
-        MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT
-        )
-        : KnowsNeighbour(coordinate)
+    public class Mushroom( Coordinate coordinate, MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT) : KnowsNeighbour(coordinate)
     {
+        public Coordinate GetCoordinate => this.Coordinate;
         private static bool SpreadAttempt() 
             => World.Instance.SharedRandom.Next(100) > GameSettings.SpreadChance;
         private static bool IsFieldSpreadable(Field? f) => SpreadAttempt() && f is { Surface: null };
@@ -19,6 +16,46 @@ namespace VolcanicTransport.Model.World
         public void Grow()
         {
             if (GrowthStage < MushroomGrowthStage.FULLY_GROWN) GrowthStage++;
+        }
+
+        public bool UpdateMushroom(Coordinate myCoord, double deltaTime)
+        {
+            Random rand = World.Instance.SharedRandom;
+            bool hasChanged = false;
+
+            double growthBaseChance = 0.10;
+            double spreadBaseChance = 0.05; 
+
+            if (rand.NextDouble() < growthBaseChance * deltaTime) 
+            {
+                int oldStage = (int)GrowthStage;
+                Grow();
+                if ((int)GrowthStage != oldStage) hasChanged = true;
+            }
+
+            if (IsAbleToSpread() && rand.NextDouble() < spreadBaseChance * deltaTime)
+            {
+                Coordinate dir = rand.Next(4) switch
+                {
+                    0 => new Coordinate(0, -1), 
+                    1 => new Coordinate(0, 1),  
+                    2 => new Coordinate(1, 0),
+                    _ => new Coordinate(-1, 0)
+                };
+
+                Coordinate targetCoord = myCoord + dir;
+                Field? targetField = World.Instance.GetField(targetCoord);
+
+                if (targetField != null && targetField.Surface == null && targetField.IsBuildable())
+                {
+                    targetField.Surface = new Mushroom(targetCoord, MushroomGrowthStage.SPROUT);
+                    //Chunk? neighborChunk = World.Instance.GetChunk(World.Instance.GetChunkCoordinate(targetCoord));
+                    //neighborChunk?.TriggerRerender();
+                    hasChanged = true;
+                }
+            }
+
+            return hasChanged;
         }
 
 
