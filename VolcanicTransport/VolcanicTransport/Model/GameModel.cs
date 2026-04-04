@@ -330,37 +330,32 @@ namespace VolcanicTransport.Model
 
         private void UpdateAllMushrooms(double deltaTime)
         {
+            int samplesCount = (int)(100 * deltaTime);
             HashSet<Chunk> chunksToRedraw = new HashSet<Chunk>();
 
-            WorldInstance.ChunkMatrix.ReadEach((cx, cy, chunk) =>
+            for (int i = 0; i < samplesCount; i++)
             {
-                bool chunkChanged = false;
+                int x = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.X);
+                int y = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.Y);
+                Coordinate randomCoord = new Coordinate(x, y);
 
-                chunk.FieldMatrix.ReadEach((fx, fy, field) =>
+                Field? field = WorldInstance.GetField(randomCoord);
+
+                if (field?.Surface is Mushroom mushroom)
                 {
-                    if (field.Surface is Mushroom mushroom)
+                    (Coordinate? target, bool spread) = mushroom.UpdateMushroom(randomCoord);
+                    if (spread)
                     {
-                        int globalX = cx * GameSettings.ChunkSize + fx;
-                        int globalY = cy * GameSettings.ChunkSize + fy;
-                        Coordinate globalCoord = new Coordinate(globalX, globalY);
-
-                        bool changed = mushroom.UpdateMushroom(globalCoord, deltaTime);
-
-                        if (changed) chunkChanged = true;
-                    }
-                });
-
-                if (chunkChanged)
-                {
-                    // Csak ha latszik a chunk epp
-                    {
-                        chunksToRedraw.Add(chunk);
+                        if (target != null)
+                        {
+                            var chunk = WorldInstance.GetChunk(WorldInstance.GetChunkCoordinate((Coordinate)target));
+                            if (chunk != null) chunksToRedraw.Add(chunk);
+                        }
                     }
                 }
+            }
 
-            });
-
-            foreach (var chunk in chunksToRedraw)
+            foreach (Chunk? chunk in chunksToRedraw)
             {
                 chunk.TriggerRerender();
             }

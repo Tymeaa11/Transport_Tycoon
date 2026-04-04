@@ -18,7 +18,7 @@ namespace VolcanicTransport.Model.World
             if (GrowthStage < MushroomGrowthStage.FULLY_GROWN) GrowthStage++;
         }
 
-        public bool UpdateMushroom(Coordinate myCoord, double deltaTime)
+        public (Coordinate?, bool) UpdateMushroom(Coordinate myCoord)
         {
             Random rand = World.Instance.SharedRandom;
             bool hasChanged = false;
@@ -26,14 +26,18 @@ namespace VolcanicTransport.Model.World
             double growthBaseChance = 0.10;
             double spreadBaseChance = 0.05; 
 
-            if (rand.NextDouble() < growthBaseChance * deltaTime) 
+            if (rand.NextDouble() < growthBaseChance) 
             {
                 int oldStage = (int)GrowthStage;
                 Grow();
-                if ((int)GrowthStage != oldStage) hasChanged = true;
+                if ((int)GrowthStage != oldStage)
+                {
+                    hasChanged = true;
+                    return (myCoord, hasChanged);
+                }
             }
 
-            if (IsAbleToSpread() && rand.NextDouble() < spreadBaseChance * deltaTime)
+            if (IsAbleToSpread() && rand.NextDouble() < spreadBaseChance)
             {
                 Coordinate dir = rand.Next(4) switch
                 {
@@ -49,13 +53,12 @@ namespace VolcanicTransport.Model.World
                 if (targetField != null && targetField.Surface == null && targetField.IsBuildable())
                 {
                     targetField.Surface = new Mushroom(targetCoord, MushroomGrowthStage.SPROUT);
-                    //Chunk? neighborChunk = World.Instance.GetChunk(World.Instance.GetChunkCoordinate(targetCoord));
-                    //neighborChunk?.TriggerRerender();
                     hasChanged = true;
+                    return (targetCoord, hasChanged);
                 }
             }
 
-            return hasChanged;
+            return (null, hasChanged);
         }
 
 
