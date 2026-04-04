@@ -55,6 +55,7 @@ public static class GameSettings
     #endregion
     
     #region Economy
+
     #region FactoryData
     public readonly record struct FactoryData(
         ProductType BaseProduct,

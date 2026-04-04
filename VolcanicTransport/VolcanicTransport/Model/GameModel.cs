@@ -7,13 +7,15 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using VolcanicTransport;
 
 namespace VolcanicTransport.Model
 {
     public class GameModel
     {
         public static World.World WorldInstance => World.World.Instance;
-        private readonly ScalableTimer _mushroomGrowthTimer;
+        private ScalableTimer _mushroomGrowthTimer;
+        private double _monthlyExpenseAccumulator = 0;
 
         #region Fields
 
@@ -57,7 +59,7 @@ namespace VolcanicTransport.Model
                 );
             WorldInstance.Generate();
 
-            PlayerMoney = 100000;
+            PlayerMoney = 10000;
 
             _mushroomGrowthTimer = new ScalableTimer();
             _mushroomGrowthTimer.TimeScale = 1; 
@@ -118,6 +120,14 @@ namespace VolcanicTransport.Model
         public void Update(double deltaTime)
         {
             if (IsPaused) return;
+            _monthlyExpenseAccumulator += deltaTime;
+
+            if (_monthlyExpenseAccumulator >= 600.0)
+            {
+                HandleMonthlyExpenses();
+                _monthlyExpenseAccumulator = 0;
+            }
+
             WorldInstance.Update(deltaTime);
             GameAdvanced?.Invoke(this, EventArgs.Empty);
             Time += deltaTime;
@@ -161,14 +171,26 @@ namespace VolcanicTransport.Model
 
         private void HandleMonthlyExpenses()
         {
-            // Levonja a fenntartási költségeket
-            CheckBankruptcy();
-        }
+            double totalExpense = 0;
 
-        private void CheckBankruptcy()
-        {
-            if (PlayerMoney < 0)
-                GameOver?.Invoke(this, EventArgs.Empty);
+            lock (WorldInstance.Vehicles)
+            {
+                foreach (var vehicle in WorldInstance.Vehicles)
+                {
+                    totalExpense += 500;
+                }
+            }
+
+            if (totalExpense > 0)
+            {
+                bool able = TryPurchase(totalExpense);
+                if (!able)
+                {
+                    Pause();
+                    GameOver?.Invoke(this, EventArgs.Empty);
+                }
+                Debug.WriteLine($"Havi kiadások levonva: -{totalExpense}$ (Járművek száma: {WorldInstance.Vehicles.Count})");
+            }
         }
 
         public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
