@@ -18,6 +18,7 @@ namespace VolcanicTransport_WPF.View
             this.MouseWheel += MainGameWindow_MouseWheel;
             this.MouseLeftButtonDown += MainGameWindow_MouseLeftButtonDown;
             this.MouseMove += MainGameWindow_MouseMove;
+            this.KeyDown += MainGameWindow_KeyDown;
 
             this.SizeChanged += (s, e) =>
             {
@@ -25,6 +26,14 @@ namespace VolcanicTransport_WPF.View
                     vm.SetViewDimensions(ViewPort.ActualWidth, ViewPort.ActualHeight);
             };
 
+        }
+
+        private void MainGameWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                (DataContext as GameViewModel)?.TogglePauseCommand.Execute(null);
+            }
         }
 
         private void MainGameWindow_MouseWheel(object sender, MouseWheelEventArgs e)

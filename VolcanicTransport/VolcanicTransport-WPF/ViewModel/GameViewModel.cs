@@ -16,6 +16,37 @@ namespace VolcanicTransport_WPF.ViewModel
     public class GameViewModel : ViewModelBase
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
+        private bool _isPausedView;
+
+        #region Events
+        public event EventHandler? ExitToMenuRequested;
+        #endregion
+
+        public bool IsPausedView
+        {
+            get => _isPausedView;
+            set
+            {
+                _isPausedView = value;
+                OnPropertyChanged();
+                if (_isPausedView)
+                {
+                    GameModelInstance.Pause();
+                }
+                else
+                {
+                    GameModelInstance.UnPause();
+                }
+                RefreshTimescaleProperties();
+            }
+        }
+        private void RefreshTimescaleProperties()
+        {
+            OnPropertyChanged(nameof(IsTimescale0));
+            OnPropertyChanged(nameof(IsTimescale1));
+            OnPropertyChanged(nameof(IsTimescale2));
+            OnPropertyChanged(nameof(IsTimescale4));
+        }
 
         #region Chunks
         public ObservableCollection<Chunk> LoadedChunks { get; } = [];
@@ -75,13 +106,11 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale1Command { get; private set; }
         public DelegateCommand SetTimescale2Command { get; private set; }
         public DelegateCommand SetTimescale4Command { get; private set; }   
-
-
-
+        public DelegateCommand TogglePauseCommand { get; private set; }
+        public DelegateCommand ResumeCommand { get; private set; }  
+        public DelegateCommand QuitToMainMenuCommand {  get; private set; }
         public DelegateCommand ReGenerateWithRandomSeed { get; private set; }   
-
         public DelegateCommand BuyVehicleCommand { get; private set; }
-
         public DelegateCommand AddStopCommand { get; }
         #endregion
 
@@ -339,6 +368,14 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimescale1Command = new DelegateCommand(_ => OnSetTimescale1X());
             SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
             SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
+            TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
+            ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
+            /*
+            QuitToMainMenuCommand = new DelegateCommand(_ =>
+            {
+                ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
+            });
+            */
             BuyVehicleCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BUY_VEHICLE));
             AddStopCommand = new DelegateCommand(_ =>
             {
@@ -453,10 +490,10 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
 
-        public bool IsTimescale0 => CurrentTimescale == 0;
-        public bool IsTimescale1 => CurrentTimescale == 1;
-        public bool IsTimescale2 => CurrentTimescale == 2;
-        public bool IsTimescale4 => CurrentTimescale == 4;
+        public bool IsTimescale0 => CurrentTimescale == 0 || IsPausedView || GameModelInstance.IsPaused;
+        public bool IsTimescale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 1;
+        public bool IsTimescale2 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 2;
+        public bool IsTimescale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 4;
 
         public string CurrentMoney
         {
