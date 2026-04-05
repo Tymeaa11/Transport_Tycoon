@@ -7,6 +7,42 @@
         mc:Ignorable="d"
         Title="MainMenuWindow" Height="450" Width="800">
     <Grid>
+        <Image Source="/Assets/main_menu_background.jpg" 
+           Stretch="UniformToFill">
+            <Image.Effect>
+                <BlurEffect Radius="5"/>
+            </Image.Effect>
+        </Image>
+
+        <Border Background="Black" Opacity="0.2"/>
         
+        <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+
+        <Viewbox Grid.Row="0" Margin="130,50">
+            <TextBlock Text="Volcanic Transport" 
+                       FontFamily="Impact" 
+                       Foreground="White"></TextBlock>
+        </Viewbox>
+
+        <StackPanel Grid.Row="1" Width="200" HorizontalAlignment="Center" Margin="0,0,0,50">
+            <Button Content="New Game" 
+                    Command="{Binding NewGameCommand}" 
+                    Margin="0,0,0,15" Padding="10" FontSize="16"/>
+
+            <Button Content="Load Game" 
+                    Command="{Binding LoadGameCommand}" 
+                    Margin="0,0,0,15" Padding="10" FontSize="16"
+                    ToolTip="Még nem elérhető"/>
+
+            <Button Content="Exit" 
+                    Command="{Binding ExitCommand}" 
+                    Padding="10" FontSize="16"/>
+        </StackPanel>
+    </Grid>
     </Grid>
 </Window>

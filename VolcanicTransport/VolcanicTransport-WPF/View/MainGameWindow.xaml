@@ -24,6 +24,7 @@
         <view:FieldToPixelConverter x:Key="FieldToPixelConverter" />
         <view:BuildabilityToColorConverter x:Key="BuildabilityToColorConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
 
     <Grid x:Name="ViewPort" ClipToBounds="True">
@@ -248,5 +249,26 @@
             </TextBlock>
         </Border>
 
+        <Grid x:Name="PauseOverlay" Visibility="{Binding IsPausedView, Converter={StaticResource BoolToVis}}" Panel.ZIndex="100">
+            <Border Background="Black" Opacity="0.5"/>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="Paused" 
+                   FontSize="48" FontFamily="Impact" 
+                   Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,40"/>
+
+                <Button Content="Resume Game" Command="{Binding ResumeCommand}"
+                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
+
+                <Button Content="Save Game"
+                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
+
+                <Button Content="Load Game"
+                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
+
+                <Button Content="Quit to Menu" Command="{Binding QuitToMainMenuCommand}"
+                Width="200" Padding="10" FontSize="18"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>
