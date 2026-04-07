@@ -307,38 +307,34 @@ namespace VolcanicTransport.Model
         public void AddStopToVehicle(Vehicle v, Station s)
         {
 
-            if (v.Route == null) v.Route = new Route();
+            if (v.Route.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
 
             v.Route.AddStop(s);
             System.Diagnostics.Debug.WriteLine($"Megálló hozzáadva: {s.Coordinate}. Összesen: {v.Route.Stops.Count}");
 
-            if (v.Route.Stops.Count < 2)
-            {
-                System.Diagnostics.Debug.WriteLine("Várakozás a második megállóra...");
-                return;
-            }
-            System.Diagnostics.Debug.WriteLine("Két megálló megvan, gráf frissítése...");
-            
             var graph = WorldInstance.Roadnetwork;
-            //graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
             graph.RegisterNodeIfNeeded(s.Coordinate);
             graph.RebuildEdges();
 
+            if (v.State == VehicleState.Waiting)
+            {
+                v.TryStartNextRoute();
+            }
             //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
             //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
             //{
-                //var path = Pathfinder.FindPath(startNode, targetNode);
-               // if (path != null && path.Count > 0)
-              //  {
-                //    v.StartJourney(path);
-               //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-              //  }
-               // else
-              //  {
-              //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-               // }
-           // }
-            
+            //var path = Pathfinder.FindPath(startNode, targetNode);
+            // if (path != null && path.Count > 0)
+            //  {
+            //    v.StartJourney(path);
+            //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
+            //  }
+            // else
+            //  {
+            //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
+            // }
+            // }
+
         }
 
     }

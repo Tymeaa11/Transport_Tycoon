@@ -4,7 +4,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type) : INotifyPropertyChanged
+    public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type)
     {
         public string Name { get; } = name;
         public ProductType Type { get; protected set; } = type;
@@ -12,26 +12,13 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public int Price { get; } = price;
         protected Route? route = null;
 
-        private float _visualAngle;
-        public float VisualAngle
-        {
-            get => _visualAngle;
-            set
-            {
-                if (_visualAngle != value)
-                {
-                    _visualAngle = value;
-                    OnPropertyChanged(nameof(VisualAngle));
-                }
-            }
-        }
-
-
         public Route? Route { get { return route; } set { route = value; } }
 
         protected float currentSpeed = 0;
         protected float maxSpeed = maxSpeed;
         protected int capacity = capacity;
+
+        public int CurrentStopIndex { get; protected set; } = 1;
 
         public float MaxSpeed { get { return maxSpeed; } }
         public int Capacity { get { return capacity; } }
@@ -50,23 +37,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         protected List<Vector2> currentWaypoints = [];
         protected int currentWaypointIndex = 0;
 
-        public float VisualX => VisualPosition.X;
-        public float VisualY => VisualPosition.Y;
+        public Vector2 Position { get; protected set; }
+        public float Angle { get; protected set; }
 
-        private Vector2 _visualPosition;
-        public Vector2 VisualPosition
-        {
-            get => _visualPosition;
-            set
-            {
-                _visualPosition = value;
-                OnPropertyChanged(nameof(VisualPosition));
-                OnPropertyChanged(nameof(VisualX));
-                OnPropertyChanged(nameof(VisualY));
-            }
-        }
-
-
+        public event EventHandler? StateUpdated;
 
         public void StartJourney(List<Road> path)
         {
@@ -81,16 +55,18 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             LoadWaypointsForField();
 
-            if (currentWaypoints.Count > 0)
-            {
-                VisualPosition = currentWaypoints[0];
-            }
-            else {
-                VisualPosition = new System.Numerics.Vector2(CurrentRoad.Coordinate.X * 32, CurrentRoad.Coordinate.Y * 32);
-                System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {VisualPosition} pixelre.");
-            }
+                if (currentWaypoints.Count > 0)
+                {
+                    Position = currentWaypoints[0];
+                }
+                else
+                {
+                    Position = new System.Numerics.Vector2(CurrentRoad.Coordinate.X * 32, CurrentRoad.Coordinate.Y * 32);
+                    System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {Position} pixelre.");
+                }
 
             State = VehicleState.Moving;
+            StateUpdated?.Invoke( this, EventArgs.Empty );
         }
 
         protected double waitTimer = 0;
@@ -136,37 +112,79 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 }
 
                 Vector2 target = currentWaypoints[currentWaypointIndex];
-                Vector2 diff = target - VisualPosition;
+                Vector2 diff = target - Position;
                 float dist = diff.Length();
 
                 if (dist > 0.001f)
                 {
-                    VisualAngle = (float)(System.Math.Atan2(diff.Y, diff.X) * (180.0 / System.Math.PI));
+                    Angle = (float)(System.Math.Atan2(diff.Y, diff.X) * (180.0 / System.Math.PI));
                 }
 
                 if (dist < 0.01f)
                 {
-                    VisualPosition = target;
+                    Position = target;
                     currentWaypointIndex++;
                 }
                 else if (distanceToTravel >= dist)
                 {
-                    VisualPosition = target;
+                    Position = target;
                     distanceToTravel -= dist;
                     currentWaypointIndex++;
                 }
                 else
                 {
-                    VisualPosition += Vector2.Normalize(diff) * distanceToTravel;
+                    Position += Vector2.Normalize(diff) * distanceToTravel;
                     distanceToTravel = 0;
                 }
             }
+            StateUpdated?.Invoke(this,EventArgs.Empty);
         }
 
         private void HandleRouteCycle()
         {
-            System.Diagnostics.Debug.WriteLine($"{Name} elérte a végállomást. Törlés a világból...");
-            World.Instance.RemoveVehicle(this);
+            if (Route == null || Route.Stops.Count < 2)
+            {
+                State = VehicleState.Waiting;
+                System.Diagnostics.Debug.WriteLine($"{Name} várakozik további megállókra...");
+                return;
+            }
+
+            CurrentStopIndex = (CurrentStopIndex + 1) % Route.Stops.Count;
+
+            int startIndex = (CurrentStopIndex - 1 + Route.Stops.Count) % Route.Stops.Count;
+            Station startStation = Route.Stops[startIndex];
+            Station targetStation = Route.Stops[CurrentStopIndex];
+
+            System.Diagnostics.Debug.WriteLine($"{Name} újratervez: {startStation.Coordinate} -> {targetStation.Coordinate}");
+
+            var graph = World.Instance.Roadnetwork;
+            if (graph.NodeMap.TryGetValue(startStation, out RoadNode? startNode) &&
+                graph.NodeMap.TryGetValue(targetStation, out RoadNode? targetNode))
+            {
+                List<Road>? newPath = Pathfinder.FindPath(startNode, targetNode);
+                if (newPath != null && newPath.Count > 0)
+                {
+                    StartJourney(newPath);
+                }
+                else
+                {
+                    State = VehicleState.Waiting;
+                    System.Diagnostics.Debug.WriteLine($"[HIBA] Nincs aszfaltos út a következő megállóig!");
+                }
+            }
+            else
+            {
+                State = VehicleState.Waiting;
+                System.Diagnostics.Debug.WriteLine($"[HIBA] A gráf nem találja a megállót!");
+            }
+        }
+
+        public void TryStartNextRoute()
+        {
+            if (State == VehicleState.Waiting && Route != null && Route.Stops.Count >= 2)
+            {
+                HandleRouteCycle();
+            }
         }
 
         private bool TryTransitionToNextRoad()
@@ -199,7 +217,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             LoadWaypointsForField();
             if (currentWaypoints.Count > 0)
             {
-                VisualPosition = currentWaypoints[0];
+                Position = currentWaypoints[0];
                 currentWaypointIndex = 1;
             }
 
@@ -288,15 +306,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             int provided = Math.Min(CurrentLoad, amountNeeded);
             CurrentLoad -= provided;
             return provided;
-        }
-
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
         }
     }
 }

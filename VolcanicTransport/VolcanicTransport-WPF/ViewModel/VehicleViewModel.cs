@@ -14,20 +14,20 @@ namespace VolcanicTransport_WPF.ViewModel
         public VehicleViewModel(Vehicle vehicle)
         {
             _vehicle = vehicle;
-
-            _vehicle.PropertyChanged += (s, e) =>
+            _vehicle.StateUpdated += (sender, args) =>
             {
-                if (e.PropertyName == nameof(Vehicle.VisualPosition))
-                {
-                    OnPropertyChanged(nameof(PixelX));
-                    OnPropertyChanged(nameof(PixelY));
-                }
+                OnPropertyChanged(nameof(VisualX));
+                OnPropertyChanged(nameof(VisualY));
+                OnPropertyChanged(nameof(VisualAngle));
+                OnPropertyChanged(nameof(StateDisplay));
             };
         }
 
-        public double PixelX => _vehicle.VisualPosition.X;
-        public double PixelY => _vehicle.VisualPosition.Y;
 
+
+        public double VisualX => _vehicle.Position.X;
+        public double VisualY => _vehicle.Position.Y;
+        public float VisualAngle => _vehicle.Angle;
         public string GetName => _vehicle.Name;
 
         public Vehicle GetVehicle => _vehicle; 

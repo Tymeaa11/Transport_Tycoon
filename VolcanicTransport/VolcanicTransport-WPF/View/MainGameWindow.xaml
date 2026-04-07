@@ -57,7 +57,7 @@
             </ItemsControl.ItemContainerStyle>
         </ItemsControl>
 
-        <ItemsControl ItemsSource="{Binding Vehicles}">
+        <ItemsControl ItemsSource="{Binding VehicleViewModels}">
 
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>

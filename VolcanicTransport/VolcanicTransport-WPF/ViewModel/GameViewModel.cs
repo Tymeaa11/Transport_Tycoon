@@ -169,6 +169,11 @@ namespace VolcanicTransport_WPF.ViewModel
                             {
 
                                 var newBus = new Bus("buszocska", VolcanicTransport.Model.World.Economy.ProductType.HUMAN);
+
+                                newBus.Route = new Route();
+                                newBus.Route.AddStop(_firstSelectedStation);
+                                newBus.Route.AddStop(secondSelectedStation);
+
                                 newBus.StartJourney(path);
                                 GameModelInstance.BuyVehicle(newBus);
 
