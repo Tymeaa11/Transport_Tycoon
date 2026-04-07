@@ -68,7 +68,17 @@ namespace VolcanicTransport.Model
         }
         #endregion
 
+        #region SavingAndLoading
+        public void LoadGame(string filename)
+        => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename);
+
+        public void SaveGame(string filename)
+            => _savefileManager.SaveGame(new ISaveFileManager.GameData(this), filename);
+        #endregion
+        
         #region  Methods
+        public void GenerateWorld() => WorldInstance.Generate();
+        
         public void Pause()
         {
             IsPaused = true;

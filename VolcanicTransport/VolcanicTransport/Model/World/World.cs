@@ -31,7 +31,7 @@ namespace VolcanicTransport.Model.World
         public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
         public GameWorldGenerator? GameWorldGenerator { get; set; }
-        public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
+        public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
 
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
@@ -47,7 +47,6 @@ namespace VolcanicTransport.Model.World
             SizeInChunks = new Coordinate(worldSize);
             SizeInFields = SizeInChunks * GameSettings.ChunkSize;
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
-
             WorldSeed = seed;
 
             InitialiseWorld();
@@ -57,13 +56,8 @@ namespace VolcanicTransport.Model.World
 
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
 
-        public static void Initialise(int worldSize, int seed)
-        {
-            if (_instance != null) 
-                throw new InvalidOperationException("World already initialised");
-
-            _instance = new World(worldSize, seed);
-        }
+        public static void Initialise(int worldSize, int seed) 
+            => _instance = new World(worldSize, seed);
         #endregion
 
         #region FieldGetters

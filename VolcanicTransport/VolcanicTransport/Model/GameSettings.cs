@@ -11,7 +11,7 @@ public static class GameSettings
 
     #region World & WorldGeneration
     public const int FieldSize = 64;
-    public const int ChunkSize = 32;
+    public const int ChunkSize = 32; // should be even
 
     private static readonly Dictionary<FieldType, float>  FieldTypeThickness = new()
     {
@@ -148,6 +148,10 @@ public static class GameSettings
     
     static GameSettings()
     {
+        #pragma warning disable CS0162 // Unreachable code detected
+        if (ChunkSize % 2 != 0) throw new Exception("ChunkSize must be even.");
+        #pragma warning restore CS0162 // Unreachable code detected
+        
         var tempArray = new float[FieldTypeThickness.Count];
 
         var height = FieldTypeThickness[FieldType.DEEP_LAVA_OCEAN];
