@@ -15,9 +15,9 @@ namespace VolcanicTransport.Model.Utils
         #endregion
 
         #region Methods
-        public double Magnitude => Math.Sqrt(X * X + Y * Y);
+        public double Magnitude() => Math.Sqrt(X * X + Y * Y);
 
-        public double Distance(Coordinate o) => (this-o).Magnitude;
+        public double Distance(Coordinate o) => (this-o).Magnitude();
 
         public bool IsInside(Coordinate topLeft, Coordinate bottomRight)
         => X >= topLeft.X && X < bottomRight.X && Y >= topLeft.Y && Y < bottomRight.Y;
