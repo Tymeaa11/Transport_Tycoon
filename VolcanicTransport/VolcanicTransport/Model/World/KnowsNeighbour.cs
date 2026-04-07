@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
@@ -6,10 +7,10 @@ namespace VolcanicTransport.Model.World
     {
         public Coordinate Coordinate { get; }
 
-        public Field? North { get; private set; }
-        public Field? South { get; private set; }
-        public Field? East { get; private set; }
-        public Field? West { get; private set; }
+        [JsonIgnore] public Field? North { get; private set; }
+        [JsonIgnore] public Field? South { get; private set; }
+        [JsonIgnore] public Field? East { get; private set; }
+        [JsonIgnore] public Field? West { get; private set; }
 
         protected KnowsNeighbour(Coordinate coordinate)
         {

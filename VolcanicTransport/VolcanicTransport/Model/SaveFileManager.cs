@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
@@ -11,7 +12,7 @@ namespace VolcanicTransport.Model
         private class LoadingException : Exception {}
 
         #region DataWrappers
-        private record SurfaceEntry(Coordinate Position, ISurface Surface);
+        private record SurfaceEntry(Coordinate C, ISurface S);
 
         private readonly record struct SurfaceSaveData(
             int WorldSeed,
@@ -79,7 +80,13 @@ namespace VolcanicTransport.Model
                     GetSurfaceElements()
                 );
                 
-                JsonSerializer.Serialize(jsonStream, saveData, new JsonSerializerOptions { WriteIndented = true });
+                var options = new JsonSerializerOptions 
+                { 
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles // Prevents infinite loops between Field and Surface
+                };
+
+                JsonSerializer.Serialize(jsonStream, saveData, options);
             }
         }
 

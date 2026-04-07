@@ -120,10 +120,10 @@ namespace VolcanicTransport.Model.World
         }
 
 
-        public bool IsStraight => (RoadType & RoadType.STRAIGHT) != 0;
-        public bool IsCurved => (RoadType & RoadType.CURVED) != 0;
-        public bool IsJunction => (RoadType & RoadType.JUNCTION) != 0;
-        public bool IsSlope => (RoadType & RoadType.SLOPE) != 0;
+        public bool IsStraight() => (RoadType & RoadType.STRAIGHT) != 0;
+        public bool IsCurved() => (RoadType & RoadType.CURVED) != 0;
+        public bool IsJunction() => (RoadType & RoadType.JUNCTION) != 0;
+        public bool IsSlope() => (RoadType & RoadType.SLOPE) != 0;
 
         public event EventHandler? OnPlacementFailed;
 
