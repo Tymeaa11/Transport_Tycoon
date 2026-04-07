@@ -9,8 +9,10 @@ namespace VolcanicTransport.Model
     public class SaveFileManager : ISaveFileManager
     {
         private class LoadingException : Exception {}
-        
-        
+
+        #region DataWrappers
+        private record SurfaceEntry(Coordinate Position, ISurface Surface);
+
         private readonly record struct SurfaceSaveData(
             int WorldSeed,
             Coordinate SizeInChunks,
@@ -20,10 +22,8 @@ namespace VolcanicTransport.Model
             List<City> Cities,
             List<Factory> Factories,
             //List<Vehicle> Vehicles, // TODO Waiting for observable fix
-            Dictionary<Coordinate, ISurface> Surfaces)
-        {
-            
-        }
+            List<SurfaceEntry> Surfaces);
+        #endregion
         
         public ISaveFileManager.GameData LoadGame(string filename)
         {
@@ -115,14 +115,16 @@ namespace VolcanicTransport.Model
             while (index < totalBytes && binStream.CanRead)
             {
                 var b =  binStream.ReadByte();
-                bytes[index++] = (byte)(b & 0x0F);
+
+                if (b == -1) break;
+
                 bytes[index++] = (byte)(b >> 4);
+                bytes[index++] = (byte)(b & 0x0F);
             }
             
             if (index != totalBytes) throw new LoadingException();
 
             index = 0;
-            
             World.World.Instance.ChunkMatrix.ReadEach((_, _, chunk) 
                 => chunk.FieldMatrix.ReadEach((_, _, field) 
                     => field.SetFieldTypeTo( (FieldType) bytes[index++])
@@ -132,31 +134,30 @@ namespace VolcanicTransport.Model
         #endregion
 
         #region SurfaceElements
-        private static Dictionary<Coordinate, ISurface> GetSurfaceElements()
+        private static List<SurfaceEntry> GetSurfaceElements()
         {
             var world = World.World.Instance;
-            Dictionary<Coordinate, ISurface> surfaces = [];
+            List<SurfaceEntry> surfaces = [];
 
             world.ChunkMatrix.ReadEach((x, y, chunk) =>
                 chunk.FieldMatrix.ReadEach((fx, fy, field) =>
                 {
                     if (field.Surface is null) return;
                     var coordinate = new Coordinate(x * GameSettings.ChunkSize + fx, y * GameSettings.ChunkSize + fy);
-                    surfaces[coordinate] = field.Surface;
+                    surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
                 })
             );
             
             return surfaces;
         }
 
-        private static void RestoreSurfaceElements(Dictionary<Coordinate, ISurface> surfaces)
+        private static void RestoreSurfaceElements(List<SurfaceEntry> surfaces)
         {
             var world = World.World.Instance;
-            foreach (var coordinate in surfaces.Keys)
+            foreach (var (coordinate, surface) in surfaces)
             {
                 var field = world.GetField(coordinate);
-                var surface = surfaces[coordinate];
-                
+
                 if (field is null || field.Surface is not null) throw new LoadingException();
                 
                 field.Surface = surface;
