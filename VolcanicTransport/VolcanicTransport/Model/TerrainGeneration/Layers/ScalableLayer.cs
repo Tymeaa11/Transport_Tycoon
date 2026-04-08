@@ -10,7 +10,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
         private float _offsetX;
         private float _offsetY;
         #endregion
-        
+
         #region Constuctors
         protected ScalableLayer(float frequency, float amplitude, float offsetX, float offsetY)
         {
@@ -31,7 +31,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
         #region Methods
         protected abstract float Calculate(float x, float y);
 
-        public void SetSeed(int seed, Random nextRandom) 
+        public void SetSeed(int seed, Random nextRandom)
         {
             _offsetX = GetNewOffset(nextRandom);
             _offsetY = GetNewOffset(nextRandom);

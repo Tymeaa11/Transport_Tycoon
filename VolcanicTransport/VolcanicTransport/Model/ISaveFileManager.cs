@@ -2,7 +2,7 @@ namespace VolcanicTransport.Model
 {
     public interface ISaveFileManager
     {
-        public readonly record struct GameData (
+        public readonly record struct GameData(
             World.World World,
             bool IsPaused,
             double Time,
@@ -13,7 +13,8 @@ namespace VolcanicTransport.Model
                 GameModel.WorldInstance,
                 gm.IsPaused,
                 gm.Time,
-                gm.PlayerMoney) {}
+                gm.PlayerMoney)
+            { }
         }
 
         public GameData LoadGame(string filename);

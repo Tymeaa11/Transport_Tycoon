@@ -6,10 +6,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type) : INotifyPropertyChanged
     {
-        
+
         public Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType type)
-        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, type) {}
-        
+        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, type) { }
+
         public string Name { get; } = name;
         public ProductType Type { get; protected set; } = type;
         public int CurrentLoad { get; protected set; } = 0;
@@ -29,7 +29,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         }
 
 
-        public Route? Route { 
+        public Route? Route
+        {
             get => route;
             set => route = value;
         }
@@ -90,7 +91,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 VisualPosition = currentWaypoints[0];
             }
-            else {
+            else
+            {
                 VisualPosition = new Vector2(CurrentRoad.Coordinate.X * GameSettings.FieldSize, CurrentRoad.Coordinate.Y * GameSettings.FieldSize);
                 System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {VisualPosition} pixelre.");
             }
@@ -127,8 +129,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             int safetyCounter = 0;
             while (distanceToTravel > 0 && safetyCounter < 10)
-       
-      {
+
+            {
                 safetyCounter++;
                 if (currentWaypointIndex >= currentWaypoints.Count)
                 {
@@ -242,9 +244,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 System.Diagnostics.Debug.WriteLine($"HIÁNYZÓ WAYPOINT KULCS: {entryDir} -> {exitDir}");
 
-                const int halfFieldSize = GameSettings.FieldSize / 2;
-
-                currentWaypoints.Add(new Vector2(startX + halfFieldSize, startY + halfFieldSize));
+                currentWaypoints.Add(new Vector2(startX + GameSettings.FieldSizeP2, startY + GameSettings.FieldSizeP2));
             }
         }
 

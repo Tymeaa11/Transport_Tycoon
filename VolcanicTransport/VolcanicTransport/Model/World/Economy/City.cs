@@ -5,12 +5,12 @@ namespace VolcanicTransport.Model.World.Economy
 {
     public class City
     {
-        public string Name { get; } 
+        public string Name { get; }
         public Coordinate CenterCoordinate { get; }
 
         [JsonInclude]
         private List<Product> Products { get; set; }
-        
+
         private readonly List<Field> _fields;
 
         [JsonConstructor]
@@ -22,7 +22,7 @@ namespace VolcanicTransport.Model.World.Economy
             Products = [];
             RandomizeNeeds();
         }
-        
+
         public City(string name, Coordinate centerCoordinate)
         {
             Name = name;
@@ -33,7 +33,7 @@ namespace VolcanicTransport.Model.World.Economy
         }
 
 
-        public void AddField(Field f) =>_fields.Add(f);
+        public void AddField(Field f) => _fields.Add(f);
 
         private void RandomizeNeeds()
         {

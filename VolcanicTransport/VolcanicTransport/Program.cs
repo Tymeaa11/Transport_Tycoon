@@ -3,8 +3,6 @@ using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using VolcanicTransport.Model;
-using VolcanicTransport.Model.TerrainGeneration;
-using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport;
@@ -13,15 +11,16 @@ internal static class Program
 {
     private static void Main()
     {
-        GameModel.Initialise(8,0);
-        
+        GameModel.Initialise(8, 0);
+
         GameModel.Instance.SaveGame("output.zip");
-        
+
         GameModel.Instance.LoadGame("output.zip");
-        
+
         GeneratePreview();
     }
-    private static void GeneratePreview() {
+    private static void GeneratePreview()
+    {
         Console.WriteLine(@"Creating preview at bin\Debug\net9.0\");
         const int fieldSize = 8;
         const int offset = fieldSize / 4;

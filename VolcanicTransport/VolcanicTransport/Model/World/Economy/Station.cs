@@ -32,7 +32,7 @@ namespace VolcanicTransport.Model.World.Economy
 
         public bool UnBoarding()
         {
-            if (vehicle is not { Type: ProductType.HUMAN }) 
+            if (vehicle is not { Type: ProductType.HUMAN })
                 return false;
 
             //vehicle.UnBoard() //TODO//

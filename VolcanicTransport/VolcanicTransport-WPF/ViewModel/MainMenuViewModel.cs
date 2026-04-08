@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-
-namespace VolcanicTransport_WPF.ViewModel
+﻿namespace VolcanicTransport_WPF.ViewModel
 {
     public class MainMenuViewModel : ViewModelBase
     {

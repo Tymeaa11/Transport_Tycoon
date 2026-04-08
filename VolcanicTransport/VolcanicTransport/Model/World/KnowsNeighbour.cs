@@ -15,7 +15,7 @@ namespace VolcanicTransport.Model.World
         protected KnowsNeighbour(Coordinate coordinate)
         {
             Coordinate = coordinate;
-            North = South =  East = West = null;
+            North = South = East = West = null;
             UpdateNeighbourReferences();
         }
 

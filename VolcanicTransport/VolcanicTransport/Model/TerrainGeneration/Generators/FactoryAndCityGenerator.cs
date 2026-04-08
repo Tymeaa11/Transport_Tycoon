@@ -1,13 +1,13 @@
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
-using VolcanicTransport.Model.Exceptions;
 
 namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class FactoryAndCityGenerator(int cityCount, int factoryCount)
     {
-        private static Field GetField(Coordinate coordinate) 
+        private static Field GetField(Coordinate coordinate)
             => World.World.Instance.GetField(coordinate) ?? throw new GenerationErrorException();
 
         public void Generate()
@@ -54,7 +54,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                         return false;
 
             // Távolság ellenőrzése a már meglévő városoktól/gyáraktól
-            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance)) 
+            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance))
                    && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistance));
         }
 
@@ -124,7 +124,8 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
             if (fields.Count != 4) throw new GenerationErrorException();
 
-            fields.ForEach(f => {
+            fields.ForEach(f =>
+            {
                 f.SetFieldTypeTo(reference); // Kilapítás az origin magasságára
                 f.Surface = new FactoryBuilding(); // ISurface beállítása
                 newFactory.AddField(f);

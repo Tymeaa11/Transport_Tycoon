@@ -7,15 +7,15 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
         #endregion
 
         #region Constructors
-        public PerlinLayer(Perlin perlin, float frequency, float amplitude, float offsetX, float offsetY) 
-            : base(frequency, amplitude, offsetX, offsetY) 
+        public PerlinLayer(Perlin perlin, float frequency, float amplitude, float offsetX, float offsetY)
+            : base(frequency, amplitude, offsetX, offsetY)
         {
             _perlin = perlin;
         }
 
-        public PerlinLayer(Perlin perlin, float frequency, float amplitude, Random nextRandom) 
-            : base(frequency, amplitude, nextRandom) 
-        { 
+        public PerlinLayer(Perlin perlin, float frequency, float amplitude, Random nextRandom)
+            : base(frequency, amplitude, nextRandom)
+        {
             _perlin = perlin;
         }
         #endregion

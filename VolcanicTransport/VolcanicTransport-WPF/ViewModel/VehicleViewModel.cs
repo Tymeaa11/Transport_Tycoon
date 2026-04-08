@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VolcanicTransport.Model.World.Roadnetwork;
+﻿using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -30,12 +25,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public string GetName => _vehicle.Name;
 
-        public Vehicle GetVehicle => _vehicle; 
+        public Vehicle GetVehicle => _vehicle;
 
         public string Type => _vehicle.Type.ToString();
-        
-        public string GetCapacity =>  _vehicle.Capacity.ToString(); 
-        public string SpeedDisplay => (_vehicle.MaxSpeed*45).ToString() + " km/h";
+
+        public string GetCapacity => _vehicle.Capacity.ToString();
+        public string SpeedDisplay => (_vehicle.MaxSpeed * 45).ToString() + " km/h";
 
         public string StateDisplay => _vehicle.State.ToString();
 

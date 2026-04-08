@@ -7,24 +7,24 @@ namespace VolcanicTransport.Model.World.Economy
     public class Product(ProductType productType, float minvalue, float maxvalue, float variability = 0.05f)
     {
         #region Fields
-        public ProductType ProductType { get;} = productType;
+        public ProductType ProductType { get; } = productType;
         private readonly Perlin _perlin = new();
-        
+
         [JsonInclude]
         private float MinValue { get; } = minvalue;
-        
+
         [JsonInclude]
         private float MaxValue { get; } = maxvalue;
-        
+
         [JsonInclude]
         private float Variability { get; } = variability;
 
         #endregion
-        
+
         #region Constructors
-        public Product(Product other) : 
-            this(other.ProductType, other.MinValue, other.MaxValue, other.Variability) 
-        {}
+        public Product(Product other) :
+            this(other.ProductType, other.MinValue, other.MaxValue, other.Variability)
+        { }
 
         #endregion
 

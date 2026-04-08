@@ -75,10 +75,10 @@ namespace VolcanicTransport.Model
         public void SaveGame(string filename)
             => _savefileManager.SaveGame(new ISaveFileManager.GameData(this), filename);
         #endregion
-        
+
         #region  Methods
         public void GenerateWorld() => WorldInstance.Generate();
-        
+
         public void Pause()
         {
             IsPaused = true;
@@ -120,7 +120,7 @@ namespace VolcanicTransport.Model
         public bool BuyVehicle(Vehicle v)
         {
             if (!TryPurchase(v.Price)) return false;
-            
+
             WorldInstance.AddVehicle(v);
             VehicleBought?.Invoke(this, EventArgs.Empty);
             return true;
@@ -129,7 +129,7 @@ namespace VolcanicTransport.Model
         public void SellVehicle(Vehicle v)
         {
             if (!WorldInstance.HasVehicle(v)) return;
-            
+
             AddMoney(v.Price * 0.5);
             WorldInstance.RemoveVehicle(v);
             VehicleSold?.Invoke(this, EventArgs.Empty);
@@ -138,7 +138,7 @@ namespace VolcanicTransport.Model
         public bool TryPurchase(double amount)
         {
             if (!(PlayerMoney >= amount)) return false;
-            
+
             PlayerMoney -= amount;
             MoneyChanged?.Invoke(this, EventArgs.Empty);
             return true;
@@ -193,7 +193,7 @@ namespace VolcanicTransport.Model
 
 
             if (tempRoad.RoadType != RoadType.INVALID) return tempRoad;
-            
+
             field.Surface = null;
             tempRoad.RoadLayoutChanged -= OnRoadBecameJunction;
             OnPlacementFailed?.Invoke(this, EventArgs.Empty);
@@ -208,17 +208,17 @@ namespace VolcanicTransport.Model
             const double mushroomPricePerUnit = 20;
 
             var field = WorldInstance.GetField(coord);
-            if (null == field) 
+            if (null == field)
                 return;
 
             if (field.Surface is Mushroom mushroom)
             {
-                var stage = (double)mushroom.GrowthStage+1;
+                var stage = (double)mushroom.GrowthStage + 1;
                 var extraCost = stage * mushroomPricePerUnit;
                 roadPrice += extraCost;
             }
 
-            if (!TryPurchase(roadPrice)) 
+            if (!TryPurchase(roadPrice))
                 return;
 
             var road = CanPlaceRoadHere(coord, field);
@@ -250,7 +250,7 @@ namespace VolcanicTransport.Model
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
             var nearRoad = Direction.Directions.Any(dir => WorldInstance.GetField(coord + dir)?.Surface is Road);
-            
+
             if (!nearRoad) return false;
 
             var field = WorldInstance.GetField(coord);
@@ -259,7 +259,7 @@ namespace VolcanicTransport.Model
 
             if (field.Surface is Mushroom mushroom)
             {
-                var stage = (double)mushroom.GrowthStage+1;
+                var stage = (double)mushroom.GrowthStage + 1;
                 var extraCost = stage * mushroomPricePerUnit;
                 stationCost += extraCost;
             }
@@ -273,7 +273,7 @@ namespace VolcanicTransport.Model
             if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
 
             if (newStation == null || !TryPurchase(stationCost)) return false;
-            
+
             WorldInstance.GetField(coord)!.Surface = newStation;
             WorldInstance.Stations.Add(newStation);
 
@@ -299,7 +299,7 @@ namespace VolcanicTransport.Model
                 return;
             }
             Debug.WriteLine("Két megálló megvan, gráf frissítése...");
-            
+
             var graph = WorldInstance.Roadnetwork;
             //graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
             graph.RegisterNodeIfNeeded(s.Coordinate);
@@ -308,23 +308,23 @@ namespace VolcanicTransport.Model
             //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
             //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
             //{
-                //var path = Pathfinder.FindPath(startNode, targetNode);
-               // if (path != null && path.Count > 0)
-              //  {
-                //    v.StartJourney(path);
-               //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-              //  }
-               // else
-              //  {
-              //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-               // }
-           // }
-            
+            //var path = Pathfinder.FindPath(startNode, targetNode);
+            // if (path != null && path.Count > 0)
+            //  {
+            //    v.StartJourney(path);
+            //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
+            //  }
+            // else
+            //  {
+            //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
+            // }
+            // }
+
         }
-        
+
         #endregion
 
-        private void TerraformField (Coordinate coord, int deltaHeight)
+        private void TerraformField(Coordinate coord, int deltaHeight)
         {
             double terraformingPrice = 50;
             const double mushroomPricePerUnit = 20;
@@ -334,7 +334,7 @@ namespace VolcanicTransport.Model
             if (null == field)
                 return;
 
-            if (! ((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
+            if (!((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
             {
                 return;
             }
