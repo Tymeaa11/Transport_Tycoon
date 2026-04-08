@@ -55,7 +55,7 @@ namespace VolcanicTransport.Model
                 );
             WorldInstance.Generate();
 
-            PlayerMoney = 100000;
+            PlayerMoney = GameSettings.StartingMoney;
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
@@ -78,6 +78,17 @@ namespace VolcanicTransport.Model
         
         #region  Methods
         public void GenerateWorld() => WorldInstance.Generate();
+
+        private static double GetMushroomCosts(Field field)
+        {
+            var cost = 0d;
+            
+            if (field.Surface is not Mushroom mushroom) return cost;
+            
+            var stage = (double)mushroom.GrowthStage+1;
+            cost = stage * GameSettings.MushroomPricePerUnit;
+            return cost;
+        }
         
         public void Pause()
         {
@@ -204,19 +215,13 @@ namespace VolcanicTransport.Model
 
         public void PlaceRoad(Coordinate coord)
         {
-            double roadPrice = 50;
-            const double mushroomPricePerUnit = 20;
-
+            var roadPrice = GameSettings.BaseRoadPrice;
+            
             var field = WorldInstance.GetField(coord);
             if (null == field) 
                 return;
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                var stage = (double)mushroom.GrowthStage+1;
-                var extraCost = stage * mushroomPricePerUnit;
-                roadPrice += extraCost;
-            }
+            roadPrice += GetMushroomCosts(field);
 
             if (!TryPurchase(roadPrice)) 
                 return;
@@ -244,8 +249,7 @@ namespace VolcanicTransport.Model
 
         public bool PlaceStation(Coordinate coord)
         {
-            double stationCost = 500;
-            const double mushroomPricePerUnit = 20;
+            var stationCost = GameSettings.BaseStationPrice;
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
@@ -256,13 +260,7 @@ namespace VolcanicTransport.Model
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;
-
-            if (field.Surface is Mushroom mushroom)
-            {
-                var stage = (double)mushroom.GrowthStage+1;
-                var extraCost = stage * mushroomPricePerUnit;
-                stationCost += extraCost;
-            }
+            stationCost += GetMushroomCosts(field);
 
             var city = WorldInstance.Cities.FirstOrDefault(c => c.CenterCoordinate.Distance(coord) <= 4);
 
@@ -283,7 +281,6 @@ namespace VolcanicTransport.Model
             WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
             return true;
-
         }
 
         public static void AddStopToVehicle(Vehicle v, Station s)
@@ -326,36 +323,26 @@ namespace VolcanicTransport.Model
 
         private void TerraformField (Coordinate coord, int deltaHeight)
         {
-            double terraformingPrice = 50;
-            const double mushroomPricePerUnit = 20;
+            var terraformationPrice = GameSettings.BaseTerraformationPrice;
 
-
-            Field? field = WorldInstance.GetField(coord);
-            if (null == field)
+            var field = WorldInstance.GetField(coord);
+            
+            if (field == null)
                 return;
 
             if (! ((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
-            {
                 return;
-            }
+            
+            terraformationPrice += GetMushroomCosts(field);
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                double stage = (double)mushroom.GrowthStage + 1;
-                terraformingPrice += stage * mushroomPricePerUnit;
-            }
+            var newFieldType = (FieldType)((int)field.Type + deltaHeight);
 
-            FieldType newFieldType = (FieldType)((int)field.Type + deltaHeight);
-
-            if (FieldType.DEEP_LAVA_OCEAN <= newFieldType && newFieldType <= FieldType.HIGH_MOUNTAINS)
-            {
-                if (TryPurchase(terraformingPrice))
-                {
-                    field.SetFieldTypeTo(newFieldType);
-                    var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
-                    WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
-                }
-            }
+            if (newFieldType > FieldType.HIGH_MOUNTAINS) return;
+            if (!TryPurchase(terraformationPrice)) return;
+            
+            field.SetFieldTypeTo(newFieldType);
+            var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
+            WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
         }
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);

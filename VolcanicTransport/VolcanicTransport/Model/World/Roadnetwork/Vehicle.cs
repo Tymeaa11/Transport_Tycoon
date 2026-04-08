@@ -242,9 +242,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 System.Diagnostics.Debug.WriteLine($"HIÁNYZÓ WAYPOINT KULCS: {entryDir} -> {exitDir}");
 
-                const int halfFieldSize = GameSettings.FieldSize / 2;
-
-                currentWaypoints.Add(new Vector2(startX + halfFieldSize, startY + halfFieldSize));
+                currentWaypoints.Add(new Vector2(startX + GameSettings.FieldSizeP2, startY + GameSettings.FieldSizeP2));
             }
         }
 

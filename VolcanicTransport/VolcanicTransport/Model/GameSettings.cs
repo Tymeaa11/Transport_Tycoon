@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 
-namespace VolcanicTransport;
+namespace VolcanicTransport.Model;
 
 public static class GameSettings
 {
@@ -10,8 +10,12 @@ public static class GameSettings
     public const string GameVersion = "0.1.0";
 
     #region World & WorldGeneration
-    public const int FieldSize = 64;
+    public const int FieldSize = 64; // should be divisible by 8
     public const int ChunkSize = 32; // should be even
+
+    public const int FieldSizeP2 = FieldSize / 2;
+    public const int FieldSizeP4 = FieldSize / 4;
+    public const int FieldSizeP8 = FieldSize / 8;
 
     private static readonly Dictionary<FieldType, float>  FieldTypeThickness = new()
     {
@@ -145,11 +149,24 @@ public static class GameSettings
     
     #endregion
     #endregion
+
+
+    #region GameplayConstants
+
+    public const int StartingMoney = 10_000;
+    public const double BaseRoadPrice = 100;
+    public const double BaseStationPrice = 500;
+    public const double BaseTerraformationPrice = 500;
+    
+    public const double MushroomPricePerUnit = 200;
+
+    #endregion
     
     static GameSettings()
     {
         #pragma warning disable CS0162 // Unreachable code detected
         if (ChunkSize % 2 != 0) throw new Exception("ChunkSize must be even.");
+        if (FieldSize % 8 != 0) throw new Exception("FieldSize must be divisible by 8.");
         #pragma warning restore CS0162 // Unreachable code detected
         
         var tempArray = new float[FieldTypeThickness.Count];
