@@ -55,7 +55,7 @@ namespace VolcanicTransport.Model
             world.Cities.AddRange(surfaceData.Cities);
             world.Factories.AddRange(surfaceData.Factories);
             
-            RestoreSurfaceElements(surfaceData.Surfaces);
+            RestoreSurfaceElements(surfaceData.Surfaces, world.Cities, world.Factories);
             
             return new ISaveFileManager.GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
         }
@@ -160,8 +160,13 @@ namespace VolcanicTransport.Model
             return surfaces;
         }
 
-        private static void RestoreSurfaceElements(List<SurfaceEntry> surfaces)
+        private static void RestoreSurfaceElements(List<SurfaceEntry> surfaces, List<City> cities, List<Factory> factories)
         {
+            
+            var cityNameMap = cities.ToDictionary(c => c.Name);
+            var FactoryNameMap = factories.ToDictionary(c => c.Name);
+
+
             var world = World.World.Instance;
             foreach (var (coordinate, surface) in surfaces)
             {
@@ -170,9 +175,24 @@ namespace VolcanicTransport.Model
                 if (field is null || field.Surface is not null) throw new LoadingException();
                 
                 field.Surface = surface;
-                if (surface is KnowsNeighbour knowsNeighbour)
+
+                switch (surface)
                 {
-                    knowsNeighbour.UpdateNeighbourReferences();
+                    case KnowsNeighbour knowsNeighbour:
+                        knowsNeighbour.UpdateNeighbourReferences();
+                        break;
+                    
+                    case CityBuilding cityBuilding:
+                        if (!cityNameMap.TryGetValue(cityBuilding.CityName, out var city)) 
+                            throw new LoadingException();
+                        city.AddField(field);
+                        break;
+                    
+                    case FactoryBuilding factoryBuilding:
+                        if (!FactoryNameMap.TryGetValue(factoryBuilding.FactoryName, out var factory)) 
+                            throw new LoadingException();
+                        factory.AddField(field);
+                        break;
                 }
                 
             }

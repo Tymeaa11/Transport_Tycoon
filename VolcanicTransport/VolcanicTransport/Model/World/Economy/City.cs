@@ -7,8 +7,10 @@ namespace VolcanicTransport.Model.World.Economy
     {
         public string Name { get; } 
         public Coordinate CenterCoordinate { get; }
+
+        [JsonInclude]
+        private List<Product> Products { get; set; }
         
-        public List<Product> Products { get; private set; }
         private readonly List<Field> _fields;
 
         [JsonConstructor]
