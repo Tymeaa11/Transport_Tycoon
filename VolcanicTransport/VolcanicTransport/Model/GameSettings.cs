@@ -159,17 +159,16 @@ public static class GameSettings
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;
-
+    
     public const double MushroomPricePerUnit = 200;
 
     #endregion
-
+    
     static GameSettings()
     {
-#pragma warning disable CS0162 // Unreachable code detected
+
         if (ChunkSize % 2 != 0) throw new Exception("ChunkSize must be even.");
         if (FieldSize % 8 != 0) throw new Exception("FieldSize must be divisible by 8.");
-#pragma warning restore CS0162 // Unreachable code detected
 
         var tempArray = new float[FieldTypeThickness.Count];
 
