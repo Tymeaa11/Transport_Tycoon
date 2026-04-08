@@ -17,7 +17,11 @@ public static class GameSettings
     public const int FieldSizeP4 = FieldSize / 4;
     public const int FieldSizeP8 = FieldSize / 8;
 
+<<<<<<< HEAD
     private static readonly Dictionary<FieldType, float> FieldTypeThickness = new()
+=======
+    private static readonly Dictionary<FieldType, float>  FieldTypeThickness = new()
+>>>>>>> 94c8b75550d8a64088762a6ac93b1c5e5f409279
     {
         [FieldType.DEEP_LAVA_OCEAN] = 20, // -inf to 20
         [FieldType.LAVA_OCEAN] = 60,
@@ -159,18 +163,31 @@ public static class GameSettings
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;
+<<<<<<< HEAD
 
     public const double MushroomPricePerUnit = 200;
 
     #endregion
 
+=======
+    
+    public const double MushroomPricePerUnit = 200;
+
+    #endregion
+    
+>>>>>>> 94c8b75550d8a64088762a6ac93b1c5e5f409279
     static GameSettings()
     {
 #pragma warning disable CS0162 // Unreachable code detected
         if (ChunkSize % 2 != 0) throw new Exception("ChunkSize must be even.");
         if (FieldSize % 8 != 0) throw new Exception("FieldSize must be divisible by 8.");
+<<<<<<< HEAD
 #pragma warning restore CS0162 // Unreachable code detected
 
+=======
+        #pragma warning restore CS0162 // Unreachable code detected
+        
+>>>>>>> 94c8b75550d8a64088762a6ac93b1c5e5f409279
         var tempArray = new float[FieldTypeThickness.Count];
 
         var height = FieldTypeThickness[FieldType.DEEP_LAVA_OCEAN];
