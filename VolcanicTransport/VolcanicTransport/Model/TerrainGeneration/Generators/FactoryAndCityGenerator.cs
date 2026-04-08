@@ -69,16 +69,16 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
             fields.ForEach(f => f.SetFieldTypeTo(reference));
 
-            fields[0].Surface = new CityBuilding(name);
+            fields[0].Surface = new CityBuilding();
             newCity.AddField(fields[0]);
 
-            fields[2].Surface = new CityBuilding(name);
+            fields[2].Surface = new CityBuilding();
             newCity.AddField(fields[0]);
 
-            fields[6].Surface = new CityBuilding(name);
+            fields[6].Surface = new CityBuilding();
             newCity.AddField(fields[0]);
 
-            fields[8].Surface = new CityBuilding(name);
+            fields[8].Surface = new CityBuilding();
             newCity.AddField(fields[0]);
 
             fields[1].Surface = new Road(center + Direction.North);
@@ -126,7 +126,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
             fields.ForEach(f => {
                 f.SetFieldTypeTo(reference); // Kilapítás az origin magasságára
-                f.Surface = new FactoryBuilding(name); // ISurface beállítása
+                f.Surface = new FactoryBuilding(); // ISurface beállítása
                 newFactory.AddField(f);
             });
 

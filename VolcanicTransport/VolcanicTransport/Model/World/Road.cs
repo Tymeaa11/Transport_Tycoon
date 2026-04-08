@@ -2,19 +2,9 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Road : KnowsNeighbour
+    public class Road(Coordinate coordinate) : KnowsNeighbour(coordinate)
     {
-
-        #region Constructors
-        public Road(Coordinate coordinate, bool isPermanent = false) : base(coordinate)
-        {
-            IsPermanent = isPermanent;
-        }
-        #endregion
-
         #region Fields
-        public bool IsPermanent { get; }
-
         public bool IsReserved { get; set; } = false;
         public RoadType RoadType { get; private set; }
         #endregion

@@ -13,7 +13,7 @@ internal static class Program
 {
     private static void Main()
     {
-        GameModel.Initialise(2,0);
+        GameModel.Initialise(8,0);
         
         GameModel.Instance.SaveGame("output.zip");
         

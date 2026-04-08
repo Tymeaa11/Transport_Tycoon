@@ -55,7 +55,7 @@ namespace VolcanicTransport.Model
             world.Cities.AddRange(surfaceData.Cities);
             world.Factories.AddRange(surfaceData.Factories);
             
-            RestoreSurfaceElements(surfaceData.Surfaces, world.Cities, world.Factories);
+            RestoreSurfaceElements(surfaceData.Surfaces);
             
             return new ISaveFileManager.GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
         }
@@ -97,47 +97,92 @@ namespace VolcanicTransport.Model
 
         private static int GetTotalBytes() =>
             World.World.Instance.SizeInChunks.X * World.World.Instance.SizeInChunks.Y * FieldsPerChunk;
+
+        private const byte LowMask = 0x0F;
+        private const byte MushroomStageMask = 0b0000_0011;
+        private const byte MushroomId = 0b0000_0100;
+        private const byte RoadId = 0b0000_1000;
+        private const byte RoadDataMask = 0b0000_0001;
+        private const byte CityBuildingId = 0b0000_1100;
+        private const byte SurfaceTypeMask = 0b0000_1100;
         
         private static void SaveBinaryMap(BinaryWriter writer)
         {
-            var totalBytes = GetTotalBytes();
-            
-            var bytes = new byte[totalBytes];
-            var index = 0;
+            byte data;
+            byte stage;
             
             World.World.Instance.ChunkMatrix.ReadEach((_, _, chunk) => 
                 chunk.FieldMatrix.ReadEach((_, _, field) =>
-                    bytes[index++] = (byte)field.Type)
-            );
+                {
+                    data = (byte)(((byte)field.Type & LowMask) << 4);
 
-            for (var i = 0; i < totalBytes; i += 2)
-                writer.Write((byte)((bytes[i] << 4) | (bytes[i + 1] & 0x0F)));
+                    switch (field.Surface)
+                    {
+                        case Mushroom mushroom:
+                            stage = (byte)((byte)mushroom.GrowthStage & MushroomStageMask);
+                            data = (byte) (data | MushroomId | stage);
+                            break;
+                        
+                        case Road road:
+                            data = (byte)(data | RoadId | (road.IsReserved ? 0b1 : 0b0));
+                            break;
+                        
+                        case CityBuilding:
+                            data = (byte)(data | CityBuildingId);
+                            break;
+                    }
+                    
+                    writer.Write(data);
+                })
+            );
         }
         
         private static void LoadBinaryMap(Stream binStream)
         {
             var totalBytes = GetTotalBytes();
-            
+            var index = 0;
             var bytes = new byte[totalBytes];
             
-            var index = 0;
             while (index < totalBytes && binStream.CanRead)
             {
                 var b =  binStream.ReadByte();
-
-                if (b == -1) break;
-
-                bytes[index++] = (byte)(b >> 4);
-                bytes[index++] = (byte)(b & 0x0F);
+                if (b == -1) throw new LoadingException();
+                bytes[index++] = (byte)b;
             }
+            
+            byte high;
+            byte low;
             
             if (index != totalBytes) throw new LoadingException();
 
             index = 0;
-            World.World.Instance.ChunkMatrix.ReadEach((_, _, chunk) 
-                => chunk.FieldMatrix.ReadEach((_, _, field) 
-                    => field.SetFieldTypeTo( (FieldType) bytes[index++])
-                )
+            World.World.Instance.ChunkMatrix.ReadEach((x, y, chunk) 
+                => chunk.FieldMatrix.ReadEach((fx, fy, field) =>
+                {
+                    var b = bytes[index++];
+                    high = (byte)(b >> 4);
+                    low = (byte)(b & LowMask);
+                    
+                    field.SetFieldTypeTo((FieldType)high);
+
+                    if (low == 0) return;
+                    
+                    var coordinate = new Coordinate(x * GameSettings.ChunkSize + fx, y * GameSettings.ChunkSize + fy);
+
+                    field.Surface = (low & SurfaceTypeMask) switch
+                    {
+                        MushroomId 
+                            => new Mushroom(coordinate, (MushroomGrowthStage)(low & MushroomStageMask)),
+                        
+                        RoadId 
+                            => new Road(coordinate) { IsReserved = (low & RoadDataMask) == 1 },
+                        
+                        CityBuildingId 
+                            => new CityBuilding(),
+                        
+                        _ => field.Surface
+                    };
+                }) 
             );
         }
         #endregion
@@ -153,20 +198,17 @@ namespace VolcanicTransport.Model
                 {
                     if (field.Surface is null) return;
                     var coordinate = new Coordinate(x * GameSettings.ChunkSize + fx, y * GameSettings.ChunkSize + fy);
-                    surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
+                    
+                    if (field.Surface is not Mushroom && field.Surface is not Road && field.Surface is not CityBuilding)
+                        surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
                 })
             );
             
             return surfaces;
         }
 
-        private static void RestoreSurfaceElements(List<SurfaceEntry> surfaces, List<City> cities, List<Factory> factories)
+        private static void RestoreSurfaceElements(List<SurfaceEntry> surfaces)
         {
-            
-            var cityNameMap = cities.ToDictionary(c => c.Name);
-            var FactoryNameMap = factories.ToDictionary(c => c.Name);
-
-
             var world = World.World.Instance;
             foreach (var (coordinate, surface) in surfaces)
             {
@@ -180,18 +222,6 @@ namespace VolcanicTransport.Model
                 {
                     case KnowsNeighbour knowsNeighbour:
                         knowsNeighbour.UpdateNeighbourReferences();
-                        break;
-                    
-                    case CityBuilding cityBuilding:
-                        if (!cityNameMap.TryGetValue(cityBuilding.CityName, out var city)) 
-                            throw new LoadingException();
-                        city.AddField(field);
-                        break;
-                    
-                    case FactoryBuilding factoryBuilding:
-                        if (!FactoryNameMap.TryGetValue(factoryBuilding.FactoryName, out var factory)) 
-                            throw new LoadingException();
-                        factory.AddField(field);
                         break;
                 }
                 

@@ -5,10 +5,10 @@ namespace VolcanicTransport.Model.World.Economy
 {
     public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
     {
-        protected string name = name;
-        protected readonly ProductBuffer passangerBuffer = passangerBuffer;
-        protected Vehicle? vehicle = null;
-        protected Product passengerDemand = passengerDemand;
+        protected string name = name; // menteni
+        protected readonly ProductBuffer passangerBuffer = passangerBuffer; // menteni
+        protected Vehicle? vehicle = null; // ?? egyenlőre nem mentjük IsOccupied lesz majdd
+        protected Product passengerDemand = passengerDemand;  // menteni
 
         public abstract bool UnLoadProductFromVehicle();
         public bool Boarding()
