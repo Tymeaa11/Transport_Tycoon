@@ -1,6 +1,9 @@
 
+using System.Text.Json.Serialization;
+
 namespace VolcanicTransport.Model.Utils
 {
+    [method: JsonConstructor]
     public readonly struct Coordinate(int x, int y) : IEquatable<Coordinate>
     {
         #region  Fields

@@ -17,6 +17,8 @@ internal static class Program
         
         GameModel.Instance.SaveGame("output.zip");
         
+        GameModel.Instance.LoadGame("output.zip");
+        
         GeneratePreview();
     }
     private static void GeneratePreview() {

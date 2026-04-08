@@ -10,6 +10,12 @@ namespace VolcanicTransport.Model
     public class SaveFileManager : ISaveFileManager
     {
         private class LoadingException : Exception {}
+        
+        private readonly JsonSerializerOptions _jsonOptions = new()
+        { 
+            WriteIndented = true,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        };
 
         #region DataWrappers
         private record SurfaceEntry(Coordinate C, ISurface S);
@@ -80,13 +86,9 @@ namespace VolcanicTransport.Model
                     GetSurfaceElements()
                 );
                 
-                var options = new JsonSerializerOptions 
-                { 
-                    WriteIndented = true,
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles // Prevents infinite loops between Field and Surface
-                };
 
-                JsonSerializer.Serialize(jsonStream, saveData, options);
+
+                JsonSerializer.Serialize(jsonStream, saveData, _jsonOptions);
             }
         }
 
