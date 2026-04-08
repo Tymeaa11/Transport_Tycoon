@@ -55,7 +55,7 @@ namespace VolcanicTransport.Model
                 );
             WorldInstance.Generate();
 
-            PlayerMoney = 100000;
+            PlayerMoney = GameSettings.StartingMoney;
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
@@ -68,7 +68,28 @@ namespace VolcanicTransport.Model
         }
         #endregion
 
+        #region SavingAndLoading
+        public void LoadGame(string filename)
+        => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename);
+
+        public void SaveGame(string filename)
+            => _savefileManager.SaveGame(new ISaveFileManager.GameData(this), filename);
+        #endregion
+
         #region  Methods
+        public void GenerateWorld() => WorldInstance.Generate();
+
+        private static double GetMushroomCosts(Field field)
+        {
+            var cost = 0d;
+            
+            if (field.Surface is not Mushroom mushroom) return cost;
+            
+            var stage = (double)mushroom.GrowthStage+1;
+            cost = stage * GameSettings.MushroomPricePerUnit;
+            return cost;
+        }
+        
         public void Pause()
         {
             IsPaused = true;
@@ -110,7 +131,7 @@ namespace VolcanicTransport.Model
         public bool BuyVehicle(Vehicle v)
         {
             if (!TryPurchase(v.Price)) return false;
-            
+
             WorldInstance.AddVehicle(v);
             VehicleBought?.Invoke(this, EventArgs.Empty);
             return true;
@@ -119,7 +140,7 @@ namespace VolcanicTransport.Model
         public void SellVehicle(Vehicle v)
         {
             if (!WorldInstance.HasVehicle(v)) return;
-            
+
             AddMoney(v.Price * 0.5);
             WorldInstance.RemoveVehicle(v);
             VehicleSold?.Invoke(this, EventArgs.Empty);
@@ -128,7 +149,7 @@ namespace VolcanicTransport.Model
         public bool TryPurchase(double amount)
         {
             if (!(PlayerMoney >= amount)) return false;
-            
+
             PlayerMoney -= amount;
             MoneyChanged?.Invoke(this, EventArgs.Empty);
             return true;
@@ -183,7 +204,7 @@ namespace VolcanicTransport.Model
 
 
             if (tempRoad.RoadType != RoadType.INVALID) return tempRoad;
-            
+
             field.Surface = null;
             tempRoad.RoadLayoutChanged -= OnRoadBecameJunction;
             OnPlacementFailed?.Invoke(this, EventArgs.Empty);
@@ -194,21 +215,15 @@ namespace VolcanicTransport.Model
 
         public void PlaceRoad(Coordinate coord)
         {
-            double roadPrice = 50;
-            const double mushroomPricePerUnit = 20;
-
+            var roadPrice = GameSettings.BaseRoadPrice;
+            
             var field = WorldInstance.GetField(coord);
-            if (null == field) 
+            if (null == field)
                 return;
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                var stage = (double)mushroom.GrowthStage+1;
-                var extraCost = stage * mushroomPricePerUnit;
-                roadPrice += extraCost;
-            }
+            roadPrice += GetMushroomCosts(field);
 
-            if (!TryPurchase(roadPrice)) 
+            if (!TryPurchase(roadPrice))
                 return;
 
             var road = CanPlaceRoadHere(coord, field);
@@ -234,25 +249,19 @@ namespace VolcanicTransport.Model
 
         public bool PlaceStation(Coordinate coord)
         {
-            double stationCost = 500;
-            const double mushroomPricePerUnit = 20;
+            var stationCost = GameSettings.BaseStationPrice;
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
             var nearRoad = Direction.Directions.Any(dir => WorldInstance.GetField(coord + dir)?.Surface is Road);
-            
+
             if (!nearRoad) return false;
 
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                var stage = (double)mushroom.GrowthStage+1;
-                var extraCost = stage * mushroomPricePerUnit;
-                stationCost += extraCost;
-            }
+            stationCost += GetMushroomCosts(field);
 
             var city = WorldInstance.Cities.FirstOrDefault(c => c.CenterCoordinate.Distance(coord) <= 4);
 
@@ -263,7 +272,7 @@ namespace VolcanicTransport.Model
             if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
 
             if (newStation == null || !TryPurchase(stationCost)) return false;
-            
+
             WorldInstance.GetField(coord)!.Surface = newStation;
             WorldInstance.Stations.Add(newStation);
 
@@ -273,7 +282,6 @@ namespace VolcanicTransport.Model
             WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
             return true;
-
         }
 
         public static void AddStopToVehicle(Vehicle v, Station s)
@@ -289,7 +297,7 @@ namespace VolcanicTransport.Model
                 return;
             }
             Debug.WriteLine("Két megálló megvan, gráf frissítése...");
-            
+
             var graph = WorldInstance.Roadnetwork;
             //graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
             graph.RegisterNodeIfNeeded(s.Coordinate);
@@ -298,54 +306,44 @@ namespace VolcanicTransport.Model
             //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
             //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
             //{
-                //var path = Pathfinder.FindPath(startNode, targetNode);
-               // if (path != null && path.Count > 0)
-              //  {
-                //    v.StartJourney(path);
-               //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-              //  }
-               // else
-              //  {
-              //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-               // }
-           // }
-            
+            //var path = Pathfinder.FindPath(startNode, targetNode);
+            // if (path != null && path.Count > 0)
+            //  {
+            //    v.StartJourney(path);
+            //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
+            //  }
+            // else
+            //  {
+            //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
+            // }
+            // }
+
         }
-        
+
         #endregion
 
-        private void TerraformField (Coordinate coord, int deltaHeight)
+        private void TerraformField(Coordinate coord, int deltaHeight)
         {
-            double terraformingPrice = 50;
-            const double mushroomPricePerUnit = 20;
+            var terraformationPrice = GameSettings.BaseTerraformationPrice;
 
-
-            Field? field = WorldInstance.GetField(coord);
-            if (null == field)
+            var field = WorldInstance.GetField(coord);
+            
+            if (field == null)
                 return;
 
             if (! ((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
-            {
                 return;
-            }
+            
+            terraformationPrice += GetMushroomCosts(field);
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                double stage = (double)mushroom.GrowthStage + 1;
-                terraformingPrice += stage * mushroomPricePerUnit;
-            }
+            var newFieldType = (FieldType)((int)field.Type + deltaHeight);
 
-            FieldType newFieldType = (FieldType)((int)field.Type + deltaHeight);
-
-            if (FieldType.DEEP_LAVA_OCEAN <= newFieldType && newFieldType <= FieldType.HIGH_MOUNTAINS)
-            {
-                if (TryPurchase(terraformingPrice))
-                {
-                    field.SetFieldTypeTo(newFieldType);
-                    var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
-                    WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
-                }
-            }
+            if (newFieldType > FieldType.HIGH_MOUNTAINS) return;
+            if (!TryPurchase(terraformationPrice)) return;
+            
+            field.SetFieldTypeTo(newFieldType);
+            var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
+            WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
         }
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);

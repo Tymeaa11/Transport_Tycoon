@@ -1,10 +1,7 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using VolcanicTransport;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -105,11 +102,11 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale0Command { get; private set; }
         public DelegateCommand SetTimescale1Command { get; private set; }
         public DelegateCommand SetTimescale2Command { get; private set; }
-        public DelegateCommand SetTimescale4Command { get; private set; }   
+        public DelegateCommand SetTimescale4Command { get; private set; }
         public DelegateCommand TogglePauseCommand { get; private set; }
-        public DelegateCommand ResumeCommand { get; private set; }  
-        public DelegateCommand QuitToMainMenuCommand {  get; private set; }
-        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }   
+        public DelegateCommand ResumeCommand { get; private set; }
+        public DelegateCommand QuitToMainMenuCommand { get; private set; }
+        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
         public DelegateCommand BuyVehicleCommand { get; private set; }
         public DelegateCommand AddStopCommand { get; }
         #endregion
@@ -232,7 +229,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
         {
             HoveredCoordinate = Camera.ScreenToField(mouseXY);
-            
+
             UpdateBuildability();
 
             _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
@@ -260,7 +257,7 @@ namespace VolcanicTransport_WPF.ViewModel
             }
             else text += "-";
 
-                ToolTipText = text;
+            ToolTipText = text;
         }
 
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
@@ -278,11 +275,11 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        private string _toolTipText;
-        public string ToolTipText 
+        private string _toolTipText = "";
+        public string ToolTipText
         {
             get => _toolTipText;
-            set 
+            set
             {
                 _toolTipText = value;
                 OnPropertyChanged();
@@ -298,21 +295,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
-            switch(CurrentBuildMode)
+            IsHoveredFieldBuildable = CurrentBuildMode switch
             {
-                case BuildMode.HEIGHTEN:
-                    IsHoveredFieldBuildable = GameModelInstance.IsHeightenable(HoveredCoordinate);
-                    break;
-                case BuildMode.LOWER:
-                    IsHoveredFieldBuildable = GameModelInstance.IsLowerable(HoveredCoordinate);
-                    break;
-                default:
-                    IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
-                    break;
-
-            }
-
-            
+                BuildMode.HEIGHTEN => GameModelInstance.IsHeightenable(HoveredCoordinate),
+                BuildMode.LOWER => GameModelInstance.IsLowerable(HoveredCoordinate),
+                _ => GameModelInstance.IsBuildable(HoveredCoordinate),
+            };
         }
         #endregion
 
@@ -410,7 +398,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(8,0);
+            GameModel.Initialise(8, 0);
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
@@ -421,7 +409,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
             GameModelInstance.VehicleBought += (s, e) =>
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     var newModelVehicle = GameModel.WorldInstance.GetLatestVehicle();
                     if (newModelVehicle != null)
@@ -492,9 +480,9 @@ namespace VolcanicTransport_WPF.ViewModel
             get => GameModelInstance.PlayerMoney.ToString("F0") + " $";
         }
 
-        private readonly object _vehiclesLock = new object();
+        private readonly object _vehiclesLock = new();
 
-        private DispatcherTimer _gameLoop;
+        //private readonly DispatcherTimer _gameLoop;
         private System.Diagnostics.Stopwatch _stopwatch;
         private TimeSpan _lastRenderTime = TimeSpan.Zero;
 

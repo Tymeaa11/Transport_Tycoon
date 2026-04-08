@@ -1,20 +1,25 @@
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class ProductBuffer(ProductType productType, int maxCapacity)
+    [method: JsonConstructor]
+    public class ProductBuffer(ProductType productType, int maxCapacity, int currentLoad = 0)
     {
-        private readonly ProductType _productType = productType;
-        private readonly int _maxCapacity = maxCapacity;
-        public int CurrentLoad { get; private set; } = 0;
+        #region Fields
+        public ProductType ProductType { get; } = productType;
+        public int MaxCapacity { get; } = maxCapacity;
+        public int CurrentLoad { get; private set; } = currentLoad;
 
-        public int AmountNeeded() => _maxCapacity - CurrentLoad;
+        #endregion
+
+        public int AmountNeeded() => MaxCapacity - CurrentLoad;
 
         public int ReceiveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
         {
-            if (_productType != type) return 0;
+            if (ProductType != type) return 0;
 
-            int canReceive = Math.Min(amount, _maxCapacity - CurrentLoad);
+            var canReceive = Math.Min(amount, MaxCapacity - CurrentLoad);
 
             CurrentLoad += canReceive;
 

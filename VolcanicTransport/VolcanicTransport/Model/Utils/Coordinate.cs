@@ -1,6 +1,9 @@
 
+using System.Text.Json.Serialization;
+
 namespace VolcanicTransport.Model.Utils
 {
+    [method: JsonConstructor]
     public readonly struct Coordinate(int x, int y) : IEquatable<Coordinate>
     {
         #region  Fields
@@ -15,9 +18,9 @@ namespace VolcanicTransport.Model.Utils
         #endregion
 
         #region Methods
-        public double Magnitude => Math.Sqrt(X * X + Y * Y);
+        public double Magnitude() => Math.Sqrt(X * X + Y * Y);
 
-        public double Distance(Coordinate o) => (this-o).Magnitude;
+        public double Distance(Coordinate o) => (this - o).Magnitude();
 
         public bool IsInside(Coordinate topLeft, Coordinate bottomRight)
         => X >= topLeft.X && X < bottomRight.X && Y >= topLeft.Y && Y < bottomRight.Y;
@@ -33,7 +36,7 @@ namespace VolcanicTransport.Model.Utils
 
         public static List<Coordinate> GetArea(Coordinate topLeft, Coordinate topRight)
         {
-            if (!topLeft.IsInside(topRight)) 
+            if (!topLeft.IsInside(topRight))
                 return [];
 
             List<Coordinate> coords = [];

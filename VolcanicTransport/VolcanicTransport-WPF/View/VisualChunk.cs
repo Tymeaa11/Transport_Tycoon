@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using VolcanicTransport;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;

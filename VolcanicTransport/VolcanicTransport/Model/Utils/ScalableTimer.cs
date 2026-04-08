@@ -5,13 +5,13 @@ namespace VolcanicTransport.Model.Utils
     public class ScalableTimer : IDisposable
     {
         private const int BaseScale = 100;
-        
+
         #region Fields
         public event EventHandler? Elapsed;
         private readonly Timer _timer;
         private int _timeScale;
         #endregion
-        
+
         #region Properties
         public bool Enabled
         {
@@ -38,7 +38,7 @@ namespace VolcanicTransport.Model.Utils
             }
         }
         #endregion
-    
+
         #region Constructors
         public ScalableTimer()
         {

@@ -59,9 +59,9 @@ namespace VolcanicTransport_WPF
 
             _mainMenuViewModel = new MainMenuViewModel();
             _mainMenuViewModel.NewGameRequested += MainMenuViewModel_StartNewGameRequested;
-            _mainMenuWindow = new MainMenuWindow 
-            { 
-                DataContext = _mainMenuViewModel 
+            _mainMenuWindow = new MainMenuWindow
+            {
+                DataContext = _mainMenuViewModel
             };
 
             _mainMenuWindow.Show();

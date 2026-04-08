@@ -12,7 +12,8 @@ namespace VolcanicTransport.Model.World
         #region Fields
 
         private int _worldSeed;
-        public int WorldSeed { 
+        public int WorldSeed
+        {
             get => _worldSeed;
             private set
             {
@@ -31,7 +32,7 @@ namespace VolcanicTransport.Model.World
         public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
         public GameWorldGenerator? GameWorldGenerator { get; set; }
-        public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
+        public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
 
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
@@ -47,7 +48,6 @@ namespace VolcanicTransport.Model.World
             SizeInChunks = new Coordinate(worldSize);
             SizeInFields = SizeInChunks * GameSettings.ChunkSize;
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
-
             WorldSeed = seed;
 
             InitialiseWorld();
@@ -58,12 +58,7 @@ namespace VolcanicTransport.Model.World
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
 
         public static void Initialise(int worldSize, int seed)
-        {
-            if (_instance != null) 
-                throw new InvalidOperationException("World already initialised");
-
-            _instance = new World(worldSize, seed);
-        }
+            => _instance = new World(worldSize, seed);
         #endregion
 
         #region FieldGetters
@@ -78,20 +73,20 @@ namespace VolcanicTransport.Model.World
                 .FieldMatrix[GetFieldCoordinateInChunk(fieldCoordinate)];
 
         public Field? GetField(Coordinate fieldCoordinate)
-            => fieldCoordinate.IsInside(SizeInFields) 
-            ? GetFieldNoChecks(fieldCoordinate) 
+            => fieldCoordinate.IsInside(SizeInFields)
+            ? GetFieldNoChecks(fieldCoordinate)
             : null;
 
         public List<Field> GetArea(Coordinate topLeft, Coordinate topRight)
-            => topRight.IsInside(SizeInFields) 
-            ? [.. Coordinate.GetArea(topLeft, topRight).Where(c => c.IsInside(SizeInFields)).Select(GetFieldNoChecks)] 
+            => topRight.IsInside(SizeInFields)
+            ? [.. Coordinate.GetArea(topLeft, topRight).Where(c => c.IsInside(SizeInFields)).Select(GetFieldNoChecks)]
             : [];
 
         public Chunk? GetChunk(Coordinate chunkCoordinate)
             => chunkCoordinate.IsInside(SizeInChunks)
             ? ChunkMatrix[chunkCoordinate]
             : null;
-        
+
         #endregion
 
         #region Methods
@@ -167,7 +162,7 @@ namespace VolcanicTransport.Model.World
 
             // Itt jöhetnének késõbb az épületek frissítései (termelés, stb.)
         }
-        
+
         #endregion
     }
 }

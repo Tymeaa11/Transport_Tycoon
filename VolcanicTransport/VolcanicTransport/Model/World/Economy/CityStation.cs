@@ -15,7 +15,7 @@ namespace VolcanicTransport.Model.World.Economy
 
             var amount = vehicle.CurrentLoad;
             var provided = vehicle.Unload(amount);
-            
+
             return provided != 0;
             //int moneyGiven = city.RecieveProduct(vehicle.getType(), provided);
             //hogy legyen a pénz?

@@ -16,7 +16,7 @@ namespace VolcanicTransport.Model.TerrainGeneration
             mushroomGenerator.ModifyField(field, x, y);
         }
 
-        public void GenerateCitiesAndFactories() 
+        public void GenerateCitiesAndFactories()
             => factoryAndCityGenerator.Generate();
 
         public void SetSeed(int seed, Random nextRandom)

@@ -12,10 +12,10 @@
 
             return (float)(
                     Math.Pow(
-                        1 - Math.Min(wWidthP2 - Math.Abs(x), wHeightP2 - Math.Abs(y)) / Math.Max(wWidthP2, wHeightP2), 
+                        1 - Math.Min(wWidthP2 - Math.Abs(x), wHeightP2 - Math.Abs(y)) / Math.Max(wWidthP2, wHeightP2),
                         10));
         }
 
-        public void SetSeed(int seed, Random nextRandom) {}
+        public void SetSeed(int seed, Random nextRandom) { }
     }
 }

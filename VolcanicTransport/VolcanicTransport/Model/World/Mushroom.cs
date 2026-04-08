@@ -8,7 +8,7 @@ namespace VolcanicTransport.Model.World
         )
         : KnowsNeighbour(coordinate)
     {
-        private static bool SpreadAttempt() 
+        private static bool SpreadAttempt()
             => World.Instance.SharedRandom.Next(100) > GameSettings.SpreadChance;
         private static bool IsFieldSpreadable(Field? f) => SpreadAttempt() && f is { Surface: null };
 

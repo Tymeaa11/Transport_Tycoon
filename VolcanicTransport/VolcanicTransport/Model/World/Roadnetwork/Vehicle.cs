@@ -6,10 +6,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type) : INotifyPropertyChanged
     {
-        
+
         public Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType type)
-        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, type) {}
-        
+        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, type) { }
+
         public string Name { get; } = name;
         public ProductType Type { get; protected set; } = type;
         public int CurrentLoad { get; protected set; } = 0;
@@ -29,7 +29,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         }
 
 
-        public Route? Route { 
+        public Route? Route
+        {
             get => route;
             set => route = value;
         }
@@ -90,8 +91,9 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 VisualPosition = currentWaypoints[0];
             }
-            else {
-                VisualPosition = new System.Numerics.Vector2(CurrentRoad.Coordinate.X * 32, CurrentRoad.Coordinate.Y * 32);
+            else
+            {
+                VisualPosition = new Vector2(CurrentRoad.Coordinate.X * GameSettings.FieldSize, CurrentRoad.Coordinate.Y * GameSettings.FieldSize);
                 System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {VisualPosition} pixelre.");
             }
 
@@ -127,8 +129,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             int safetyCounter = 0;
             while (distanceToTravel > 0 && safetyCounter < 10)
-       
-      {
+
+            {
                 safetyCounter++;
                 if (currentWaypointIndex >= currentWaypoints.Count)
                 {
@@ -226,11 +228,11 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             var pathKey = (entryDir, exitDir);
 
+            float startX = CurrentRoad.Coordinate.X * GameSettings.FieldSize;
+            float startY = CurrentRoad.Coordinate.Y * GameSettings.FieldSize;
+
             if (WaypointManager.Paths.TryGetValue(pathKey, out List<Vector2>? localPoints))
             {
-                float startX = CurrentRoad.Coordinate.X * WaypointManager.TILE_SIZE;
-                float startY = CurrentRoad.Coordinate.Y * WaypointManager.TILE_SIZE;
-
                 Vector2 fieldOffset = new(startX, startY);
 
                 foreach (var p in localPoints)
@@ -242,12 +244,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 System.Diagnostics.Debug.WriteLine($"HIÁNYZÓ WAYPOINT KULCS: {entryDir} -> {exitDir}");
 
-                //Vészmegoldás
-
-                float startX = CurrentRoad.Coordinate.X * WaypointManager.TILE_SIZE;
-                float startY = CurrentRoad.Coordinate.Y * WaypointManager.TILE_SIZE;
-
-                currentWaypoints.Add(new Vector2(startX + 16, startY + 16));
+                currentWaypoints.Add(new Vector2(startX + GameSettings.FieldSizeP2, startY + GameSettings.FieldSizeP2));
             }
         }
 
