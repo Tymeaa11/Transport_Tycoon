@@ -14,12 +14,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     }
     public static class WaypointManager
     {
-        public const int TILE_SIZE = 32;
+        private const float END = GameSettings.FieldSize;
+        private const float MID = GameSettings.FieldSize / 2f;
 
-        private const float END = TILE_SIZE;
-        private const float MID = TILE_SIZE / 2f;
-
-        private const float OFFSET = TILE_SIZE / 8f;
+        private const float OFFSET = GameSettings.FieldSize / 8f;
         private const float L1 = MID - OFFSET; // Belső sáv (bal/fent) -> 12
         private const float L2 = MID + OFFSET; // Külső sáv (jobb/lent) -> 20
 

@@ -64,7 +64,8 @@
                 <ItemsPanelTemplate>
                     <Canvas IsHitTestVisible="False">
                         <Canvas.RenderTransform>
-                            <MatrixTransform Matrix="{Binding Camera.ProjectionMatrix}" />
+                            <MatrixTransform Matrix="{Binding DataContext.Camera.ProjectionMatrix,
+                                                        Source={x:Reference RootWindow}}" />
                         </Canvas.RenderTransform>
                     </Canvas>
                 </ItemsPanelTemplate>
@@ -72,11 +73,8 @@
 
             <ItemsControl.ItemContainerStyle>
                 <Style TargetType="ContentPresenter">
-                    <Setter Property="RenderTransform">
-                        <Setter.Value>
-                            <TranslateTransform X="{Binding VisualX}" Y="{Binding VisualY}" />
-                        </Setter.Value>
-                    </Setter>
+                    <Setter Property="Canvas.Left" Value="{Binding VisualX}" />
+                    <Setter Property="Canvas.Top" Value="{Binding VisualY}" />
                 </Style>
             </ItemsControl.ItemContainerStyle>
 
