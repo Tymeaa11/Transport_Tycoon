@@ -19,6 +19,7 @@ namespace VolcanicTransport_WPF.View
             MouseLeftButtonDown += MainGameWindow_MouseLeftButtonDown;
             MouseMove += MainGameWindow_MouseMove;
             KeyDown += MainGameWindow_KeyDown;
+            KeyUp += MainGameWindow_KeyUp;
 
             SizeChanged += (s, e) =>
             {
@@ -30,9 +31,12 @@ namespace VolcanicTransport_WPF.View
 
         private void MainGameWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape)
+            if (DataContext is GameViewModel vm)
             {
-                (DataContext as GameViewModel)?.TogglePauseCommand.Execute(null);
+                UpdateCameraInput(vm.Camera, e.Key, true);
+
+                if (e.Key == Key.Escape)
+                    vm.TogglePauseCommand.Execute(null); //
             }
         }
 
@@ -40,6 +44,24 @@ namespace VolcanicTransport_WPF.View
         {
             if (DataContext is GameViewModel vm)
                 vm.Camera.Zoom(e.Delta);
+        }
+
+        private void MainGameWindow_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (DataContext is GameViewModel vm)
+            {
+                UpdateCameraInput(vm.Camera, e.Key, false);
+            }
+        }
+        private void UpdateCameraInput(Camera camera, Key key, bool isPressed)
+        {
+            switch (key)
+            {
+                case Key.W: camera.IsMovingUp = isPressed; break;
+                case Key.S: camera.IsMovingDown = isPressed; break;
+                case Key.A: camera.IsMovingLeft = isPressed; break;
+                case Key.D: camera.IsMovingRight = isPressed; break;
+            }
         }
 
         private void MainGameWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

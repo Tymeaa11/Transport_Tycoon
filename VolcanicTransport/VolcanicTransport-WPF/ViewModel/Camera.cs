@@ -1,9 +1,5 @@
-﻿using System.Data;
-using System.Numerics;
-using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using Vector = System.Windows.Vector;
@@ -18,7 +14,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private Vector _position;
         private Vector _velocity;
-        private const double MovementDrag = 0.8;
+        private const double MovementDrag = 0.85;
 
         private double _zoom;
         private double _zoomSpeed;
@@ -30,7 +26,7 @@ namespace VolcanicTransport_WPF.ViewModel
         private double _previousScale;
         private const double ScaleCoefficient = 0.005;
 
-        private const double CameraMovementSpeed = 25;
+        private const double CameraMovementSpeed = 2;
         private const double CameraZoomSpeed = 0.5;
 
         private Vector _currentMousePosition;
@@ -57,10 +53,10 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        public DelegateCommand MoveUp { get; }
-        public DelegateCommand MoveDown { get; }
-        public DelegateCommand MoveLeft { get; }
-        public DelegateCommand MoveRight { get; }
+        public bool IsMovingUp { get; set; }
+        public bool IsMovingDown { get; set; }
+        public bool IsMovingLeft { get; set; }
+        public bool IsMovingRight { get; set; }
 
         public Camera()
         {
@@ -71,30 +67,14 @@ namespace VolcanicTransport_WPF.ViewModel
             CalculateZoomFromScale();
             _previousScale = _scale;
 
-            MoveUp = new DelegateCommand(_ =>
-            {
-               // _velocity.Y += CameraMovementSpeed;
-            });
-            MoveDown = new DelegateCommand(_ => 
-            {
-                //_velocity.Y -= CameraMovementSpeed;
-            });
-            MoveLeft = new DelegateCommand(_ =>
-            { 
-                //_velocity.X += CameraMovementSpeed;
-            });
-            MoveRight = new DelegateCommand(_ =>
-            {
-                //_velocity.X -= CameraMovementSpeed;
-            });
         }
 
         public void Update()
         {
-            if (Keyboard.IsKeyDown(Key.W)) _velocity.Y += CameraMovementSpeed;
-            if (Keyboard.IsKeyDown(Key.S)) _velocity.Y -= CameraMovementSpeed;
-            if (Keyboard.IsKeyDown(Key.A)) _velocity.X += CameraMovementSpeed;
-            if (Keyboard.IsKeyDown(Key.D)) _velocity.X -= CameraMovementSpeed;
+            if (IsMovingUp) _velocity.Y += CameraMovementSpeed;
+            if (IsMovingDown) _velocity.Y -= CameraMovementSpeed;
+            if (IsMovingLeft) _velocity.X += CameraMovementSpeed;
+            if (IsMovingRight) _velocity.X -= CameraMovementSpeed;
 
             _position += _velocity;
             _velocity *= MovementDrag;
