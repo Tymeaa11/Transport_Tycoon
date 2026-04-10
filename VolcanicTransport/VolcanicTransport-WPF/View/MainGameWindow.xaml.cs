@@ -15,12 +15,12 @@ namespace VolcanicTransport_WPF.View
         {
             InitializeComponent();
 
-            this.MouseWheel += MainGameWindow_MouseWheel;
-            this.MouseLeftButtonDown += MainGameWindow_MouseLeftButtonDown;
-            this.MouseMove += MainGameWindow_MouseMove;
-            this.KeyDown += MainGameWindow_KeyDown;
+            MouseWheel += MainGameWindow_MouseWheel;
+            MouseLeftButtonDown += MainGameWindow_MouseLeftButtonDown;
+            MouseMove += MainGameWindow_MouseMove;
+            KeyDown += MainGameWindow_KeyDown;
 
-            this.SizeChanged += (s, e) =>
+            SizeChanged += (s, e) =>
             {
                 if (DataContext is GameViewModel vm)
                     vm.SetViewDimensions(ViewPort.ActualWidth, ViewPort.ActualHeight);
@@ -39,17 +39,14 @@ namespace VolcanicTransport_WPF.View
         private void MainGameWindow_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (DataContext is GameViewModel vm)
-            {
-                // Zoom around the current mouse position
-                vm.Camera.Zoom(e.Delta, e.GetPosition(ViewPort));
-            }
+                vm.Camera.Zoom(e.Delta);
         }
 
         private void MainGameWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (DataContext is GameViewModel vm)
             {
-                Coordinate fieldCoord = vm.Camera.ScreenToField(e.GetPosition(ViewPort));
+                Coordinate fieldCoord = vm.Camera.ScreenToField((Vector)e.GetPosition(ViewPort));
 
                 if (vm.FieldClickedCommand.CanExecute(fieldCoord))
                     vm.FieldClickedCommand.Execute(fieldCoord);

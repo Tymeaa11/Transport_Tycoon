@@ -12,10 +12,19 @@
         >
 
     <Window.InputBindings>
-        <KeyBinding Key="W" Command="{Binding Camera.MoveUp}" />
-        <KeyBinding Key="S" Command="{Binding Camera.MoveDown}" />
-        <KeyBinding Key="A" Command="{Binding Camera.MoveLeft}" />
-        <KeyBinding Key="D" Command="{Binding Camera.MoveRight}" />
+        <KeyBinding Key="W" 
+            Command="{Binding Camera.MoveUp}" 
+            CommandParameter="{Binding Camera.CurrentMousePosition}" />
+        <KeyBinding Key="S" 
+            Command="{Binding Camera.MoveDown}" 
+            CommandParameter="{Binding Camera.CurrentMousePosition}" />
+        <KeyBinding Key="A" 
+            Command="{Binding Camera.MoveLeft}" 
+            CommandParameter="{Binding Camera.CurrentMousePosition}" />
+        <KeyBinding Key="D" 
+            Command="{Binding Camera.MoveRight}" 
+            CommandParameter="{Binding Camera.CurrentMousePosition}" />
+        
         <KeyBinding Key="G" Command="{Binding ReGenerateWithRandomSeed}" />
     </Window.InputBindings>
 
@@ -28,7 +37,6 @@
     </Window.Resources>
 
     <Grid x:Name="ViewPort" ClipToBounds="True">
-
 
         <ItemsControl ItemsSource="{Binding LoadedChunks}">
             <ItemsControl.ItemsPanel>

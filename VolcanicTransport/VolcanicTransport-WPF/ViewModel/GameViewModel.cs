@@ -52,12 +52,13 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             _lastWidth = width;
             _lastHeight = height;
-            UpdateVisibleChunks(width, height);
+            UpdateVisibleChunks();
+            Camera.HalfScreenDimensions = new Vector(width * 0.5, height * 0.5);
         }
 
-        public void UpdateVisibleChunks(double width, double height)
+        public void UpdateVisibleChunks()
         {
-            Rect bounds = Camera.GetVisibleWorldBounds(width, height);
+            Rect bounds = Camera.GetVisibleWorldBounds();
 
             // Get visible chunk coordinates (+1 buffer)
             int chunkPX = GameSettings.ChunkSize * GameSettings.FieldSize;
@@ -117,6 +118,8 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
+            Camera.PrintDebug();
+
             Field? f = GameModel.WorldInstance.GetField(coord);
             if (f == null) return;
 
@@ -228,7 +231,9 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
         {
-            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+            Camera.CurrentMousePosition = new Vector(mouseXY.X, mouseXY.Y);
+
+            HoveredCoordinate = Camera.ScreenToField((Vector)mouseXY);
 
             UpdateBuildability();
 
@@ -336,9 +341,9 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public GameViewModel()
         {
-            Camera = new Camera(Matrix.Identity);
+            Camera = new Camera();
 
-            Camera.CameraChanged += (s, e) => UpdateVisibleChunks(_lastWidth, _lastHeight);
+            Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
             CurrentTimescale = 1;
 
@@ -384,7 +389,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 GameModel.WorldInstance.Generate(new Random().Next());
                 LoadedChunks.Clear();
                 GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
-                UpdateVisibleChunks(_lastWidth, _lastHeight);
+                UpdateVisibleChunks();
             }
             );
 
@@ -512,8 +517,11 @@ namespace VolcanicTransport_WPF.ViewModel
             while (_accumulator >= FIXED_DELTA_TIME)
             {
                 GameModelInstance.Update(FIXED_DELTA_TIME);
+
                 _accumulator -= FIXED_DELTA_TIME;
             }
+
+            Camera.Update();
         }
         private void OnSetBuildMode(BuildMode mode)
         {
