@@ -9,7 +9,6 @@ namespace VolcanicTransport_WPF.View
 {
     public class VisualChunk : FrameworkElement
     {
-
         private static readonly int Dpi = 96;
         private static readonly int FieldSize = GameSettings.FieldSize;
         private static readonly int HalfFieldSize = FieldSize / 2;
@@ -36,7 +35,8 @@ namespace VolcanicTransport_WPF.View
                 if (e.NewValue is Chunk newChunk)
                 {
                     newChunk.Changed += OnChunkDataChanged;
-                    Dispatcher.InvokeAsync(() => PreRender(newChunk));
+                    //Dispatcher.InvokeAsync(() => PreRender(newChunk));
+                    PreRender(newChunk);
                 }
             };
         }
@@ -44,7 +44,8 @@ namespace VolcanicTransport_WPF.View
         private void OnChunkDataChanged(object? sender, EventArgs e)
         {
             if (DataContext is Chunk chunkData)
-                Dispatcher.InvokeAsync(() => PreRender(chunkData));
+                //Dispatcher.InvokeAsync(() => PreRender(chunkData));
+                PreRender(chunkData);
         }
 
         public void PreRender(Chunk chunkData)

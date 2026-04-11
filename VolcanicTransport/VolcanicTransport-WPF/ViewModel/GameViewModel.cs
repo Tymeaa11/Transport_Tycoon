@@ -77,8 +77,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
 
             // 1. Remove if outside
-            var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();
-            foreach (var chunk in toRemove) LoadedChunks.Remove(chunk);
+            //var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();
+            //foreach (var chunk in toRemove) LoadedChunks.Remove(chunk);
 
             // 2. Add if became visible
             foreach (var coord in visibleCoords)
@@ -403,7 +403,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(8, 0);
+            GameModel.Initialise(5, 0);
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
@@ -521,7 +521,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 _accumulator -= FIXED_DELTA_TIME;
             }
 
-            Camera.Update();
+            Camera.Update(deltaTime);
         }
         private void OnSetBuildMode(BuildMode mode)
         {

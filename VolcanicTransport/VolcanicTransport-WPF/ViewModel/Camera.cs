@@ -14,20 +14,20 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private Vector _position;
         private Vector _velocity;
-        private const double MovementDrag = 0.85;
+        private const double MovementDrag = 0.005;
 
         private double _zoom;
         private double _zoomSpeed;
-        private const double ZoomDrag = 0.8;
-        private const double MinimumScale = 0.5;
+        private const double ZoomDrag = 0.01;
+        private const double MinimumScale = 0.2; // 0.5
         private const double MaximumScale = 3;
 
         private double _scale;
         private double _previousScale;
         private const double ScaleCoefficient = 0.005;
 
-        private const double CameraMovementSpeed = 2;
-        private const double CameraZoomSpeed = 0.5;
+        private const double CameraMovementSpeed = 8000;
+        private const double CameraZoomSpeed = 6;
 
         private Vector _currentMousePosition;
         public Vector CurrentMousePosition
@@ -69,19 +69,19 @@ namespace VolcanicTransport_WPF.ViewModel
 
         }
 
-        public void Update()
+        public void Update(double deltaTime)
         {
-            if (IsMovingUp) _velocity.Y += CameraMovementSpeed;
-            if (IsMovingDown) _velocity.Y -= CameraMovementSpeed;
-            if (IsMovingLeft) _velocity.X += CameraMovementSpeed;
-            if (IsMovingRight) _velocity.X -= CameraMovementSpeed;
+            if (IsMovingUp) _velocity.Y += CameraMovementSpeed * deltaTime;
+            if (IsMovingDown) _velocity.Y -= CameraMovementSpeed * deltaTime;
+            if (IsMovingLeft) _velocity.X += CameraMovementSpeed * deltaTime;
+            if (IsMovingRight) _velocity.X -= CameraMovementSpeed * deltaTime;
 
-            _position += _velocity;
-            _velocity *= MovementDrag;
+            _position += _velocity * deltaTime;
+            _velocity *= Math.Pow(MovementDrag, deltaTime);
 
-            _zoom += _zoomSpeed;
+            _zoom += _zoomSpeed * deltaTime;
             if (_zoom < 0) _zoom = 0;
-            _zoomSpeed *= ZoomDrag;
+            _zoomSpeed *= Math.Pow(ZoomDrag, deltaTime);
 
             CalculateScale();
 
