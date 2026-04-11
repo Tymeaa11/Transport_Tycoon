@@ -5,6 +5,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {
@@ -32,6 +33,7 @@ namespace VolcanicTransport.Model
         public event EventHandler? fieldChanged;
         public event EventHandler? vehicleSelectedIndex;
         public event EventHandler? onPlacementFailed;
+        public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
 
 
 
@@ -117,6 +119,8 @@ namespace VolcanicTransport.Model
         {
             if (TryPurchase(v.Price))
             {
+                v.ArrivedAtStation += HandleVehicleArrived;
+
                 WorldInstance.AddVehicle(v);
                 vehicleBought?.Invoke(this, EventArgs.Empty);
                 return true;
@@ -320,6 +324,7 @@ namespace VolcanicTransport.Model
             {
                 v.TryStartNextRoute();
             }
+            v.TriggerRouteChanged();
             //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
             //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
             //{
@@ -336,6 +341,21 @@ namespace VolcanicTransport.Model
             // }
 
         }
+
+        private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
+
+            double ticketIncome = 150;
+            AddMoney(ticketIncome);
+            System.Diagnostics.Debug.WriteLine($"[GameModel] Játékos kapott {ticketIncome}$-t a fuvarért.");
+
+            // load-unload stb
+
+            // tova a viewmodellnek ha kell
+            VehicleArrivedAtStation?.Invoke(this, e);
+        }
+
 
     }
 }

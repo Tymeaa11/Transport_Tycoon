@@ -14,5 +14,8 @@
     <Compile Update="View\PausedGameWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="View\VehicleNameWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 </Project>

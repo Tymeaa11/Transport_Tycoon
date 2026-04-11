@@ -111,6 +111,8 @@ namespace VolcanicTransport_WPF.ViewModel
         #region FieldClicked & FieldHovered
         public DelegateCommand FieldClickedCommand { get; private set; }
 
+        public DelegateCommand ClearRouteCommand { get; private set; }
+
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
@@ -163,30 +165,59 @@ namespace VolcanicTransport_WPF.ViewModel
 
                         if (startNode != null && endNode != null)
                         {
-                            List<Road>? path = Pathfinder.FindPath(startNode, endNode);
 
-                            if (path != null && path.Count > 0)
+                            if (startNode != null && endNode != null)
                             {
+                                if (SelectedVehicle != null)
+                                {
+                                    Vehicle v = SelectedVehicle.GetVehicle;
 
-                                var newBus = new Bus("buszocska", VolcanicTransport.Model.World.Economy.ProductType.HUMAN);
+                                    Route newRoute = new Route();
+                                    newRoute.AddStop(_firstSelectedStation);
+                                    newRoute.AddStop(secondSelectedStation);
 
-                                newBus.Route = new Route();
-                                newBus.Route.AddStop(_firstSelectedStation);
-                                newBus.Route.AddStop(secondSelectedStation);
+                                    v.AssignNewRoute(newRoute);
 
-                                newBus.StartJourney(path);
-                                GameModelInstance.BuyVehicle(newBus);
+                                    System.Diagnostics.Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
+                                }
+                                else
+                                {
+                                    List<Road>? path = Pathfinder.FindPath(startNode, endNode);
 
-                                System.Diagnostics.Debug.WriteLine("Busz sikeresen elindítva!");
+                                    if (path != null && path.Count > 0)
+                                    {
+                                        var nameDialog = new VolcanicTransport_WPF.View.VehicleNameWindow();
+                                        nameDialog.Owner = System.Windows.Application.Current.MainWindow;
+
+                                        if (nameDialog.ShowDialog() == true)
+                                        {
+                                            string chosenName = string.IsNullOrWhiteSpace(nameDialog.VehicleName) ? "Névtelen Busz" : nameDialog.VehicleName;
+
+                                            var newBus = new Bus(chosenName, VolcanicTransport.Model.World.Economy.ProductType.HUMAN);
+                                            Route initialRoute = new Route();
+                                            initialRoute.AddStop(_firstSelectedStation);
+                                            initialRoute.AddStop(secondSelectedStation);
+                                            newBus.Route = initialRoute;
+                                            newBus.CurrentStopIndex = 1;
+
+                                            newBus.StartJourney(path, false, _firstSelectedStation);
+                                            GameModelInstance.BuyVehicle(newBus);
+                                            System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName}");
+                                        } else
+                                        {
+                                            System.Diagnostics.Debug.WriteLine("Vásárlás megszakítva.");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        System.Diagnostics.Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
+                                    }
+                                }
                             }
-                            else
-                            {
-                                System.Diagnostics.Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
-                            }
+
+                            _firstSelectedStation = null;
+                            CurrentBuildMode = BuildMode.NONE;
                         }
-
-                        _firstSelectedStation = null;
-                        CurrentBuildMode = BuildMode.NONE;
                     }
                 }
                 else
@@ -262,7 +293,12 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimescale1Command = new DelegateCommand(_ => OnSetTimescale1X());
             SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
             SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
-            BuyVehicleCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BUY_VEHICLE));
+            BuyVehicleCommand = new DelegateCommand(_ =>
+            {
+                SelectedVehicle = null;
+                _firstSelectedStation = null;
+                OnSetBuildMode(BuildMode.BUY_VEHICLE);
+            });
             AddStopCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)
@@ -285,6 +321,18 @@ namespace VolcanicTransport_WPF.ViewModel
                 UpdateVisibleChunks(_lastWidth, _lastHeight);
             }
             );
+
+            ClearRouteCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle != null)
+                {
+                    SelectedVehicle.GetVehicle.ClearRoute();
+
+                    _firstSelectedStation = null;
+                    CurrentBuildMode = BuildMode.BUY_VEHICLE;
+                    System.Diagnostics.Debug.WriteLine($"Menetrend törölve a {SelectedVehicle.GetName} járművön. Válassz új start állomást!");
+                }
+            });
 
             //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
         }

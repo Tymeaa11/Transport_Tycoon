@@ -13,12 +13,16 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         protected Route? route = null;
 
         public Route? Route { get { return route; } set { route = value; } }
+        public Route? PendingRoute { get; set; } = null;
 
         protected float currentSpeed = 0;
         protected float maxSpeed = maxSpeed;
         protected int capacity = capacity;
 
-        public int CurrentStopIndex { get; protected set; } = 1;
+        protected double waitTimer = 0;
+        protected const double LOAD_TIME = 20.0;
+
+        public int CurrentStopIndex { get; set; } = 1;
 
         public float MaxSpeed { get { return maxSpeed; } }
         public int Capacity { get { return capacity; } }
@@ -41,8 +45,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public float Angle { get; protected set; }
 
         public event EventHandler? StateUpdated;
+        public event EventHandler? RouteChanged;
+        public event EventHandler<VehicleArrivedEventArgs>? ArrivedAtStation;
 
-        public void StartJourney(List<Road> path)
+        public void StartJourney(List<Road> path, bool alreadyOnRoad = true, Station? currentStation = null)
         {
             //if (route == null) return;
             if (path == null || path.Count == 0) return;
@@ -55,6 +61,9 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             LoadWaypointsForField();
 
+            if (alreadyOnRoad)
+            {
+
                 if (currentWaypoints.Count > 0)
                 {
                     Position = currentWaypoints[0];
@@ -64,13 +73,22 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     Position = new System.Numerics.Vector2(CurrentRoad.Coordinate.X * 32, CurrentRoad.Coordinate.Y * 32);
                     System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {Position} pixelre.");
                 }
+            }
+            else if (currentStation != null) {
+
+                float stationCenterX = (currentStation.Coordinate.X * 32f) + 16f;
+                float stationCenterY = (currentStation.Coordinate.Y * 32f) + 16f;
+
+                currentWaypoints.Insert(0, new System.Numerics.Vector2(stationCenterX, stationCenterY));
+
+                Position = new System.Numerics.Vector2(stationCenterX, stationCenterY);
+
+            }
 
             State = VehicleState.Moving;
-            StateUpdated?.Invoke( this, EventArgs.Empty );
+            StateUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        protected double waitTimer = 0;
-        protected const double LOAD_TIME = 2.0;
 
         public void Update(double deltaTime)
         {
@@ -98,8 +116,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             int safetyCounter = 0;
             while (distanceToTravel > 0 && safetyCounter < 10)
-       
-      {
+
+            {
                 safetyCounter++;
                 if (currentWaypointIndex >= currentWaypoints.Count)
                 {
@@ -137,34 +155,54 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     distanceToTravel = 0;
                 }
             }
-            StateUpdated?.Invoke(this,EventArgs.Empty);
+            StateUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         private void HandleRouteCycle()
         {
-            if (Route == null || Route.Stops.Count < 2)
+            if (PendingRoute != null && PendingRoute.Stops.Count >= 2)
             {
-                State = VehicleState.Waiting;
-                System.Diagnostics.Debug.WriteLine($"{Name} várakozik további megállókra...");
-                return;
+                Route = PendingRoute;
+                PendingRoute = null;
+                CurrentStopIndex = 0;
+                System.Diagnostics.Debug.WriteLine($"{Name} elolvasta az új menetrendet! Váltás a {Route.Stops[0].Coordinate} állomásra.");
+            }
+            else
+            {
+                if (Route == null || Route.Stops.Count < 2)
+                {
+                    State = VehicleState.Waiting;
+                    System.Diagnostics.Debug.WriteLine($"{Name} várakozik további megállókra...");
+                    return;
+                }
+                CurrentStopIndex = (CurrentStopIndex + 1) % Route.Stops.Count;
             }
 
-            CurrentStopIndex = (CurrentStopIndex + 1) % Route.Stops.Count;
-
-            int startIndex = (CurrentStopIndex - 1 + Route.Stops.Count) % Route.Stops.Count;
-            Station startStation = Route.Stops[startIndex];
             Station targetStation = Route.Stops[CurrentStopIndex];
-
-            System.Diagnostics.Debug.WriteLine($"{Name} újratervez: {startStation.Coordinate} -> {targetStation.Coordinate}");
+            System.Diagnostics.Debug.WriteLine($"{Name} tervezés a következő pontra: -> {targetStation.Coordinate}");
 
             var graph = World.Instance.Roadnetwork;
-            if (graph.NodeMap.TryGetValue(startStation, out RoadNode? startNode) &&
-                graph.NodeMap.TryGetValue(targetStation, out RoadNode? targetNode))
+
+            RoadNode? targetNode = graph.NodeMap.Values.FirstOrDefault(n => n.Coordinate == targetStation.Coordinate);
+
+            RoadNode? startNode = null;
+            if (CurrentRoad != null)
+            {
+                startNode = graph.NodeMap.Values
+                    .OrderBy(n => Math.Abs(n.Coordinate.X - CurrentRoad.Coordinate.X) + Math.Abs(n.Coordinate.Y - CurrentRoad.Coordinate.Y))
+                    .FirstOrDefault();
+            }
+
+    
+
+            if (startNode != null && targetNode != null)
             {
                 List<Road>? newPath = Pathfinder.FindPath(startNode, targetNode);
+
                 if (newPath != null && newPath.Count > 0)
                 {
-                    StartJourney(newPath);
+                    Station? currentStation = World.Instance.GetField(CurrentRoad!.Coordinate)?.Surface as Station;
+                    StartJourney(newPath, false, currentStation);
                 }
                 else
                 {
@@ -175,7 +213,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             else
             {
                 State = VehicleState.Waiting;
-                System.Diagnostics.Debug.WriteLine($"[HIBA] A gráf nem találja a megállót!");
+                System.Diagnostics.Debug.WriteLine($"[HIBA] A gráf nem találja a megállót vagy a busz jelenlegi helyét!");
             }
         }
 
@@ -192,8 +230,15 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (currentPathIndex + 1 >= currentPath.Count)
             {
                 State = VehicleState.Loading;
+                waitTimer = 0;
                 if (CurrentRoad != null)
                     ReleaseJunctionLock(CurrentRoad);
+
+                if (Route != null && Route.Stops.Count > 0)
+                {
+                    Station arrivedStation = Route.Stops[CurrentStopIndex];
+                    ArrivedAtStation?.Invoke(this, new VehicleArrivedEventArgs(this, arrivedStation));
+                }
                 return false;
             }
             Road nextRoad = currentPath[currentPathIndex + 1];
@@ -306,6 +351,49 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             int provided = Math.Min(CurrentLoad, amountNeeded);
             CurrentLoad -= provided;
             return provided;
+        }
+
+        public void ClearRoute()
+        {
+            State = VehicleState.Waiting;
+            currentSpeed = 0;
+            currentPath.Clear();
+            currentWaypoints.Clear();
+            Route = null;
+            CurrentStopIndex = 1;
+            StateUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void AssignNewRoute(Route newRoute)
+        {
+            if (State == VehicleState.Waiting)
+            {
+                Route = newRoute;
+                CurrentStopIndex = -1;
+                HandleRouteCycle();
+            }
+            else
+            {
+                PendingRoute = newRoute;
+            }
+            RouteChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void TriggerRouteChanged()
+        {
+            RouteChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public class VehicleArrivedEventArgs : EventArgs
+        {
+            public Vehicle Vehicle { get; }
+            public Station Station { get; }
+
+            public VehicleArrivedEventArgs(Vehicle vehicle, Station station)
+            {
+                Vehicle = vehicle;
+                Station = station;
+            }
         }
     }
 }
