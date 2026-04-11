@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VolcanicTransport.Model.TerrainGeneration.Layers
+﻿namespace VolcanicTransport.Model.TerrainGeneration.Layers
 {
-    internal class Falloff(float Strength) : ILayer
+    internal class Falloff() : ILayer
     {
         public float Get(float x, float y)
         {
@@ -17,16 +11,11 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
             y -= wHeightP2;
 
             return (float)(
-                -Strength * 
                     Math.Pow(
-                        1 - 
-                        Math.Min(wWidthP2 - Math.Abs(x), wHeightP2 - Math.Abs(y)) / Math.Max(wWidthP2, wHeightP2), 
-                    10
-                   
-                    )
-                );
+                        1 - Math.Min(wWidthP2 - Math.Abs(x), wHeightP2 - Math.Abs(y)) / Math.Max(wWidthP2, wHeightP2),
+                        10));
         }
 
-        public void SetSeed(int seed, Random nextRandom) {}
+        public void SetSeed(int seed, Random nextRandom) { }
     }
 }

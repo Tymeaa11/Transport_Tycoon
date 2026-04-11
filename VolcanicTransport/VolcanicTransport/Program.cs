@@ -2,27 +2,28 @@
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using VolcanicTransport.Model.TerrainGeneration;
-using VolcanicTransport.Model.TerrainGeneration.Generators;
+using VolcanicTransport.Model;
 using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport;
 
-class Program
+internal static class Program
 {
     private static void Main()
     {
-        Console.WriteLine(@"Creating preview at bin\Debug\net9.0\");
-        World.Initialise(40, 0);
-        World.Instance.GameWorldGenerator = new GameWorldGenerator(
-            new TerrainHeightGenerator(),
-            new MushroomGenerator(),
-            new FactoryAndCityGenerator(5, 10)
-        );
-        World.Instance.Generate();
+        GameModel.Initialise(8, 0);
 
-        var fieldSize = 8;
-        var offset = fieldSize / 4;
+        GameModel.Instance.SaveGame("output.zip");
+
+        GameModel.Instance.LoadGame("output.zip");
+
+        GeneratePreview();
+    }
+    private static void GeneratePreview()
+    {
+        Console.WriteLine(@"Creating preview at bin\Debug\net9.0\");
+        const int fieldSize = 8;
+        const int offset = fieldSize / 4;
         var size = World.Instance.SizeInFields * fieldSize;
 
         using var image = new Image<Rgba32>(size.X, size.Y, Color.DarkSlateGray);
@@ -32,7 +33,7 @@ class Program
             {
                 chunk.FieldMatrix.ReadEach((fx, fy, field) =>
                 {
-                    Color c = field.Type switch
+                    var c = field.Type switch
                     {
                         FieldType.DEEP_LAVA_OCEAN => Color.FromRgb(147, 0, 0),
                         FieldType.LAVA_OCEAN => Color.FromRgb(236, 62, 62),
@@ -42,22 +43,22 @@ class Program
                         FieldType.MID_LANDS => Color.FromRgb(166, 160, 160),
                         FieldType.MID_HIGH_TRANSITION => Color.FromRgb(107, 97, 19),
                         FieldType.HIGH_LANDS => Color.FromRgb(71, 73, 14),
-                        FieldType.MOUNTAINS => Color.FromRgb(32, 47, 40),    // Dark Stone
-                        FieldType.HIGH_MOUNTAINS => Color.FromRgb(255, 255, 255), // Ash/Snow Peak
+                        FieldType.MOUNTAINS => Color.FromRgb(32, 47, 40),
+                        FieldType.HIGH_MOUNTAINS => Color.FromRgb(255, 255, 255),
                         _ => Color.Magenta
                     };
 
                     ctx.Fill(c, new Rectangle(
-                        cx * Chunk.ChunkSize * fieldSize + fx * fieldSize,
-                        cy * Chunk.ChunkSize * fieldSize + fy * fieldSize,
+                        cx * GameSettings.ChunkSize * fieldSize + fx * fieldSize,
+                        cy * GameSettings.ChunkSize * fieldSize + fy * fieldSize,
                         fieldSize, fieldSize
                     ));
 
                     if (field.Surface is Mushroom m)
                     {
                         ctx.Fill(Color.Magenta.WithAlpha(1.0f / (int)(5 - m.GrowthStage)), new Rectangle(
-                            cx * Chunk.ChunkSize * fieldSize + fx * fieldSize + offset,
-                            cy * Chunk.ChunkSize * fieldSize + fy * fieldSize + offset,
+                            cx * GameSettings.ChunkSize * fieldSize + fx * fieldSize + offset,
+                            cy * GameSettings.ChunkSize * fieldSize + fy * fieldSize + offset,
                             fieldSize - offset, fieldSize - offset
                         ));
                     }

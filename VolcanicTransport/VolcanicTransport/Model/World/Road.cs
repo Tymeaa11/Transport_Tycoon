@@ -2,22 +2,14 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Road : KnowsNeighbour
+    public class Road(Coordinate coordinate) : KnowsNeighbour(coordinate)
     {
-
-        public Road(Coordinate coordinate, bool isPermanent = false) : base(coordinate)
-        {
-            IsPermanent = isPermanent;
-        }
-
-        #region fields
-        public bool IsPermanent { get; }
-
+        #region Fields
         public bool IsReserved { get; set; } = false;
         public RoadType RoadType { get; private set; }
         #endregion
 
-        #region methods
+        #region Methods
 
         public class FieldEventArgs(Coordinate coordinate) : EventArgs
         {
@@ -96,7 +88,7 @@ namespace VolcanicTransport.Model.World
                 return;
             }
 
-            // No neightbour can be heigher if curved or junction
+            // No neighbor can be higher if curved or junction
             if (heightDiffNorth < 0 || heightDiffSouth < 0 || heightDiffEast < 0 || heightDiffWest < 0)
             {
                 RoadType = RoadType.INVALID;
@@ -118,12 +110,12 @@ namespace VolcanicTransport.Model.World
         }
 
 
-        public bool IsStraight => (RoadType & RoadType.STRAIGHT) != 0;
-        public bool IsCurved => (RoadType & RoadType.CURVED) != 0;
-        public bool IsJunction => (RoadType & RoadType.JUNCTION) != 0;
-        public bool IsSlope => (RoadType & RoadType.SLOPE) != 0;
+        public bool IsStraight() => (RoadType & RoadType.STRAIGHT) != 0;
+        public bool IsCurved() => (RoadType & RoadType.CURVED) != 0;
+        public bool IsJunction() => (RoadType & RoadType.JUNCTION) != 0;
+        public bool IsSlope() => (RoadType & RoadType.SLOPE) != 0;
 
-        public event EventHandler? onPlacementFailed;
+        public event EventHandler? OnPlacementFailed;
 
         public bool TryUpdateNeighbours()
         {

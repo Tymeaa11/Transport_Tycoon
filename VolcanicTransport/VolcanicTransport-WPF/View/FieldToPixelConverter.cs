@@ -1,5 +1,5 @@
 ﻿using System.Windows.Data;
-using VolcanicTransport.Model.World;
+using VolcanicTransport.Model;
 
 namespace VolcanicTransport_WPF.View
 {
@@ -8,7 +8,7 @@ namespace VolcanicTransport_WPF.View
         public object Convert(object? value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is int coord)
-                return (double)(coord * Field.FieldSize);
+                return (double)(coord * GameSettings.FieldSize);
             return 0.0;
         }
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)

@@ -1,43 +1,29 @@
-using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World.Roadnetwork;
-
 namespace VolcanicTransport.Model.World
 {
     public class Field
     {
-        public static readonly int FieldSize = 32;
-
-        private static readonly float[] MaxFieldTypeHeights =
-        [
-            20,
-            80,
-            100,
-            190,
-            200,
-            290,
-            300,
-            400,
-            520,
-            50000
-        ];
-
-
+        #region  Fields
         public FieldType Type { get; private set; } = FieldType.DEEP_LAVA_OCEAN;
-
         public ISurface? Surface { get; set; }
+        #endregion
 
-
+        #region Methods
         public void SetFieldTypeTo(Field f) => Type = f.Type;
+        public void SetFieldTypeTo(FieldType ftype) => Type = ftype;
         public void SetFieldHeight(float height)
         {
-            int i = 0;
-            while (i < MaxFieldTypeHeights.Length && height > MaxFieldTypeHeights[i]) i++;
+            var i = 0;
+            while (i < GameSettings.MaxFieldTypeHeights.Length &&
+                   height > GameSettings.MaxFieldTypeHeights[i])
+                i++;
 
             Type = (FieldType)i;
         }
 
-        public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && (Surface == null  || Surface is Mushroom);
-
+        public bool IsBuildable() => Type > FieldType.LAVA_OCEAN && Surface is null or Mushroom;
+        public bool IsLowerable() => Type > FieldType.BEACH && Surface is null or Mushroom;
+        public bool IsHeightenable() => Type is >= FieldType.BEACH and < FieldType.HIGH_MOUNTAINS && Surface is null or Mushroom;
         public int GetHeightDifference(Field? field) => Type - field?.Type ?? 0;
+        #endregion
     }
 }

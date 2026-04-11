@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace VolcanicTransport.Model.World;
 
 public enum MushroomGrowthStage

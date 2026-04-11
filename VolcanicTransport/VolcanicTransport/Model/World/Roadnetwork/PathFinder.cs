@@ -23,7 +23,7 @@
 
             while (openSet.Count > 0)
             {
-                RoadNode current = openSet.OrderBy(n => fScore.ContainsKey(n) ? fScore[n] : int.MaxValue).First();
+                RoadNode current = openSet.OrderBy(n => fScore.TryGetValue(n, out var value) ? value : int.MaxValue).First();
 
                 if (current == targetNode)
                     return ReconstructPath(cameFrom, current);

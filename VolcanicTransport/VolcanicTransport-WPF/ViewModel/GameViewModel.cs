@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -14,34 +13,40 @@ namespace VolcanicTransport_WPF.ViewModel
     public class GameViewModel : ViewModelBase
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
+        private bool _isPausedView;
 
-        public ObservableCollection<Chunk> LoadedChunks { get; } = [];
+        #region Events
+        public event EventHandler? ExitToMenuRequested;
+        #endregion
 
-        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
-
-        public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
-
-        private Station? _firstSelectedStation = null;
-
-        private VehicleViewModel? _selectedVehicle;
-        public VehicleViewModel? SelectedVehicle
+        public bool IsPausedView
         {
-            get => _selectedVehicle;
+            get => _isPausedView;
             set
             {
-                _selectedVehicle = value;
-                OnPropertyChanged(nameof(SelectedVehicle));
-                OnPropertyChanged(nameof(IsVehiclePanelVisible));
+                _isPausedView = value;
+                OnPropertyChanged();
+                if (_isPausedView)
+                {
+                    GameModelInstance.Pause();
+                }
+                else
+                {
+                    GameModelInstance.UnPause();
+                }
+                RefreshTimescaleProperties();
             }
         }
+        private void RefreshTimescaleProperties()
+        {
+            OnPropertyChanged(nameof(IsTimescale0));
+            OnPropertyChanged(nameof(IsTimescale1));
+            OnPropertyChanged(nameof(IsTimescale2));
+            OnPropertyChanged(nameof(IsTimescale4));
+        }
 
-        private double _accumulator = 0;
-        private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
-
-        public bool IsVehiclePanelVisible => SelectedVehicle != null;
-
-        private double _lastWidth;
-        private double _lastHeight;
+        #region Chunks
+        public ObservableCollection<Chunk> LoadedChunks { get; } = [];
 
         public void SetViewDimensions(double width, double height)
         {
@@ -55,7 +60,7 @@ namespace VolcanicTransport_WPF.ViewModel
             Rect bounds = Camera.GetVisibleWorldBounds(width, height);
 
             // Get visible chunk coordinates (+1 buffer)
-            int chunkPX = Chunk.ChunkSize * Field.FieldSize;
+            int chunkPX = GameSettings.ChunkSize * GameSettings.FieldSize;
 
             int startX = (int)Math.Floor(bounds.Left / chunkPX) - 1;
             int endX = (int)Math.Ceiling(bounds.Right / chunkPX) + 1;
@@ -78,14 +83,14 @@ namespace VolcanicTransport_WPF.ViewModel
             foreach (var coord in visibleCoords)
                 if (!LoadedChunks.Any(c => c.Coordinate.Equals(coord)))
                 {
-                    var chunk = GameModelInstance.WorldInstance.GetChunk(coord);
+                    var chunk = GameModel.WorldInstance.GetChunk(coord);
                     if (chunk != null) LoadedChunks.Add(chunk);
                 }
         }
 
-        public Coordinate WorldSizeInChunks => GameModelInstance.WorldInstance.SizeInChunks;
-        public int TileSize => Field.FieldSize;
+        #endregion
 
+        public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public Camera Camera { get; }
 
         #region Commands
@@ -97,18 +102,16 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale0Command { get; private set; }
         public DelegateCommand SetTimescale1Command { get; private set; }
         public DelegateCommand SetTimescale2Command { get; private set; }
-        public DelegateCommand SetTimescale4Command { get; private set; }   
-
-
-
-        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }   
-
+        public DelegateCommand SetTimescale4Command { get; private set; }
+        public DelegateCommand TogglePauseCommand { get; private set; }
+        public DelegateCommand ResumeCommand { get; private set; }
+        public DelegateCommand QuitToMainMenuCommand { get; private set; }
+        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
         public DelegateCommand BuyVehicleCommand { get; private set; }
-
         public DelegateCommand AddStopCommand { get; }
         #endregion
 
-        #region FieldClicked & FieldHovered
+        #region FieldClicked
         public DelegateCommand FieldClickedCommand { get; private set; }
 
         public DelegateCommand ClearRouteCommand { get; private set; }
@@ -116,7 +119,7 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
-            Field? f = GameModelInstance.WorldInstance.GetField(coord);
+            Field? f = GameModel.WorldInstance.GetField(coord);
             if (f == null) return;
 
             if (CurrentBuildMode == BuildMode.SELECT_STATION)
@@ -130,7 +133,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         if (v != null)
                         {
                             System.Diagnostics.Debug.WriteLine("Station megvan, küldöm a modellnek!");
-                            GameModelInstance.AddStopToVehicle(v, clickedStation);
+                            GameModel.AddStopToVehicle(v, clickedStation);
                         }
                     }
                     CurrentBuildMode = BuildMode.NONE;
@@ -159,7 +162,7 @@ namespace VolcanicTransport_WPF.ViewModel
                             return;
                         }
 
-                        var nodes = GameModelInstance.WorldInstance.Roadnetwork.NodeMap;
+                        var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
                         RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == _firstSelectedStation.Coordinate);
                         RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondSelectedStation.Coordinate);
 
@@ -225,7 +228,7 @@ namespace VolcanicTransport_WPF.ViewModel
                     System.Diagnostics.Debug.WriteLine("Kérlek egy állomásra kattints!");
                 }
             }
-    
+
 
             if (f.IsBuildable())
             {
@@ -243,7 +246,59 @@ namespace VolcanicTransport_WPF.ViewModel
                         break;
                 }
             }
+
+            if (CurrentBuildMode == BuildMode.HEIGHTEN)
+            {
+                GameModelInstance.HeightenField(coord);
+            }
+
+            if (CurrentBuildMode == BuildMode.LOWER)
+            {
+                GameModelInstance.LowerField(coord);
+            }
         }
+
+        #endregion
+
+        #region Hovered field & Tooltips
+
+        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
+        {
+            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+
+            UpdateBuildability();
+
+            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
+
+            var text = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  ";
+
+            if (_hoveredField != null)
+            {
+                text += $"{_hoveredField.Type} ({(int)_hoveredField.Type})";
+
+                if (_hoveredField.Surface != null)
+                {
+                    text += " - ";
+
+                    text += _hoveredField.Surface switch
+                    {
+                        Mushroom m => $"M({m.GrowthStage})",
+                        Road r => $"R({r.RoadType})",
+                        Station _ => $"S",
+                        CityBuilding _ => $"C",
+                        FactoryBuilding _ => $"F",
+                        _ => "Not listed"
+                    };
+                }
+            }
+            else text += "-";
+
+            ToolTipText = text;
+        }
+
+        public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
+
+        private Field? _hoveredField;
 
         private Coordinate _hoveredCoordinate;
         public Coordinate HoveredCoordinate
@@ -253,7 +308,17 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 _hoveredCoordinate = value;
                 OnPropertyChanged();
-                UpdateBuildability();
+            }
+        }
+
+        private string _toolTipText = "";
+        public string ToolTipText
+        {
+            get => _toolTipText;
+            set
+            {
+                _toolTipText = value;
+                OnPropertyChanged();
             }
         }
 
@@ -266,10 +331,44 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
-            IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
+            IsHoveredFieldBuildable = CurrentBuildMode switch
+            {
+                BuildMode.HEIGHTEN => GameModelInstance.IsHeightenable(HoveredCoordinate),
+                BuildMode.LOWER => GameModelInstance.IsLowerable(HoveredCoordinate),
+                _ => GameModelInstance.IsBuildable(HoveredCoordinate),
+            };
         }
         #endregion
 
+
+        #region Vehicles
+        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
+
+        public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
+
+        private Station? _firstSelectedStation = null;
+
+        private VehicleViewModel? _selectedVehicle;
+        public VehicleViewModel? SelectedVehicle
+        {
+            get => _selectedVehicle;
+            set
+            {
+                _selectedVehicle = value;
+                OnPropertyChanged(nameof(SelectedVehicle));
+                OnPropertyChanged(nameof(IsVehiclePanelVisible));
+            }
+        }
+
+        private double _accumulator = 0;
+        private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
+
+        public bool IsVehiclePanelVisible => SelectedVehicle != null;
+
+        #endregion
+
+        private double _lastWidth;
+        private double _lastHeight;
 
         public GameViewModel()
         {
@@ -299,6 +398,14 @@ namespace VolcanicTransport_WPF.ViewModel
                 _firstSelectedStation = null;
                 OnSetBuildMode(BuildMode.BUY_VEHICLE);
             });
+            TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
+            ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
+            /*
+            QuitToMainMenuCommand = new DelegateCommand(_ =>
+            {
+                ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
+            });
+            */
             AddStopCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)
@@ -315,9 +422,9 @@ namespace VolcanicTransport_WPF.ViewModel
 
             ReGenerateWithRandomSeed = new DelegateCommand(_ =>
             {
-                GameModelInstance.WorldInstance.Generate(new Random().Next());
+                GameModel.WorldInstance.Generate(new Random().Next());
                 LoadedChunks.Clear();
-                GameModelInstance.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
+                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
                 UpdateVisibleChunks(_lastWidth, _lastHeight);
             }
             );
@@ -344,20 +451,20 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(8,0);
+            GameModel.Initialise(8, 0);
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
-            GameModelInstance.moneyChanged += (s, e) =>
+            GameModelInstance.MoneyChanged += (s, e) =>
             {
                 Application.Current.Dispatcher.Invoke(() => OnPropertyChanged(nameof(CurrentMoney)));
             };
 
-            GameModelInstance.vehicleBought += (s, e) =>
+            GameModelInstance.VehicleBought += (s, e) =>
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var newModelVehicle = GameModelInstance.WorldInstance.GetLatestVehicle();
+                    var newModelVehicle = GameModel.WorldInstance.GetLatestVehicle();
                     if (newModelVehicle != null)
                     {
                         var vvm = new VehicleViewModel(newModelVehicle);
@@ -416,19 +523,19 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
 
-        public bool IsTimescale0 => CurrentTimescale == 0;
-        public bool IsTimescale1 => CurrentTimescale == 1;
-        public bool IsTimescale2 => CurrentTimescale == 2;
-        public bool IsTimescale4 => CurrentTimescale == 4;
+        public bool IsTimescale0 => CurrentTimescale == 0 || IsPausedView || GameModelInstance.IsPaused;
+        public bool IsTimescale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 1;
+        public bool IsTimescale2 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 2;
+        public bool IsTimescale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 4;
 
         public string CurrentMoney
         {
             get => GameModelInstance.PlayerMoney.ToString("F0") + " $";
         }
 
-        private readonly object _vehiclesLock = new object();
+        private readonly object _vehiclesLock = new();
 
-        private DispatcherTimer _gameLoop;
+        //private readonly DispatcherTimer _gameLoop;
         private System.Diagnostics.Stopwatch _stopwatch;
         private TimeSpan _lastRenderTime = TimeSpan.Zero;
 
@@ -478,7 +585,7 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 System.Diagnostics.Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
 
-                GameModelInstance.WorldInstance.Roadnetwork.RebuildEdges();
+                GameModel.WorldInstance.Roadnetwork.RebuildEdges();
             }
 
         }

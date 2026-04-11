@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
+using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -34,7 +34,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public Camera(Matrix initialMatrix)
         {
             ProjectionMatrix = initialMatrix;
-            
+
             MoveUp = new DelegateCommand(_ => Pan(0, PanSpeed));
             MoveDown = new DelegateCommand(_ => Pan(0, -PanSpeed));
             MoveLeft = new DelegateCommand(_ => Pan(PanSpeed, 0));
@@ -43,7 +43,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Zoom(double delta, Point screenCenter)
         {
-            if (! EnableDevMode) return;
+            if (!EnableDevMode) return;
 
             bool zoomIn = delta > 0;
 
@@ -72,8 +72,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public Coordinate WorldToField(Point worldPoint)
             => new(
-                (int)Math.Floor(worldPoint.X / Field.FieldSize),
-                (int)Math.Floor(worldPoint.Y / Field.FieldSize)
+                (int)Math.Floor(worldPoint.X / GameSettings.FieldSize),
+                (int)Math.Floor(worldPoint.Y / GameSettings.FieldSize)
             );
         public Coordinate ScreenToField(Point screenPoint) => WorldToField(ScreenToWorld(screenPoint));
 

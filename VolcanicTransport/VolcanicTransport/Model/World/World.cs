@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -8,41 +9,36 @@ namespace VolcanicTransport.Model.World
 {
     public class World
     {
-        public class NoWorldGeneratorProvidedException : Exception {}
-
-
         #region Fields
 
         private int _worldSeed;
-        public int WorldSeed { 
+        public int WorldSeed
+        {
             get => _worldSeed;
             private set
             {
                 _worldSeed = value;
                 SharedRandom = new Random(WorldSeed);
             }
-            
         }
-        public Random SharedRandom { get; private set; } = new Random();
+        public Random SharedRandom { get; private set; } = new();
 
-        public Coordinate SizeInChunks { get; init; }
-        public Coordinate SizeInFields { get; init; }
-        public RoadNetworkGraph Roadnetwork { get; set; }
-        public List<City> Cities { get; set; } = [];
-        public List<Factory> Factories { get; set; } = [];
-        public List<Station> Stations { get; set; } = [];
-        public ObservableCollection<Vehicle> Vehicles { get; } = new ObservableCollection<Vehicle>();
+        public Coordinate SizeInChunks { get; }
+        public Coordinate SizeInFields { get; }
+        public RoadNetworkGraph Roadnetwork { get; }
+        public List<City> Cities { get; } = [];
+        public List<Factory> Factories { get; } = [];
+        public List<Station> Stations { get; } = [];
+        public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
         public GameWorldGenerator? GameWorldGenerator { get; set; }
-        public SquareMatrixIterator<Chunk> ChunkMatrix { get; }
+        public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
 
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
         #endregion
 
         #region Instance
-        public class WorldNotInitialisedException : Exception { }
-
         private static World? _instance;
 
         private World(int worldSize, int seed)
@@ -50,9 +46,8 @@ namespace VolcanicTransport.Model.World
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(worldSize);
 
             SizeInChunks = new Coordinate(worldSize);
-            SizeInFields = SizeInChunks * Chunk.ChunkSize;
+            SizeInFields = SizeInChunks * GameSettings.ChunkSize;
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
-
             WorldSeed = seed;
 
             InitialiseWorld();
@@ -63,31 +58,28 @@ namespace VolcanicTransport.Model.World
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
 
         public static void Initialise(int worldSize, int seed)
-        {
-            if (_instance != null) throw new InvalidOperationException("World already initialised");
-
-            _instance = new World(worldSize, seed);
-        }
+            => _instance = new World(worldSize, seed);
         #endregion
-        
+
+        #region FieldGetters
         public Coordinate GetChunkCoordinate(Coordinate fieldCoordinate)
-            => fieldCoordinate / Chunk.ChunkSize;
+            => fieldCoordinate / GameSettings.ChunkSize;
 
         public Coordinate GetFieldCoordinateInChunk(Coordinate fieldCoordinate)
-            => fieldCoordinate % Chunk.ChunkSize;
+            => fieldCoordinate % GameSettings.ChunkSize;
 
         private Field GetFieldNoChecks(Coordinate fieldCoordinate)
             => ChunkMatrix[GetChunkCoordinate(fieldCoordinate)]
                 .FieldMatrix[GetFieldCoordinateInChunk(fieldCoordinate)];
 
         public Field? GetField(Coordinate fieldCoordinate)
-            => fieldCoordinate.IsInside(SizeInFields) 
-            ? GetFieldNoChecks(fieldCoordinate) 
+            => fieldCoordinate.IsInside(SizeInFields)
+            ? GetFieldNoChecks(fieldCoordinate)
             : null;
 
         public List<Field> GetArea(Coordinate topLeft, Coordinate topRight)
-            => topRight.IsInside(SizeInFields) 
-            ? [.. Coordinate.GetArea(topLeft, topRight).Where(c => c.IsInside(SizeInFields)).Select(GetFieldNoChecks)] 
+            => topRight.IsInside(SizeInFields)
+            ? [.. Coordinate.GetArea(topLeft, topRight).Where(c => c.IsInside(SizeInFields)).Select(GetFieldNoChecks)]
             : [];
 
         public Chunk? GetChunk(Coordinate chunkCoordinate)
@@ -95,9 +87,12 @@ namespace VolcanicTransport.Model.World
             ? ChunkMatrix[chunkCoordinate]
             : null;
 
+        #endregion
+
+        #region Methods
         private void InitialiseWorld()
         {
-            ChunkMatrix.SetEach((x, y) => new Chunk(new(x, y)));
+            ChunkMatrix.SetEach((x, y) => new Chunk(new Coordinate(x, y)));
             ChunkMatrix.ReadEach((_, _, c) => c.FieldMatrix.SetEach((_, _) => new Field()));
         }
 
@@ -106,7 +101,7 @@ namespace VolcanicTransport.Model.World
             if (GameWorldGenerator == null) throw new NoWorldGeneratorProvidedException();
             ChunkMatrix.ReadEach(
                 (cx, cy, c) => c.FieldMatrix.ReadEach(
-                    (x, y, f) => GameWorldGenerator.GenerateField(f, cx * Chunk.ChunkSize + x, cy * Chunk.ChunkSize + y)));
+                    (x, y, f) => GameWorldGenerator.GenerateField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
 
             GameWorldGenerator.GenerateCitiesAndFactories();
         }
@@ -128,16 +123,16 @@ namespace VolcanicTransport.Model.World
 
         public void UpdateRoadNetworkAround(Coordinate c)
         {
-            List<Coordinate> targets = new()
-            {
+            List<Coordinate> targets =
+            [
                 c,
                 c + Direction.North,
                 c + Direction.South,
                 c + Direction.East,
                 c + Direction.West
-            };
+            ];
 
-            HashSet<Chunk> chunksToRender = new HashSet<Chunk>();
+            HashSet<Chunk> chunksToRender = [];
 
             foreach (var coord in targets)
             {
@@ -167,5 +162,7 @@ namespace VolcanicTransport.Model.World
 
             // Itt jöhetnének késõbb az épületek frissítései (termelés, stb.)
         }
+
+        #endregion
     }
 }

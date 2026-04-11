@@ -1,0 +1,260 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor #8ffdd3
+}
+
+set namespaceSeparator ::
+
+namespace Model::Utils #DDDDDD {
+    class "SquareMatrixIterator"<T> #f3dbb6 {}
+}
+
+namespace Model::World #aaf1ee {
+
+    class World <<Singleton>> {
+        - _worldSeed : int
+        + WorldSeed : int <<get>>
+        + SharedRandom : Random <<get>>
+        + SizeInChunks : Coordinate <<get>> <<init>>
+        + SizeInFields : Coordinate <<get>> <<init>>
+        + Roadnetwork : RoadNetworkGraph <<get>> <<set>>
+        + Cities : List<City> <<get>> <<set>>
+        + Factories : List<Factory> <<get>> <<set>>
+        + Stations : List<Station> <<get>> <<set>>
+        + Vehicles : ObservableCollection<Vehicle> <<get>>
+        + GameWorldGenerator : GameWorldGenerator? <<get>> <<set>>
+        + ChunkMatrix : SquareMatrixIterator<Chunk> <<get>>
+        --
+        - {static} _instance : World?
+        - World(worldSize:int, seed:int)
+        + {static} Instance : World <<get>>
+        + {static} Initialise(worldSize:int, seed:int) : void
+        ..
+        + GetLatestVehicle() : Vehicle?
+        + GetChunkCoordinate(fieldCoordinate:Coordinate) : Coordinate
+        + GetFieldCoordinateInChunk(fieldCoordinate:Coordinate) : Coordinate
+        - GetFieldNoChecks(fieldCoordinate:Coordinate) : Field
+        + GetField(fieldCoordinate:Coordinate) : Field?
+        + GetArea(topLeft:Coordinate, topRight:Coordinate) : List<Field>
+        + GetChunk(chunkCoordinate:Coordinate) : Chunk?
+        - InitialiseWorld() : void
+        + Generate() : void
+        + Generate(seed:int) : void
+        + AddVehicle(v:Vehicle) : void
+        + RemoveVehicle(v:Vehicle) : void
+        + HasVehicle(v:Vehicle) : bool
+        + UpdateRoadNetworkAround(c:Coordinate) : void
+        + Update(gameDt:double) : void
+    }
+    class NoWorldGeneratorProvidedException {
+    }
+    class WorldNotInitialisedException {
+    }
+    World +-- NoWorldGeneratorProvidedException
+    Exception <|-- NoWorldGeneratorProvidedException
+    World +-- WorldNotInitialisedException
+    Exception <|-- WorldNotInitialisedException
+
+    class Chunk {
+        + {static} <<readonly>> ChunkSize : int = 32
+        ..
+        + Coordinate : Coordinate <<get>> <<init>>
+        + FieldMatrix : SquareMatrixIterator<Field> <<get>> <<init>>
+        +  <<event>> Changed : EventHandler? 
+        --
+        + Chunk(Coordinate coordinate)
+        ..
+        + TriggerRerender() : void
+        + RemoveAllUpdateTriggers() : void
+    }
+
+
+
+    class Field {
+        + {static} <<readonly>> FieldSize : int = 32
+        - {static} <<readonly>> MaxFieldTypeHeights : float[]
+        ..
+        + Type : FieldType <<get>>
+        + Surface : ISurface? <<get>> <<set>>
+        --
+        + Field()
+        ..
+        + SetFieldTypeTo(f:Field) : void
+        + SetFieldHeight(height:float) : void
+        + IsBuildable() : bool
+        + GetHeightDifference(field:Field?) : int
+    }
+
+    enum FieldType extends byte{
+        DEEP_LAVA_OCEAN,
+        LAVA_OCEAN,
+        BEACH,
+        LOW_LANDS,
+        LOW_MID_TRANSITION,
+        MID_LANDS,
+        MID_HIGH_TRANSITION,
+        HIGH_LANDS,
+        MOUNTAINS,
+        HIGH_MOUNTAINS,
+    }
+
+    interface ISurface {
+    }
+
+    abstract class Bridge {
+        + {static} Cost : int
+        + {static} MaximumSpan : int
+        + {static} SpeedLimit : int
+        ..
+        - Fields : List<<Field>>
+        --
+        Bridge()
+        ..
+        + IsNorthSouth : bool
+        + AddField(f : Field) : bool
+        + RemoveField(f : Field) : bool
+        - IsFieldBrigable() : bool
+        - IsFieldRemovableFromBridge() : bool
+    }
+    class PoorMansBridge extends Bridge {
+        - {static} cost, maxspan, speed
+    }
+    class AverageMansBridge extends Bridge  {
+        - {static} cost, maxspan, speed
+    }
+    class RichMansBridge extends Bridge  {
+        - {static} cost, maxspan, speed
+    }   
+
+    class BridgePart {
+        + VehicleLeft : Vehicle
+        + VehicleRight: Vehicle
+        - Parent : Bridge
+    }
+
+
+
+
+    interface ISaveFileManager {
+        +fileFormat : string
+        + LoadGame(string file) : (World,double, bool, DateTime)
+        + SaveGame(World, double, bool, DateTime) : void
+    }
+    class SaveFileManager extends ISaveFileManager {
+        + LoadGame(string file) : (World,double, bool, DateTime)
+        + SaveGame(World, double, bool, DateTime) : void
+    }
+
+    abstract class KnowsNeighbour  {
+        + Coordinate : Coordinate <<get>>
+        + Field : Field <<get>>
+        + North : Field? <<get>>
+        + South : Field? <<get>>
+        + East : Field? <<get>>
+        + West : Field? <<get>>
+        --
+        # KnowsNeighbour(coordinate:Coordinate)
+        ..
+        # CountSidesThatSatisfy(predicate:Predicate<Field?>) : int
+    }
+
+
+
+    class Mushroom {
+        - <<const>> SpreadChance : int = 50
+        - {static} SpreadAttempt() : bool
+        - {static} IsFieldSpreadable(f:Field?) : bool
+        + GrowthStage : MushroomGrowthStage <<get>>
+        - IsAbleToSpread() : bool
+        + Grow() : void
+        + Spread() : void
+    }
+
+    enum MushroomGrowthStage {
+        SPROUT,
+        JUVENILE,
+        ADULT,
+        FULLY_GROWN,
+    }
+
+    class Road {
+        + Road(coordinate:Coordinate, isPermanent:bool)
+        + IsPermanent : bool <<get>>
+        + IsReserved : bool <<get>> <<set>> = false
+        + RoadType : RoadType <<get>>
+        +  <<event>> RoadLayoutChanged : EventHandler<FieldEventArgs>? 
+        # <<virtual>> OnRoadLayoutChanged(coord:Coordinate) : void
+        + Update() : void
+        + IsStraight : bool <<get>>
+        + IsCurved : bool <<get>>
+        + IsJunction : bool <<get>>
+        + IsSlope : bool <<get>>
+        +  <<event>> onPlacementFailed : EventHandler? 
+        + TryUpdateNeighbours() : bool
+        + UpdateNeighbours() : void
+    }
+
+    class FieldEventArgs {
+        + Coordinate : Coordinate <<get>>
+    }
+    
+    enum RoadType extends byte {
+        TYPE_MASK= 0b1111_0000,
+        DIRECTION_MASK= 0b0000_1111,
+        INVALID= 0b1111_1111,
+        STRAIGHT= 0b1000_0000,
+        SLOPE= 0b1001_0000,
+        CURVED= 0b0100_0000,
+        JUNCTION= 0b0010_0000,
+        LONELY= 0,
+        NORTH= 0b0000_1000,
+        SOUTH= 0b0000_0100,
+        EAST= 0b0000_0010,
+        WEST= 0b0000_0001,
+        STRAIGHT_NS= STRAIGHT | NORTH | SOUTH,
+        STRAIGHT_EW= STRAIGHT | EAST | WEST,
+        CURVED_NE= CURVED | NORTH | EAST,
+        CURVED_ES= CURVED | EAST | SOUTH,
+        CURVED_SW= CURVED | SOUTH | WEST,
+        CURVED_WN= CURVED | NORTH | WEST,
+        JUNCTION_T_WNE= JUNCTION | WEST | NORTH | EAST,
+        JUNCTION_T_NES= JUNCTION | NORTH | EAST | SOUTH,
+        JUNCTION_T_ESW= JUNCTION | EAST | SOUTH | WEST,
+        JUNCTION_T_SWN= JUNCTION | SOUTH | WEST | NORTH,
+        JUNCTION_NESW= JUNCTION | NORTH | SOUTH | EAST | WEST,
+        SLOPE_NS= SLOPE | NORTH | SOUTH,
+        SLOPE_EW= SLOPE | EAST | WEST
+    }
+
+    Model::Utils::SquareMatrixIterator --*"1" World
+    Model::Utils::SquareMatrixIterator --*"1" Chunk
+
+    Field --* Chunk
+    Chunk --* World
+
+    Field <-- FieldType
+    Field <-- ISurface
+
+    ISurface <|-- BridgePart
+    Bridge <-- BridgePart
+    Field  "1-*" --* Bridge
+
+    Field "2-4" --* KnowsNeighbour
+    ISurface <|-- KnowsNeighbour
+    KnowsNeighbour <|-- Mushroom
+
+    Road <-- RoadType
+    KnowsNeighbour <|-- Road
+    Road +-- FieldEventArgs
+    EventArgs <|-- FieldEventArgs
+
+    MushroomGrowthStage --> Mushroom
+}
+
+@enduml

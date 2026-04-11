@@ -1,0 +1,177 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor #f7e180
+}
+
+set namespaceSeparator ::
+namespace Model {
+
+namespace TerrainGeneration #bbf58b  {
+namespace Layers #CCDDCC{
+    class Perlin #f3dbb6 {}
+}
+}
+
+namespace World #aaf1ee {
+namespace RoadNetwork {
+    class Vehicle {}
+}
+
+class World <<Singleton>> #8ffdd3 {}
+class KnowsNeighbour #8ffdd3 {}
+class ISurface #8ffdd3 {}
+
+
+namespace Economy #fad4d4 {
+
+    enum ProductType {
+        NONE,
+        HUMAN,
+        BONE,
+        SULFUR,
+        STEAM,
+        WATER,
+        ASH,
+        CONCREATE,
+        MUSHROOM,
+    }
+
+    class Product {
+        + ProductType : ProductType <<get>> <<set>>
+        - <<readonly>> _perlin : Perlin
+        - <<readonly>> _minValue : float
+        - <<readonly>> _maxValue : float
+        - <<readonly>> _variability : float
+        + GetDemand(time:float) : int
+        + GetFactoryEfficiency(time:float) : float
+    }
+
+    class ProductBuffer {
+        - <<readonly>> _productType : ProductType
+        - <<readonly>> _maxCapacity : int
+        + CurrentLoad : int <<get>> = 0
+        + AmountNeeded() : int
+        + ReciveProduct(type:ProductType, amount:int) : int
+        + FillVehicle(vehicle:Vehicle) : int
+    }
+
+    abstract class Station extends Model::World::KnowsNeighbour {
+        # name : string
+        # passangerBuffer : ProductBuffer
+        # vehicle : Vehicle? = null
+        # PassengerDemand : Product
+        --
+        Station(coordinate:Coordinate, name:string, passangerBuffer:ProductBuffer, passengerDemand:Product)
+        ..
+        + {abstract} UnLoadProductFromVehicle() : bool
+        + Boarding() : bool
+        + UnBoarding() : bool
+    }
+
+    class CityBuilding implements Model::World::ISurface {
+    }
+
+    class FactoryBuilding implements Model::World::ISurface {
+    }
+
+
+    class City {
+        - <<readonly>> _name : string
+        - <<readonly>> _products : List<Product>
+        - <<readonly>> _centerCoordinate : Coordinate
+        - <<readonly>> _fields : List<Field>
+        --
+        + City(name:string, coord:Coordinate)
+        ..
+        + CenterCoordinate : Coordinate <<get>>
+        + AddField(f:Field) : void
+        - RandomizeNeeds() : void
+        + IsProductNeeded(productType:ProductType) : bool
+    }
+
+
+    class CityStation extends Station{
+        - <<readonly>> _city : City
+        + <<override>> UnLoadProductFromVehicle() : bool
+        --
+        CityStation(city:City, coordinate:Coordinate, name:string)
+    }
+
+
+    abstract class Factory {
+        + BaseProduct : ProductType <<get>>
+        + FinalProduct : Product <<get>>
+        + BaseProductBuffer : ProductBuffer <<get>>
+        + FinalProductBuffer : ProductBuffer <<get>>
+        + OriginCoordinate : Coordinate <<get>>
+        - <<readonly>> _factoryFields : List<Field>
+        --
+        + Factory(baseProduct:ProductType, finalProduct:Product, baseProductBuffer,finalProductBuffer:ProductBuffer, coord:Coordinate)
+        ..
+        + AddField(f:Field) : void
+    }
+
+    class SulfurProducer extends Factory {
+    }
+
+    class BoneProducer extends Factory {
+    }
+
+    class AshProducer extends Factory {
+    }
+
+    class MushroomProducer extends Factory {
+    }
+
+    class SteamProducer extends Factory {
+    }
+
+    class CondensatorFactory extends Factory {
+    }
+
+    class ConcreteFactory extends Factory {
+    }
+
+
+    class FactoryStation extends Station {
+        - <<readonly>> _factory : Factory
+        --
+        + FactoryStation(coordinate:Coordinate, name:string, factory:Factory)
+        ..
+        + GetFactoryNeeds : ProductType <<get>>
+        + GetFactoryFinishedProduct : ProductType <<get>>
+        + GetFactoryEfficiency(time:float) : float
+        + LoadProduct() : bool
+        + <<override>> UnLoadProductFromVehicle() : bool
+    }
+
+    ProductType ..> Product
+    ProductType ..> ProductBuffer
+    ProductType ..> Factory
+    ProductType ..> City
+
+    Product <-- Model::TerrainGeneration::Layers::Perlin
+    Product --|> City
+    City --|> Model::World::World
+    Factory --|> Model::World::World
+
+    City <-- CityBuilding
+    City <--> CityStation
+    Factory <-- FactoryBuilding
+    Factory <--> FactoryStation
+    Factory <-- ProductBuffer
+    Station <-- ProductBuffer
+    Station <-- Product
+    Station <|-- Model::World::RoadNetwork::Vehicle
+
+}
+}
+}
+
+@enduml

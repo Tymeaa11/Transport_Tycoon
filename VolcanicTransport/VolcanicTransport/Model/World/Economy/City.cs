@@ -1,51 +1,58 @@
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World.Economy
 {
     public class City
     {
-        private readonly string _name;
-        private readonly List<Product> _products;
-        private readonly Coordinate _centerCoordinate;
+        public string Name { get; }
+        public Coordinate CenterCoordinate { get; }
+
+        [JsonInclude]
+        private List<Product> Products { get; set; }
+
         private readonly List<Field> _fields;
 
-        public City(string name, Coordinate coord)
+        [JsonConstructor]
+        public City(string name, Coordinate centerCoordinate, List<Product> products)
         {
-            _name = name;
-            _centerCoordinate = coord;
+            Name = name;
+            CenterCoordinate = centerCoordinate;
             _fields = [];
-            _products = [];
+            Products = [];
             RandomizeNeeds();
         }
 
-        public Coordinate CenterCoordinate { get { return _centerCoordinate; } }
-
-        public void AddField(Field f)
+        public City(string name, Coordinate centerCoordinate)
         {
-            _fields.Add(f);
+            Name = name;
+            CenterCoordinate = centerCoordinate;
+            _fields = [];
+            Products = [];
+            RandomizeNeeds();
         }
+
+
+        public void AddField(Field f) => _fields.Add(f);
 
         private void RandomizeNeeds()
         {
             var rnd = new Random();
-            _products.Clear();
+            Products.Clear();
 
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
-                int typeIndex = rnd.Next(1, 9);
+                var typeIndex = rnd.Next(1, 9);
 
-                ProductType randomType = (ProductType)typeIndex;
+                var randomType = (ProductType)typeIndex;
                 Product newProduct = new(randomType, 0, 100, 5);
 
-                _products.Add(newProduct);
+                Products.Add(newProduct);
             }
         }
 
         public bool IsProductNeeded(ProductType productType)
-        {
-            if (_products.Where(f => f.ProductType == productType).Count() == 0) { return false; }
-            return true;
-        }
+            => Products.Count(f => f.ProductType == productType) != 0;
 
         /* TODOOO public int RecieveProduct(ProductType type, int amount)
         {
