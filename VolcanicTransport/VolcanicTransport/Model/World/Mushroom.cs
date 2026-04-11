@@ -5,9 +5,6 @@ namespace VolcanicTransport.Model.World
     public class Mushroom( Coordinate coordinate, MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT) : KnowsNeighbour(coordinate)
     {
         public Coordinate GetCoordinate => this.Coordinate;
-        private static bool SpreadAttempt() 
-            => World.Instance.SharedRandom.Next(100) > GameSettings.SpreadChance;
-        private static bool IsFieldSpreadable(Field? f) => SpreadAttempt() && f is { Surface: null };
 
         public MushroomGrowthStage GrowthStage { get; private set; } = growthStage; // 1 - 4
 
@@ -23,10 +20,7 @@ namespace VolcanicTransport.Model.World
             Random rand = World.Instance.SharedRandom;
             bool hasChanged = false;
 
-            double growthBaseChance = 0.10;
-            double spreadBaseChance = 0.05; 
-
-            if (rand.NextDouble() < growthBaseChance) 
+            if (rand.NextDouble() < GameSettings.GrowthBaseChance) 
             {
                 int oldStage = (int)GrowthStage;
                 Grow();
@@ -37,7 +31,7 @@ namespace VolcanicTransport.Model.World
                 }
             }
 
-            if (IsAbleToSpread() && rand.NextDouble() < spreadBaseChance)
+            if (IsAbleToSpread() && rand.NextDouble() < GameSettings.SpreadBaseChance)
             {
                 Coordinate dir = rand.Next(4) switch
                 {
@@ -50,6 +44,8 @@ namespace VolcanicTransport.Model.World
                 Coordinate targetCoord = myCoord + dir;
                 Field? targetField = World.Instance.GetField(targetCoord);
 
+                if (targetField != null && (targetField.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS)) return (null, hasChanged);
+
                 if (targetField != null && targetField.Surface == null && targetField.IsBuildable())
                 {
                     targetField.Surface = new Mushroom(targetCoord, MushroomGrowthStage.SPROUT);
@@ -60,17 +56,5 @@ namespace VolcanicTransport.Model.World
 
             return (null, hasChanged);
         }
-
-
-        public void Spread()
-        {
-            if (!IsAbleToSpread()) return;
-
-            if (IsFieldSpreadable(North)) North!.Surface = new Mushroom(Coordinate + Direction.North);
-            if (IsFieldSpreadable(South)) South!.Surface = new Mushroom(Coordinate + Direction.South);
-            if (IsFieldSpreadable(East)) East!.Surface = new Mushroom(Coordinate + Direction.East);
-            if (IsFieldSpreadable(West)) West!.Surface = new Mushroom(Coordinate + Direction.West);
-        }
-
     }
 }

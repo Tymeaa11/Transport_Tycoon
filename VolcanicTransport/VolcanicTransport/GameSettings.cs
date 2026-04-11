@@ -42,7 +42,10 @@ public static class GameSettings
 
     #region Mushrooms
 
-    public const int SpreadChance = 50; // 0-100 %
+    public const int SpreadChance = 50;
+    public const double GrowthBaseChance = 0.2;
+    public const double SpreadBaseChance = 0.1;
+    public const int SamplesCount = 100;
 
     #region MushroomGeneration
     public const float Stage0MinHeight = 0.5f;

@@ -352,7 +352,7 @@ namespace VolcanicTransport.Model
 
         private void UpdateAllMushrooms(double deltaTime)
         {
-            int samplesCount = (int)(100 * deltaTime);
+            int samplesCount = (int)(GameSettings.SamplesCount * deltaTime);
             HashSet<Chunk> chunksToRedraw = new HashSet<Chunk>();
 
             for (int i = 0; i < samplesCount; i++)
@@ -363,7 +363,11 @@ namespace VolcanicTransport.Model
 
                 Field? field = WorldInstance.GetField(randomCoord);
 
-                if (field?.Surface is Mushroom mushroom)
+                if (field == null) continue;
+
+                if (field.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS) continue;
+
+                if (field.Surface is Mushroom mushroom)
                 {
                     (Coordinate? target, bool spread) = mushroom.UpdateMushroom(randomCoord);
                     if (spread)
