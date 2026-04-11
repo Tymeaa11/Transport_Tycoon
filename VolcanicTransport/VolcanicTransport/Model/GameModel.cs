@@ -6,6 +6,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {
@@ -15,6 +16,7 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
+        public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;
         private readonly ISaveFileManager _savefileManager;
@@ -130,11 +132,15 @@ namespace VolcanicTransport.Model
 
         public bool BuyVehicle(Vehicle v)
         {
-            if (!TryPurchase(v.Price)) return false;
+            if (TryPurchase(v.Price))
+            {
+                v.ArrivedAtStation += HandleVehicleArrived;
 
-            WorldInstance.AddVehicle(v);
-            VehicleBought?.Invoke(this, EventArgs.Empty);
-            return true;
+                WorldInstance.AddVehicle(v);
+                VehicleBought?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+            return false;
         }
 
         public void SellVehicle(Vehicle v)
@@ -286,23 +292,21 @@ namespace VolcanicTransport.Model
 
         public static void AddStopToVehicle(Vehicle v, Station s)
         {
-            v.Route ??= new Route();
+
+            if (v.Route.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
 
             v.Route.AddStop(s);
             Debug.WriteLine($"Megálló hozzáadva: {s.Coordinate}. Összesen: {v.Route.Stops.Count}");
 
-            if (v.Route.Stops.Count < 2)
-            {
-                Debug.WriteLine("Várakozás a második megállóra...");
-                return;
-            }
-            Debug.WriteLine("Két megálló megvan, gráf frissítése...");
-
             var graph = WorldInstance.Roadnetwork;
-            //graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
             graph.RegisterNodeIfNeeded(s.Coordinate);
             graph.RebuildEdges();
 
+            if (v.State == VehicleState.Waiting)
+            {
+                v.TryStartNextRoute();
+            }
+            v.TriggerRouteChanged();
             //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
             //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
             //{
@@ -318,6 +322,20 @@ namespace VolcanicTransport.Model
             // }
             // }
 
+        }
+
+        private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
+
+            double ticketIncome = 150;
+            AddMoney(ticketIncome);
+            System.Diagnostics.Debug.WriteLine($"[GameModel] Játékos kapott {ticketIncome}$-t a fuvarért.");
+
+            // load-unload stb
+
+            // tova a viewmodellnek ha kell
+            VehicleArrivedAtStation?.Invoke(this, e);
         }
 
         #endregion
@@ -348,6 +366,7 @@ namespace VolcanicTransport.Model
         }
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);
         public void LowerField(Coordinate coord) => TerraformField(coord, -1);
+
 
     }
 }
