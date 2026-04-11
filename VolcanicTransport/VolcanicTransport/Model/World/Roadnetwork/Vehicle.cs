@@ -80,11 +80,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             }
             else if (currentStation != null) {
 
-                float stationCenterX = (currentStation.Coordinate.X * 64f) + 32f;
-                float stationCenterY = (currentStation.Coordinate.Y * 64f) + 32f;
+                float stationCenterX = (currentStation.Coordinate.X * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
+                float stationCenterY = (currentStation.Coordinate.Y * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
 
                 currentWaypoints.Insert(0, new System.Numerics.Vector2(stationCenterX, stationCenterY));
-
                 Position = new System.Numerics.Vector2(stationCenterX, stationCenterY);
 
             }

@@ -16,20 +16,6 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
-        public event EventHandler? moneyChanged;
-        public event EventHandler? gameOver;
-        public event EventHandler? newGame;
-        public event EventHandler? stationBought;
-        public event EventHandler? roadBought;
-        public event EventHandler? vehicleBought;
-        public event EventHandler? vehicleSelled;
-        public event EventHandler? gameAdvanced;
-        public event EventHandler? gamePaused;
-        public event EventHandler? gameUnpaused;
-        public event EventHandler? timescaleChanged;
-        public event EventHandler? fieldChanged;
-        public event EventHandler? vehicleSelectedIndex;
-        public event EventHandler? onPlacementFailed;
         public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;
@@ -151,7 +137,7 @@ namespace VolcanicTransport.Model
                 v.ArrivedAtStation += HandleVehicleArrived;
 
                 WorldInstance.AddVehicle(v);
-                vehicleBought?.Invoke(this, EventArgs.Empty);
+                VehicleBought?.Invoke(this, EventArgs.Empty);
                 return true;
             }
             return false;
