@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using VolcanicTransport.Model;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 
@@ -10,9 +11,9 @@ namespace VolcanicTransport_WPF.View
     {
 
         private static readonly int Dpi = 96;
-        private static readonly int FieldSize = Field.FieldSize;
+        private static readonly int FieldSize = GameSettings.FieldSize;
         private static readonly int HalfFieldSize = FieldSize / 2;
-        private static readonly int ChunkSizeInFields = Chunk.ChunkSize * FieldSize;
+        private static readonly int ChunkSizeInFields = GameSettings.ChunkSize * FieldSize;
         private static readonly Rect ChunkBoundries = new(0, 0, ChunkSizeInFields, ChunkSizeInFields);
 
         private readonly DrawingVisual _visual;

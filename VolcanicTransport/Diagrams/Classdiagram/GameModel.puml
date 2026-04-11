@@ -1,0 +1,94 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+set namespaceSeparator ::
+
+namespace Model {
+
+    namespace World #aaf1ee {
+        namespace RoadNetwork #f9d0fa {
+            class Vehicle {}
+        }
+
+        class World <<Singleton>> #8ffdd3 {}
+        class Road #8ffdd3 {}
+
+        namespace Economy #fad4d4 {
+            class Station #f7e180 {}
+        }
+
+    }
+
+namespace Utils #DDDDDD {
+    class ScalableTimer  #f3dbb6 {}
+}
+    
+
+
+class GameModel <<Singleton>> {
+    - _playerMoney : double
+    - _isPaused : bool = false
+    - <<readonly>> _currentTime : DateTime
+    - <<readonly>> _savefileManager : ISaveFileManager
+    - <<readonly>> _gameTickTimer : ScalableTimer
+    + PlayerMoney : double <<get>>
+    + WorldInstance : World.World <<get>>
+    +  <<event>> moneyChanged : EventHandler? 
+    +  <<event>> gameOver : EventHandler? 
+    +  <<event>> newGame : EventHandler? 
+    +  <<event>> stationBought : EventHandler? 
+    +  <<event>> roadBought : EventHandler? 
+    +  <<event>> vehicleBought : EventHandler? 
+    +  <<event>> vehicleSelled : EventHandler? 
+    +  <<event>> gameAdvanced : EventHandler? 
+    +  <<event>> gamePaused : EventHandler? 
+    +  <<event>> gameUnpaused : EventHandler? 
+    +  <<event>> timescaleChanged : EventHandler? 
+    +  <<event>> fieldChanged : EventHandler? 
+    +  <<event>> vehicleSelectedIndex : EventHandler? 
+    +  <<event>> onPlacementFailed : EventHandler? 
+    --
+    - {static} _instance : GameModel?
+    - GameModel(worldSize:int, seed:int)
+    + {static} Instance : GameModel <<get>>
+    + {static} Initialise(worldSize:int, seed:int) : void
+    ..
+    - OnTimerTick() : void
+    + Pause() : void
+    + UnPause() : void
+    + ChangeTimeSpeed1X() : void
+    + ChangeTimeSpeed2X() : void
+    + ChangeTimeSpeed4X() : void
+    + Update() : void
+    + Update(deltaTime:double) : void
+    + BuyVehicle(v:Vehicle) : bool
+    + SellVehicle(v:Vehicle) : void
+    + TryPurchase(amount:double) : bool
+    + AddMoney(amount:double) : void
+    - HandleMonthlyExpenses() : void
+    - CheckBankruptcy() : void
+    + IsBuildable(coordinate:Coordinate) : bool
+    + OnRoadBecameJunction(sender:object?, e:Road.FieldEventArgs) : void
+    - CanPlaceRoadHere(coord:Coordinate, field:Field) : Road?
+    + PlaceRoad(coord:Coordinate) : void
+    + PlaceStation(coord:Coordinate) : bool
+    + AddStopToVehicle(v:Vehicle, s:Station) : void
+}
+class GameModelNotInitialisedException {
+}
+GameModel +-- GameModelNotInitialisedException
+Exception <|-- GameModelNotInitialisedException
+
+GameModel "1"*-- Model::Utils::ScalableTimer
+GameModel "1"*-- Model::World::World
+GameModel <-- Model::World::Road
+GameModel <-- Model::World::RoadNetwork::Vehicle
+GameModel <-- Model::World::Economy::Station
+
+
+}
+@enduml

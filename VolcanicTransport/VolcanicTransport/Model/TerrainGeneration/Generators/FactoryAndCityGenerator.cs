@@ -1,34 +1,19 @@
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
-using VolcanicTransport.Model;
 
 namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class FactoryAndCityGenerator(int cityCount, int factoryCount)
     {
-        public class GenerationErrorException : Exception { }
-
-        // Városok és gyárak közötti minimális távolság mezőkben
-        private const double MinimumDistance = 15.0; 
-
-        // Keresési próbálkozások száma
-        private const int MaxAttemps = 100;
-
-        // Minimum távolság a világ szélétől
-        private const int WorldEdgeBufferZone = 2;
-
-
-        public int CityCount { get; } = cityCount;
-        public int FactoryCount { get; } = factoryCount;
-
-        private Field GetField(Coordinate coordinate) 
+        private static Field GetField(Coordinate coordinate)
             => World.World.Instance.GetField(coordinate) ?? throw new GenerationErrorException();
 
         public void Generate()
         {
             // 1. Városok lehelyezése
-            for (var i = 0; i < CityCount; i++)
+            for (var i = 0; i < cityCount; i++)
             {
                 var pos = FindValidLocation();
                 if (pos.HasValue)
@@ -36,7 +21,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             }
 
             // 2. Gyárak lehelyezése
-            for (var i = 0; i < FactoryCount; i++)
+            for (var i = 0; i < factoryCount; i++)
             {
                 var pos = FindValidLocation();
                 if (pos.HasValue)
@@ -44,15 +29,15 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             }
         }
 
-        private Coordinate? FindValidLocation()
+        private static Coordinate? FindValidLocation()
         {
-            Coordinate PossibleArea = World.World.Instance.SizeInFields - WorldEdgeBufferZone;
+            var possibleArea = World.World.Instance.SizeInFields - GameSettings.WorldEdgeBufferZone;
 
-            for (int i = 0; i < MaxAttemps; i++)
+            for (var i = 0; i < GameSettings.MaxAttempts; i++)
             {
                 Coordinate potential = new(
-                     World.World.Instance.SharedRandom.Next(WorldEdgeBufferZone, PossibleArea.X),
-                     World.World.Instance.SharedRandom.Next(2, PossibleArea.Y)
+                     World.World.Instance.SharedRandom.Next(GameSettings.WorldEdgeBufferZone, possibleArea.X),
+                     World.World.Instance.SharedRandom.Next(2, possibleArea.Y)
                     );
 
                 if (IsAreaSuitable(potential))
@@ -61,30 +46,23 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             return null;
         }
 
-        private bool IsAreaSuitable(Coordinate center)
+        private static bool IsAreaSuitable(Coordinate center)
         {
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                    if (!GetField(new(center.X + dx, center.Y + dy)).IsBuildable())
+            for (var dx = -1; dx <= 1; dx++)
+                for (var dy = -1; dy <= 1; dy++)
+                    if (!GetField(new Coordinate(center.X + dx, center.Y + dy)).IsBuildable())
                         return false;
 
             // Távolság ellenőrzése a már meglévő városoktól/gyáraktól
-            foreach (var city in World.World.Instance.Cities)
-                if (center.Distance(city.CenterCoordinate) < MinimumDistance) 
-                    return false;
-
-            foreach (var factory in World.World.Instance.Factories)
-                if (center.Distance(factory.OriginCoordinate) < MinimumDistance) 
-                    return false;
-
-            return true;
+            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance))
+                   && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistance));
         }
 
-        private void CreateCity(Coordinate center)
+        private static void CreateCity(Coordinate center)
         {
-            string name = "City " + (World.World.Instance.Cities.Count + 1);
+            var name = "City " + (World.World.Instance.Cities.Count + 1);
             City newCity = new(name, center);
-            Field reference = GetField(center);
+            var reference = GetField(center);
             var fields = World.World.Instance.GetArea(center - 1, center + 1);
 
             if (fields.Count != 9) throw new GenerationErrorException();
@@ -112,38 +90,42 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
             fields.ForEach(f =>
             {
-                if (f.Surface is Road r)
+                switch (f.Surface)
                 {
-                    r.RoadLayoutChanged += GameModel.Instance.OnRoadBecameJunction;
-                    r.Update();
+                    case Road r:
+                        r.RoadLayoutChanged += GameModel.OnRoadBecameJunction;
+                        r.Update();
+                        break;
                 }
             });
 
             World.World.Instance.Cities.Add(newCity);
         }
 
-        private void CreateFactory(Coordinate origin)
+        private static void CreateFactory(Coordinate origin)
         {
-            int factoryType = World.World.Instance.SharedRandom.Next(0, 7);
+            var name = "Factory" + World.World.Instance.SharedRandom.Next() + "_" + World.World.Instance.SharedRandom.Next();
+            var factoryType = World.World.Instance.SharedRandom.Next(0, 7);
             Factory newFactory = factoryType switch
             {
-                0 => new CondensatorFactory(origin),
-                1 => new ConcreteFactory(origin),
-                2 => new SulfurProducer(origin),
-                3 => new BoneProducer(origin),
-                4 => new AshProducer(origin),
-                5 => new MushroomProducer(origin),
-                6 => new SteamProducer(origin),
-                _ => new MushroomProducer(origin)
+                0 => new CondensatorFactory(name, origin),
+                1 => new ConcreteFactory(name, origin),
+                2 => new SulfurProducer(name, origin),
+                3 => new BoneProducer(name, origin),
+                4 => new AshProducer(name, origin),
+                5 => new MushroomProducer(name, origin),
+                6 => new SteamProducer(name, origin),
+                _ => new MushroomProducer(name, origin)
             };
 
-            Field reference = GetField(origin);
+            var reference = GetField(origin);
 
             var fields = World.World.Instance.GetArea(origin, origin + 1);
 
             if (fields.Count != 4) throw new GenerationErrorException();
 
-            fields.ForEach(f => {
+            fields.ForEach(f =>
+            {
                 f.SetFieldTypeTo(reference); // Kilapítás az origin magasságára
                 f.Surface = new FactoryBuilding(); // ISurface beállítása
                 newFactory.AddField(f);

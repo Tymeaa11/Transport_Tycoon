@@ -6,16 +6,9 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class MushroomGenerator : ITerrainGenerator
     {
-        private const float Stage0MinHeight = 0.5f;
-        private const float Stage1MinHeight = 0.55f;
-        private const float Stage2MinHeight = 0.6f;
-        private const float Stage3MinHeight = 0.65f;
+        private readonly PerlinLayer _mushroomLayer
+            = new(new Perlin(), 0.02f, 1f, World.World.Instance.SharedRandom);
 
-        private readonly PerlinLayer _mushroomLayer;
-        public MushroomGenerator()
-        {
-            _mushroomLayer = new PerlinLayer(new Perlin(), 0.02f, 1f, World.World.Instance.SharedRandom);
-        }
 
         public void ModifyField(Field field, int x, int y)
         {
@@ -25,15 +18,15 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             if (field.Surface != null) return;
             switch (height)
             {
-                case < Stage0MinHeight:
+                case < GameSettings.Stage0MinHeight:
                     return;
-                case < Stage1MinHeight:
+                case < GameSettings.Stage1MinHeight:
                     field.Surface = new Mushroom(new Coordinate(x, y));
                     break;
-                case < Stage2MinHeight:
+                case < GameSettings.Stage2MinHeight:
                     field.Surface = new Mushroom(new Coordinate(x, y), MushroomGrowthStage.JUVENILE);
                     break;
-                case < Stage3MinHeight:
+                case < GameSettings.Stage3MinHeight:
                     field.Surface = new Mushroom(new Coordinate(x, y), MushroomGrowthStage.ADULT);
                     break;
                 default:

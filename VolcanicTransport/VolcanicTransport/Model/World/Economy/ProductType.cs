@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace VolcanicTransport.Model.World.Economy
 {
     public enum ProductType
@@ -9,7 +10,7 @@ namespace VolcanicTransport.Model.World.Economy
         STEAM,
         WATER,
         ASH,
-        CONCREATE,
+        CONCRETE,
         MUSHROOM
     }
 }

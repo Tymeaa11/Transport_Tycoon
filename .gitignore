@@ -8,3 +8,5 @@
 /VolcanicTransport/VolcanicTransport/obj/*
 /VolcanicTransport/VolcanicTransport-WPF/bin/*
 /VolcanicTransport/VolcanicTransport-WPF/obj/*
+/VolcanicTransport/VolcanicTransport-Tests/bin/Debug/net9.0
+/VolcanicTransport/VolcanicTransport-Tests/obj

@@ -24,6 +24,7 @@
         <view:FieldToPixelConverter x:Key="FieldToPixelConverter" />
         <view:BuildabilityToColorConverter x:Key="BuildabilityToColorConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
 
     <Grid x:Name="ViewPort" ClipToBounds="True">
@@ -63,7 +64,8 @@
                 <ItemsPanelTemplate>
                     <Canvas IsHitTestVisible="False">
                         <Canvas.RenderTransform>
-                            <MatrixTransform Matrix="{Binding Camera.ProjectionMatrix}" />
+                            <MatrixTransform Matrix="{Binding DataContext.Camera.ProjectionMatrix,
+                                                        Source={x:Reference RootWindow}}" />
                         </Canvas.RenderTransform>
                     </Canvas>
                 </ItemsPanelTemplate>
@@ -71,11 +73,8 @@
 
             <ItemsControl.ItemContainerStyle>
                 <Style TargetType="ContentPresenter">
-                    <Setter Property="RenderTransform">
-                        <Setter.Value>
-                            <TranslateTransform X="{Binding VisualX}" Y="{Binding VisualY}" />
-                        </Setter.Value>
-                    </Setter>
+                    <Setter Property="Canvas.Left" Value="{Binding VisualX}" />
+                    <Setter Property="Canvas.Top" Value="{Binding VisualY}" />
                 </Style>
             </ItemsControl.ItemContainerStyle>
 
@@ -256,5 +255,31 @@
             </TextBlock>
         </Border>
 
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,0,0" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
+            <TextBlock Text ="{Binding ToolTipText}" FontSize="16" Margin="4">
+            </TextBlock>
+        </Border>
+
+        <Grid x:Name="PauseOverlay" Visibility="{Binding IsPausedView, Converter={StaticResource BoolToVis}}" Panel.ZIndex="100">
+            <Border Background="Black" Opacity="0.5"/>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="Paused" 
+                   FontSize="48" FontFamily="Impact" 
+                   Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,40"/>
+
+                <Button Content="Resume Game" Command="{Binding ResumeCommand}"
+                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
+
+                <Button Content="Save Game"
+                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
+
+                <Button Content="Load Game"
+                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
+
+                <Button Content="Quit to Menu" Command="{Binding QuitToMainMenuCommand}"
+                Width="200" Padding="10" FontSize="18"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

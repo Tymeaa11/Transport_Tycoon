@@ -1,8 +1,9 @@
-using VolcanicTransport.Model.World;
-using static VolcanicTransport.Model.TerrainGeneration.Generators.FactoryAndCityGenerator;
+
+using System.Text.Json.Serialization;
 
 namespace VolcanicTransport.Model.Utils
 {
+    [method: JsonConstructor]
     public readonly struct Coordinate(int x, int y) : IEquatable<Coordinate>
     {
         #region  Fields
@@ -16,9 +17,10 @@ namespace VolcanicTransport.Model.Utils
         public Coordinate() : this(0, 0) { }
         #endregion
 
-        public double Magnitude => Math.Sqrt(X * X + Y * Y);
+        #region Methods
+        public double Magnitude() => Math.Sqrt(X * X + Y * Y);
 
-        public double Distance(Coordinate o) => (this-o).Magnitude;
+        public double Distance(Coordinate o) => (this - o).Magnitude();
 
         public bool IsInside(Coordinate topLeft, Coordinate bottomRight)
         => X >= topLeft.X && X < bottomRight.X && Y >= topLeft.Y && Y < bottomRight.Y;
@@ -34,17 +36,17 @@ namespace VolcanicTransport.Model.Utils
 
         public static List<Coordinate> GetArea(Coordinate topLeft, Coordinate topRight)
         {
-            if (!topLeft.IsInside(topRight)) 
+            if (!topLeft.IsInside(topRight))
                 return [];
 
             List<Coordinate> coords = [];
-            for (int y = topLeft.Y; y <= topRight.Y; y++)
-                for (int x = topLeft.X; x <= topRight.X; x++)
-                    coords.Add(new(x, y));
+            for (var y = topLeft.Y; y <= topRight.Y; y++)
+                for (var x = topLeft.X; x <= topRight.X; x++)
+                    coords.Add(new Coordinate(x, y));
 
             return coords;
         }
-
+        #endregion
 
         #region Equals & HashCode
         public override bool Equals(object? obj)

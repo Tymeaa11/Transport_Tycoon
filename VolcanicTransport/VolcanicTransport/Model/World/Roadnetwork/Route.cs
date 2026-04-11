@@ -7,13 +7,13 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         private readonly List<Station> _stops;
         public IReadOnlyList<Station> Stops => _stops;
         private readonly List<Road> _roadToNextStation;
-        private readonly bool _isLoop;
+        //private readonly bool _isLoop;
 
         public Route()
         {
             _stops = [];
             _roadToNextStation = [];
-            _isLoop = false;
+            //_isLoop = false;
         }
         public void AddStop(Station station)
         {

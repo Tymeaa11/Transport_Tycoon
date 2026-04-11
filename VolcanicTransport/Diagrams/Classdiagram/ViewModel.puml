@@ -1,0 +1,174 @@
+@startuml
+
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor #f5e5b3
+}
+
+set namespaceSeparator ::
+
+namespace Model {
+    namespace World #aaf1ee {
+    namespace RoadNetwork #f9d0fa {
+        class Vehicle {}
+    }
+
+    class Chunk  #8ffdd3 {}
+    class World <<Singleton>> #8ffdd3 {}
+}
+
+    class GameModel <<Singleton>> #d9a6fc {}
+}
+
+
+namespace WPF {
+namespace ViewModel #f1c2c2 {
+
+abstract class ViewModelBase implements INotifyPropertyChanged {
+    +  <<event>> PropertyChanged : PropertyChangedEventHandler? 
+    # ViewModelBase()
+    # <<virtual>> OnPropertyChanged(propertyName:String?) : void
+}
+
+class DelegateCommand implements ICommand {
+    - <<readonly>> _execute : Action<Object?>
+    - <<readonly>> _canExecute : Predicate<Object?>?
+    + DelegateCommand(execute:Action<Object?>)
+    + CanExecute(parameter:Object?) : Boolean
+    + Execute(parameter:Object?) : void
+}
+
+enum BuildMode {
+    NONE,
+    ROAD,
+    STATION,
+    BRIDGE,
+    LOWER,
+    HEIGHTEN,
+    BUY_VEHICLE,
+    SELECT_STATION,
+}
+
+class Camera extends ViewModelBase {
+    - {static} <<readonly>> EnableDevMode : bool = true
+    - <<const>> PanSpeed : double = 10.0
+    - _projectionMatrix : Matrix
+    +  <<event>> CameraChanged : EventHandler? 
+    + ProjectionMatrix : Matrix <<get>>
+    + MoveUp : DelegateCommand <<get>>
+    + MoveDown : DelegateCommand <<get>>
+    + MoveLeft : DelegateCommand <<get>>
+    + MoveRight : DelegateCommand <<get>>
+    + Camera(initialMatrix:Matrix)
+    + Zoom(delta:double, screenCenter:Point) : void
+    - Pan(dx:double, dy:double) : void
+    + ScreenToWorld(screenPoint:Point) : Point
+    + WorldToField(worldPoint:Point) : Coordinate
+    + ScreenToField(screenPoint:Point) : Coordinate
+    + GetVisibleWorldBounds(screenWidth:double, screenHeight:double) : Rect
+}
+
+
+
+class GameViewModel extends ViewModelBase {
+    
+    + {static} GameModelInstance : GameModel <<get>>
+    + LoadedChunks : ObservableCollection<Chunk> <<get>>
+    + VehicleViewModels : ObservableCollection<VehicleViewModel> <<get>>
+    - _firstSelectedStation : Station? = null
+    - _selectedVehicle : VehicleViewModel?
+    + SelectedVehicle : VehicleViewModel? <<get>> <<set>>
+    - _accumulator : double = 0
+    - <<const>> FIXED_DELTA_TIME : double
+    + IsVehiclePanelVisible : bool <<get>>
+    - _lastWidth : double
+    - _lastHeight : double
+    + SetViewDimensions(width:double, height:double) : void
+    + UpdateVisibleChunks(width:double, height:double) : void
+    + WorldSizeInChunks : Coordinate <<get>>
+    + TileSize : int <<get>>
+    + Camera : Camera <<get>>
+    + SetBuildModeRoadCommand : DelegateCommand <<get>>
+    + SetBuildModeStationCommand : DelegateCommand <<get>>
+    + SetBuildModeBridgeCommand : DelegateCommand <<get>>
+    + SetBuildModeLowerCommand : DelegateCommand <<get>>
+    + SetBuildModeHeightenCommand : DelegateCommand <<get>>
+    + SetTimescale0Command : DelegateCommand <<get>>
+    + SetTimescale1Command : DelegateCommand <<get>>
+    + SetTimescale2Command : DelegateCommand <<get>>
+    + SetTimescale4Command : DelegateCommand <<get>>
+    + ReGenerateWithRandomSeed : DelegateCommand <<get>>
+    + BuyVehicleCommand : DelegateCommand <<get>>
+    + AddStopCommand : DelegateCommand <<get>>
+    + FieldClickedCommand : DelegateCommand <<get>>
+    - OnFieldClicked(coord:Coordinate) : void
+    - _hoveredCoordinate : Coordinate
+    + HoveredCoordinate : Coordinate <<get>> <<set>>
+    - _isHoveredFieldBuildable : bool
+    + IsHoveredFieldBuildable : bool <<get>> <<set>>
+    - UpdateBuildability() : void
+    + GameViewModel()
+    - GameModelInstance_moneyChanged(sender:object?, e:EventArgs) : void
+    + Initialise() : void
+    - currentBuildMode : BuildMode
+    + CurrentBuildMode : BuildMode <<get>> <<set>>
+    - currentTimescale : int
+    + CurrentTimescale : int <<get>> <<set>>
+    + IsBuildModeRoad : bool <<get>>
+    + IsBuildModeStation : bool <<get>>
+    + IsBuildModeSelectStation : bool <<get>>
+    + IsBuildModeBuyVehicle : bool <<get>>
+    + IsBuildModeBridge : bool <<get>>
+    + IsBuildModeLower : bool <<get>>
+    + IsBuildModeHeighten : bool <<get>>
+    + IsTimescale0 : bool <<get>>
+    + IsTimescale1 : bool <<get>>
+    + IsTimescale2 : bool <<get>>
+    + IsTimescale4 : bool <<get>>
+    + CurrentMoney : string <<get>>
+    - <<readonly>> _vehiclesLock : object
+    - _gameLoop : DispatcherTimer
+    - _stopwatch : System.Diagnostics.Stopwatch
+    - _lastRenderTime : TimeSpan
+    + StartGameLoop() : void
+    - OnCompositionTargetRendering(sender:object?, e:EventArgs) : void
+    - OnSetBuildMode(mode:BuildMode) : void
+    - OnSetTimescale0X() : void
+    - OnSetTimescale1X() : void
+    - OnSetTimescale2X() : void
+    - OnSetTimescale4X() : void
+}
+
+
+class VehicleViewModel extends ViewModelBase {
+    - <<readonly>> _vehicle : Vehicle
+    + VehicleViewModel(vehicle:Vehicle)
+    + PixelX : double <<get>>
+    + PixelY : double <<get>>
+    + GetName : string <<get>>
+    + GetVehicle : Vehicle <<get>>
+    + Type : string <<get>>
+    + GetCapacity : string <<get>>
+    + SpeedDisplay : string <<get>>
+    + StateDisplay : string <<get>>
+}
+
+    BuildMode --> GameViewModel
+    Camera --*"1" GameViewModel
+    DelegateCommand --* GameViewModel
+    
+    VehicleViewModel --|> GameViewModel
+
+    VehicleViewModel "1"*-- Model::World::RoadNetwork::Vehicle
+    GameViewModel *-- VehicleViewModel
+    GameViewModel <-- Model::GameModel
+    GameViewModel *-- Model::World::Chunk
+    Model::GameModel <-- Model::World::World
+
+}
+}
