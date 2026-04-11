@@ -35,7 +35,6 @@ namespace VolcanicTransport.Model.World.Economy
 
         public void AddField(Field f)
         {
-            //ELLENŐRZÉSEK TODO//
             _factoryFields.Add(f);
         }
 
@@ -43,11 +42,8 @@ namespace VolcanicTransport.Model.World.Economy
         {
             float efficiency = FinalProduct.GetFactoryEfficiency(totalTime);
 
-            // 1 termék / másodperc
-            double baseProductionRate = 1.0;
-
             // A tényleges termelés az adott pillanatban
-            double currentProduction = baseProductionRate * efficiency;
+            double currentProduction = GameSettings.BaseProductionRate * efficiency;
 
             // Ezt adjuk hozzá az akkumulátorhoz
             _productionAccumulator += deltaTime * currentProduction;

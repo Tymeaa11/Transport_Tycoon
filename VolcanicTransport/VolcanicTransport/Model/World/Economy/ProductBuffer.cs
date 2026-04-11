@@ -14,27 +14,17 @@ namespace VolcanicTransport.Model.World.Economy
         #endregion
 
         public int AmountNeeded() => MaxCapacity - CurrentLoad;
-        /*
-        public int ReciveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
-        {
-            if (ProductType != type) return 0;
 
-            var canReceive = Math.Min(amount, MaxCapacity - CurrentLoad);
-
-            CurrentLoad += canReceive;
-
-            return canReceive;
-        }*/
         public int ReciveProduct(Vehicle vehicle, int amount) //visszatérési érték: amennyit átvett 
         {
-            if (vehicle.Type != _productType) return 0;
+            if (vehicle.CurrentType != ProductType) return 0;
 
             int provided = vehicle.Unload(amount);
-            int capacity = _maxCapacity - CurrentLoad;
+            int capacity = MaxCapacity - CurrentLoad;
             if (capacity < provided)
             {
                 int plus = provided - capacity;
-                vehicle.Load(plus);
+                vehicle.Load(plus, ProductType);
                 CurrentLoad += capacity;
                 return capacity;
             } else
@@ -46,9 +36,9 @@ namespace VolcanicTransport.Model.World.Economy
 
         public int FillVehicle(Vehicle vehicle) //visszatérési érték: amennyit leadott
         {
-            if (vehicle == null || CurrentLoad <= 0 || vehicle.Type != _productType) { return 0; }
+            if (vehicle == null || CurrentLoad <= 0 || vehicle.CurrentType != ProductType) { return 0; }
 
-            var taken = vehicle.Load(CurrentLoad);
+            var taken = vehicle.Load(CurrentLoad, ProductType);
 
             CurrentLoad -= taken;
 

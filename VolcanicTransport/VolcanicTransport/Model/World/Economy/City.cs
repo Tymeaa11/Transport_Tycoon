@@ -14,14 +14,6 @@ namespace VolcanicTransport.Model.World.Economy
         private readonly List<Field> _fields;
 
         [JsonConstructor]
-        public City(string name, Coordinate centerCoordinate, List<Product> products)
-        {
-            Name = name;
-            CenterCoordinate = centerCoordinate;
-            _fields = [];
-            Products = [];
-            RandomizeNeeds();
-        }
 
         public City(string name, Coordinate centerCoordinate)
         {
@@ -51,13 +43,7 @@ namespace VolcanicTransport.Model.World.Economy
             }
         }
 
-        public bool IsProductNeeded(ProductType productType)
+        public bool IsProductNeeded(ProductType? productType)
             => Products.Count(f => f.ProductType == productType) != 0;
-
-        /* TODOOO public int RecieveProduct(ProductType type, int amount)
-        {
-            //TODO//
-            return 0;
-        }*/
     }
 }

@@ -7,20 +7,17 @@ namespace VolcanicTransport.Model.World.Economy
     {
         private readonly City _city = city;
 
-        public override bool UnLoadProductFromVehicle(Vehicle vehicle)
+        public override int UnLoadProductFromVehicle(Vehicle vehicle)
         {
-            if (vehicle == null || !_city.IsProductNeeded(vehicle.Type))
+            if (vehicle == null || !_city.IsProductNeeded(vehicle.CurrentType))
             {
-                return false;
+                return 0;
             }
 
             var amount = vehicle.CurrentLoad;
             var provided = vehicle.Unload(amount);
 
-            return provided != 0;
-            //int moneyGiven = city.RecieveProduct(vehicle.getType(), provided);
-
-            return true;
+            return provided;
         }
     }
 }

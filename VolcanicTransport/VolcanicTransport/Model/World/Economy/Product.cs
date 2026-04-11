@@ -33,21 +33,11 @@ namespace VolcanicTransport.Model.World.Economy
             => (int)(Math.Abs(MaxValue - MinValue) * _perlin.Noise(time * Variability) + MinValue);
 
         public float GetFactoryEfficiency(float time)
-            => _perlin.Noise((time + 1000f) * _variability); // 0-1
+            => _perlin.Noise((time + 1000f) * Variability); // 0 - 1
 
         public float GetPassengerEfficiency(float time)
-            => _perlin.Noise((time + 500f) * _variability);
+            => _perlin.Noise((time + 500f) * Variability);
 
-        /// <summary>
-        /// Aktuális árkalkuláció (opcionális ötlet)
-        /// Ha nagy a kereslet, az ár mehet feljebb.
-        /// </summary>
-        public double GetCurrentPrice(float time)
-        {
-            float demandPercent = _perlin.Noise(time * _variability);
-            // Alapár + kereslet alapú bónusz
-            return 100 + (demandPercent * 50);
-        }
         #endregion
     }
 }

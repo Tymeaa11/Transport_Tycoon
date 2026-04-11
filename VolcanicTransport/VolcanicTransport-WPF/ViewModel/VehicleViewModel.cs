@@ -64,7 +64,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public Vehicle GetVehicle => _vehicle;
 
-        public string Type => _vehicle.Type.ToString();
+        public string Type => _vehicle.CurrentType.ToString();
 
         public string GetCapacity => _vehicle.Capacity.ToString();
         public string SpeedDisplay => (_vehicle.MaxSpeed * 45).ToString() + " km/h";

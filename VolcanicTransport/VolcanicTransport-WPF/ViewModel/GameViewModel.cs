@@ -196,7 +196,7 @@ namespace VolcanicTransport_WPF.ViewModel
                                         {
                                             string chosenName = string.IsNullOrWhiteSpace(nameDialog.VehicleName) ? "Névtelen Busz" : nameDialog.VehicleName;
 
-                                            var newBus = new Bus(chosenName, VolcanicTransport.Model.World.Economy.ProductType.HUMAN);
+                                            var newBus = new Bus(chosenName);
                                             Route initialRoute = new Route();
                                             initialRoute.AddStop(_firstSelectedStation);
                                             initialRoute.AddStop(secondSelectedStation);

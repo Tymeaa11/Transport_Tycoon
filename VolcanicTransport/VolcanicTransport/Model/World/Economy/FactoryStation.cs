@@ -10,33 +10,34 @@ namespace VolcanicTransport.Model.World.Economy
         public ProductType GetFactoryNeeds => _factory.BaseProduct;
         public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
         public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time); // 0-1
-        public bool LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
+        public double PricePerBaseProduct => GameSettings.GetPrice(_factory.BaseProduct);
+        public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
         {
-            if (vehicle == null || vehicle.Type != _factory.FinalProduct.ProductType)
+            if (vehicle == null || vehicle.CurrentType != _factory.FinalProduct.ProductType)
             {
-                return false;
+                return 0;
             }
 
             int amountFilled = _factory.FinalProductBuffer.FillVehicle(vehicle);
 
-            return amountFilled != 0;
+            return amountFilled;
         }
 
 
-        public override bool UnLoadProductFromVehicle(Vehicle vehicle) // kapott-e árut a járműtől
+        public override int UnLoadProductFromVehicle(Vehicle vehicle) // kapott-e árut a járműtől
         {
-            if (vehicle == null || vehicle.Type != _factory.BaseProduct)
+            if (vehicle == null || vehicle.CurrentType != _factory.BaseProduct)
             {
-                return false;
+                return 0;
             }
 
             int amountNeededForFactory = _factory.BaseProductBuffer.AmountNeeded();
 
-            if (amountNeededForFactory == 0) { return false; }
+            if (amountNeededForFactory == 0) { return 0; }
 
             int provided = _factory.BaseProductBuffer.ReciveProduct(vehicle, amountNeededForFactory);
 
-            return provided != 0;
+            return provided;
         }
     }
 }

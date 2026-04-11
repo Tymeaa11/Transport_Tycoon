@@ -2,7 +2,7 @@ using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World.Roadnetwork;
 
-public class Bus(string name, ProductType type) : Vehicle(name, GameSettings.BusData, type) { }
-public class MiniBus(string name, ProductType type) : Vehicle(name, GameSettings.MiniBusData, type) { }
-public class TankerTruck(string name, ProductType type) : Vehicle(name, GameSettings.TankerTruckData, type) { }
-public class CargoTruck(string name, ProductType type) : Vehicle(name, GameSettings.CargoTruckData, type) { }
+public class Bus(string name) : Vehicle(name, GameSettings.BusData) { }
+public class MiniBus(string name) : Vehicle(name, GameSettings.MiniBusData) { }
+public class TankerTruck(string name) : Vehicle(name, GameSettings.TankerTruckData) { }
+public class CargoTruck(string name) : Vehicle(name, GameSettings.CargoTruckData) { }

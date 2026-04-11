@@ -126,6 +126,10 @@ namespace VolcanicTransport.Model
         {
             if (IsPaused) return;
             WorldInstance.Update(deltaTime);
+            foreach (var factory in WorldInstance.Factories)
+            {
+                factory.Update(deltaTime, (float)Time);
+            }
             GameAdvanced?.Invoke(this, EventArgs.Empty);
             Time += deltaTime;
         }
@@ -313,9 +317,18 @@ namespace VolcanicTransport.Model
         {
             System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
 
-            // load-unload stb
+            Vehicle vehicle = e.Vehicle;
+            Station station = e.Station;
+            float currentTime = (float)Time;
+            ProductType productType = vehicle.CurrentType;
 
-            // tova a viewmodellnek ha kell
+            int accepted = station.UnLoadProductFromVehicle(vehicle);
+            if (accepted != 0)
+            {
+                double price = GameSettings.GetPrice(productType);
+                AddMoney(accepted * price);
+            }
+
             VehicleArrivedAtStation?.Invoke(this, e);
         }
 
