@@ -1,4 +1,5 @@
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
@@ -6,7 +7,7 @@ namespace VolcanicTransport.Model.World.Economy
     {
         private readonly City _city = city;
 
-        public override bool UnLoadProductFromVehicle()
+        public override bool UnLoadProductFromVehicle(Vehicle vehicle)
         {
             if (vehicle == null || !_city.IsProductNeeded(vehicle.Type))
             {
@@ -23,7 +24,7 @@ namespace VolcanicTransport.Model.World.Economy
             }
 
             //int moneyGiven = city.RecieveProduct(vehicle.getType(), provided);
-            //hogy legyen a pénz?
+
             return true;
         }
     }

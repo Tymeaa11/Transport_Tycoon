@@ -1,4 +1,5 @@
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
@@ -8,21 +9,21 @@ namespace VolcanicTransport.Model.World.Economy
 
         public ProductType GetFactoryNeeds => _factory.BaseProduct;
         public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
-        public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time);
-        public bool LoadProduct()
+        public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time); // 0-1
+        public bool LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
         {
             if (vehicle == null || vehicle.Type != _factory.FinalProduct.ProductType)
             {
                 return false;
             }
 
-            //int taken = vehicle.Load(factory.FinalProductBuffer.CurrentLoad());
+            int amountFilled = _factory.FinalProductBuffer.FillVehicle(vehicle);
 
-            return true;
+            return amountFilled != 0;
         }
 
 
-        public override bool UnLoadProductFromVehicle()
+        public override bool UnLoadProductFromVehicle(Vehicle vehicle) // kapott-e árut a járműtől
         {
             if (vehicle == null || vehicle.Type != _factory.BaseProduct)
             {
@@ -33,16 +34,9 @@ namespace VolcanicTransport.Model.World.Economy
 
             if (amountNeededForFactory == 0) { return false; }
 
-            int provided = vehicle.Unload(amountNeededForFactory);
+            int provided = _factory.BaseProductBuffer.ReciveProduct(vehicle, amountNeededForFactory);
 
-            if (provided == 0)
-            {
-                return false;
-            }
-
-            _factory.BaseProductBuffer.ReciveProduct(vehicle.Type, provided);
-
-            return true;
+            return provided != 0;
         }
     }
 }

@@ -325,30 +325,11 @@ namespace VolcanicTransport.Model
                 v.TryStartNextRoute();
             }
             v.TriggerRouteChanged();
-            //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
-            //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
-            //{
-            //var path = Pathfinder.FindPath(startNode, targetNode);
-            // if (path != null && path.Count > 0)
-            //  {
-            //    v.StartJourney(path);
-            //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-            //  }
-            // else
-            //  {
-            //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-            // }
-            // }
-
         }
 
         private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
-
-            double ticketIncome = 150;
-            AddMoney(ticketIncome);
-            System.Diagnostics.Debug.WriteLine($"[GameModel] Játékos kapott {ticketIncome}$-t a fuvarért.");
 
             // load-unload stb
 

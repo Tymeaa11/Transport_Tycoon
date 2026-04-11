@@ -1,3 +1,4 @@
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -7,11 +8,19 @@ namespace VolcanicTransport.Model.World.Economy
     {
         protected string name = name;
         protected ProductBuffer passangerBuffer = passangerBuffer;
-        protected Vehicle? vehicle = null;
         protected Product PassengerDemand = passengerDemand;
 
-        public abstract bool UnLoadProductFromVehicle();
-        public bool Boarding()
+        protected bool isOccupied = false;
+        public bool IsOccupied { get { return isOccupied; } }
+
+        public int GetWaitingPassengers(float totalTime)
+        {
+            int MaxNewPassengers = 20;
+            return (int)(PassengerDemand.GetPassengerEfficiency(totalTime) * MaxNewPassengers);
+        }
+
+        public abstract bool UnLoadProductFromVehicle(Vehicle vehicle);
+        public bool Boarding(Vehicle vehicle)
         {
             if (vehicle == null || vehicle.Type != ProductType.HUMAN)
             {
@@ -32,11 +41,11 @@ namespace VolcanicTransport.Model.World.Economy
             return true;
         }
 
-        public bool UnBoarding()
+        public bool UnBoarding(Vehicle vehicle, float totaltime)
         {
             if (vehicle == null || vehicle.Type != ProductType.HUMAN) { return false; }
 
-            //vehicle.UnBoard() //TODO//
+            vehicle.Unload(GetWaitingPassengers(totaltime));
 
             return true;
         }
