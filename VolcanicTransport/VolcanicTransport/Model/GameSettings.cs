@@ -79,7 +79,7 @@ public static class GameSettings
     }
 
     public const double BaseProductionRate = 0.2;
-    public const double PeopleGrowthRate = 0.1;
+    public const double PeopleGrowthRate = 0.01;
 
     #region FactoryData
     public readonly record struct FactoryData(

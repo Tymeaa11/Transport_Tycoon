@@ -59,7 +59,7 @@ namespace VolcanicTransport.Model.World.Economy
                 return 0;
             }
 
-            int amount = vehicle.Unload(WaitingPassengers);
+            int amount = vehicle.Unload(20); //most fix de át kell majd írni randomra
 
             return amount;
         }

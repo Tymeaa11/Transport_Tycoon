@@ -276,8 +276,6 @@ namespace VolcanicTransport_WPF.ViewModel
             set { _isInspectorVisible = value; OnPropertyChanged(); }
         }
 
-        // GameViewModel.cs
-
         private string _inspectorText = "";
         public string InspectorText
         {
@@ -291,6 +289,10 @@ namespace VolcanicTransport_WPF.ViewModel
             HoveredCoordinate = Camera.ScreenToField(mouseXY);
             UpdateBuildability();
             _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
+            if (_hoveredField?.Surface != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Surface type: {_hoveredField.Surface.GetType().Name}");
+            }
 
             var cornerSb = new StringBuilder();
             cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
@@ -301,17 +303,28 @@ namespace VolcanicTransport_WPF.ViewModel
             }
             ToolTipText = cornerSb.ToString();
 
+            StringBuilder inspectorSb = new StringBuilder();
             if (_hoveredField?.Surface is Station)
             {
-                float currentTime = (float)GameModelInstance.Time;
-                StringBuilder inspectorSb = new StringBuilder();
                 inspectorSb.Append(_hoveredField.Surface switch
                 {
-                    FactoryStation fs => GetFactoryStationInfo(fs, currentTime),
-                    CityStation cs => GetCityStationInfo(cs, currentTime),
+                    FactoryStation fs => GetFactoryStationInfo(fs),
+                    CityStation cs => GetCityStationInfo(cs),
                     _ => ""
                 });
 
+                InspectorText = inspectorSb.ToString();
+                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
+            }
+            else if (_hoveredField?.Surface is FactoryBuilding fb)
+            {
+                inspectorSb.Append(GetSimpleFactoryInfo(fb));
+                InspectorText = inspectorSb.ToString();
+                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
+            }
+            else if (_hoveredField?.Surface is CityBuilding cb)
+            {
+                inspectorSb.Append(GetSimpleCityInfo(cb));
                 InspectorText = inspectorSb.ToString();
                 IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
             }
@@ -321,7 +334,35 @@ namespace VolcanicTransport_WPF.ViewModel
                 InspectorText = "";
             }
         }
-        private string GetFactoryStationInfo(FactoryStation fs, float time)
+        private string GetSimpleFactoryInfo(FactoryBuilding fb)
+        {
+            StringBuilder info = new StringBuilder();
+            info.AppendLine($"Factory: {fb.Name}");
+
+            if (fb.BaseProduct != ProductType.NONE)
+            {
+                info.AppendLine($"Base product need / amount:  {fb.BaseProduct} {fb.BaseProductAmount}");
+            }
+
+            info.AppendLine($"Finished product / amount: {fb.FinalProduct} {fb.FinalProductAmount}");
+
+            return info.ToString();
+        }
+
+        private string GetSimpleCityInfo(CityBuilding cb)
+        {
+            StringBuilder info = new StringBuilder();
+            info.AppendLine($"City: {cb.Name}");
+            info.AppendLine("Product needs:");
+
+            foreach (ProductType pt in cb.ProductTypes)
+            {
+                info.AppendLine($"  - {pt}");
+            }
+
+            return info.ToString();
+        }
+        private string GetFactoryStationInfo(FactoryStation fs)
         {
             StringBuilder info = new StringBuilder();
 
@@ -334,12 +375,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
             info.AppendLine($"Finished product / amount: {fs.GetFactoryFinishedProduct} / {fs.GetFactoryFinishedProductAmount}");
 
-            info.AppendLine($"People waiting: {fs.GetWaitingPassengers(time)}");
+            info.AppendLine($"People waiting: {fs.WaitingPassengers}");
 
             return info.ToString();
         }
 
-        private string GetCityStationInfo(CityStation cs, float time)
+        private string GetCityStationInfo(CityStation cs)
         {
             StringBuilder info = new StringBuilder();
 
@@ -351,7 +392,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 info.AppendLine($"  - {pt}");
             }
 
-            info.AppendLine($"People waiting: {cs.GetWaitingPassengers(time)}");
+            info.AppendLine($"People waiting: {cs.WaitingPassengers}");
 
             return info.ToString();
         }
@@ -459,12 +500,12 @@ namespace VolcanicTransport_WPF.ViewModel
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
-            /*
+            
             QuitToMainMenuCommand = new DelegateCommand(_ =>
             {
                 ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
             });
-            */
+            
             AddStopCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)
@@ -510,7 +551,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(8, 0);
+            int newSeed = new Random().Next(1, 1000000);
+            GameModel.Initialise(8, newSeed);
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 

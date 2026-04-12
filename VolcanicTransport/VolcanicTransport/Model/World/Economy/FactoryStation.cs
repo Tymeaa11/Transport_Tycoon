@@ -15,7 +15,7 @@ namespace VolcanicTransport.Model.World.Economy
         public double PricePerBaseProduct => GameSettings.GetPrice(_factory.BaseProduct);
         public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
         {
-            if (vehicle == null || vehicle.CurrentType != _factory.FinalProduct.ProductType)
+            if (vehicle == null || (vehicle.CurrentLoad > 0 && vehicle.CurrentType != _factory.FinalProduct.ProductType))
             {
                 return 0;
             }

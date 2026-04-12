@@ -65,8 +65,6 @@ namespace VolcanicTransport.Model
 
         public static void Initialise(int worldSize, int seed)
         {
-            if (_instance != null) throw new InvalidOperationException("World already initialised");
-
             _instance = new GameModel(worldSize, seed);
         }
         #endregion
@@ -326,7 +324,7 @@ namespace VolcanicTransport.Model
             Station station = e.Station;
             float currentTime = (float)Time;
             ProductType productType = vehicle.CurrentType;
-            Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity}");
+            Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity - vehicle.CurrentLoad}");
             if (vehicle is CargoTruck or TankerTruck)
             {
                 int accepted = station.UnLoadProductFromVehicle(vehicle);

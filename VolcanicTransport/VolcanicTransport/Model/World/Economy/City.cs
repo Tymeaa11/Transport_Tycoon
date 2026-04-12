@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.World.Economy
 {
@@ -45,11 +46,13 @@ namespace VolcanicTransport.Model.World.Economy
             var rnd = new Random();
             Products.Clear();
 
+            List<int> possibleIndexes = Enumerable.Range(2, 7).ToList();
+
+            possibleIndexes = possibleIndexes.OrderBy(x => rnd.Next()).ToList();
+
             for (var i = 0; i < 3; i++)
             {
-                var typeIndex = rnd.Next(1, 9);
-
-                var randomType = (ProductType)typeIndex;
+                var randomType = (ProductType)possibleIndexes[i];
                 Product newProduct = new(randomType, 0, 100, 5);
 
                 Products.Add(newProduct);
