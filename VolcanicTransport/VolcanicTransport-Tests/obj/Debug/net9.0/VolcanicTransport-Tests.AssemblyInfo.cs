@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VolcanicTransport-Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fa066d49950d9b4ea6b24f38d82aa6330e751d86")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9371af4b160111dd9b329fb8a32f6d8cfd44f3c2")]
 [assembly: System.Reflection.AssemblyProductAttribute("VolcanicTransport-Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VolcanicTransport-Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -78,7 +78,8 @@ public static class GameSettings
         return productPrices.TryGetValue(type, out double price) ? price : 0.0;
     }
 
-    public const double BaseProductionRate = 1.0;
+    public const double BaseProductionRate = 0.2;
+    public const double PeopleGrowthRate = 0.1;
 
     #region FactoryData
     public readonly record struct FactoryData(
@@ -149,14 +150,14 @@ public static class GameSettings
 
     public static readonly VehicleData BusData = new(
         productTypes: new List<ProductType> { ProductType.HUMAN },
-        MaxSpeed: 2.0f,
+        MaxSpeed: 60.0f,
         Capacity: 50,
          Price: 4000
     );
 
     public static readonly VehicleData MiniBusData = new(
         new List<ProductType> { ProductType.HUMAN },
-        MaxSpeed: 100.0f,
+        MaxSpeed: 60.0f,
         Capacity: 15,
         Price: 6000
     );
@@ -181,7 +182,7 @@ public static class GameSettings
 
     #region GameplayConstants
 
-    public const int StartingMoney = 10_000;
+    public const int StartingMoney = 80_000;
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;

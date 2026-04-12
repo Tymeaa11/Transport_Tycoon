@@ -6,6 +6,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using static System.Collections.Specialized.BitVector32;
 using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
@@ -126,9 +127,13 @@ namespace VolcanicTransport.Model
         {
             if (IsPaused) return;
             WorldInstance.Update(deltaTime);
-            foreach (var factory in WorldInstance.Factories)
+            foreach (Factory factory in WorldInstance.Factories)
             {
                 factory.Update(deltaTime, (float)Time);
+            }
+            foreach (Station station in WorldInstance.Stations)
+            {
+                station.GetWaitingPassengers(deltaTime);
             }
             GameAdvanced?.Invoke(this, EventArgs.Empty);
             Time += deltaTime;
@@ -321,14 +326,46 @@ namespace VolcanicTransport.Model
             Station station = e.Station;
             float currentTime = (float)Time;
             ProductType productType = vehicle.CurrentType;
-
-            int accepted = station.UnLoadProductFromVehicle(vehicle);
-            if (accepted != 0)
+            Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity}");
+            if (vehicle is CargoTruck or TankerTruck)
             {
-                double price = GameSettings.GetPrice(productType);
-                AddMoney(accepted * price);
+                int accepted = station.UnLoadProductFromVehicle(vehicle);
+                if (accepted != 0)
+                {
+                    Debug.WriteLine($"{accepted} egység leadva a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(accepted * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (station is FactoryStation fs)
+                {
+                    int amount = fs.LoadProduct(vehicle);
+                    if (amount > 0)
+                    {
+                        Debug.WriteLine($"{accepted} egység felvéve a járműre.");
+                    }
+                }
             }
-
+            else
+            {
+                int amount = station.UnBoarding(vehicle);
+                if (amount != 0)
+                {
+                    Debug.WriteLine($"{amount} ember leszállt a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(amount * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (vehicle.Capacity > vehicle.CurrentLoad) // Csak ha van hely
+                {
+                    // Ha a busz embereket szállít 
+                    int loadedAmount = station.Boarding(vehicle);
+                    if (loadedAmount > 0)
+                    {
+                        Debug.WriteLine($"[FELVÉTEL] {loadedAmount} egység felvéve a járműre.");
+                    }
+                }
+            }
             VehicleArrivedAtStation?.Invoke(this, e);
         }
 

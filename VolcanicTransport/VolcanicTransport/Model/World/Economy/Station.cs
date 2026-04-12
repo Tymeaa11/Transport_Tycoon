@@ -12,20 +12,30 @@ namespace VolcanicTransport.Model.World.Economy
 
         protected bool isOccupied = false;
         public bool IsOccupied { get { return isOccupied; } }
+        public string Name { get { return name; } }
+        public int WaitingPassengers => passangerBuffer.CurrentLoad;
 
-        public int GetWaitingPassengers(float totalTime)
+        private double _passengerAccumulator = 0;
+        public int GetWaitingPassengers(double deltaTime)
         {
-            int MaxNewPassengers = 20;
-            return (int)(PassengerDemand.GetPassengerEfficiency(totalTime) * MaxNewPassengers);
+            _passengerAccumulator += deltaTime * GameSettings.PeopleGrowthRate;
+
+            if (_passengerAccumulator >= 1.0)
+            {
+                int newPeople = (int)_passengerAccumulator;
+                int left = passangerBuffer.AddAmount(newPeople);
+                _passengerAccumulator -= left;
+            }
+            return passangerBuffer.CurrentLoad;
         }
         public int GetPricePerPassenger(float time)
         {
             return PassengerDemand.GetDemand(time);
         }
         public abstract int UnLoadProductFromVehicle(Vehicle vehicle);
-        public int Boarding(Vehicle vehicle)
+        public int Boarding(Vehicle vehicle) // mennyi ember szállt fel
         {
-            if (vehicle is not { CurrentType: ProductType.HUMAN })
+            if (vehicle.CurrentLoad > 0 && vehicle.CurrentType != ProductType.HUMAN)
             {
                 return 0;
             }
@@ -42,14 +52,16 @@ namespace VolcanicTransport.Model.World.Economy
             return taken;
         }
 
-        public bool UnBoarding(Vehicle vehicle, float totaltime)
+        public int UnBoarding(Vehicle vehicle) // mennyi ember szállt le
         {
-            if (vehicle is not { CurrentType: ProductType.HUMAN })
-                return false;
+            if (vehicle.CurrentType != ProductType.HUMAN)
+            {
+                return 0;
+            }
 
-            vehicle.Unload(GetWaitingPassengers(totaltime));
+            int amount = vehicle.Unload(WaitingPassengers);
 
-            return true;
+            return amount;
         }
     }
 }

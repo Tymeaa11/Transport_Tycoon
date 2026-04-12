@@ -7,6 +7,8 @@ namespace VolcanicTransport.Model.World.Economy
     {
         private readonly City _city = city;
 
+        public List<ProductType> GetCityProductNeeds => _city.ProductTypes;
+
         public override int UnLoadProductFromVehicle(Vehicle vehicle)
         {
             if (vehicle == null || !_city.IsProductNeeded(vehicle.CurrentType))
