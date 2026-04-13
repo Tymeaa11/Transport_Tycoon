@@ -17,6 +17,8 @@ public static class GameSettings
     public const int FieldSizeP4 = FieldSize / 4;
     public const int FieldSizeP8 = FieldSize / 8;
 
+    public const int ChunkSizeInPixels = ChunkSize * FieldSize;
+
     private static readonly Dictionary<FieldType, float> FieldTypeThickness = new()
     {
         [FieldType.DEEP_LAVA_OCEAN] = 20, // -inf to 20

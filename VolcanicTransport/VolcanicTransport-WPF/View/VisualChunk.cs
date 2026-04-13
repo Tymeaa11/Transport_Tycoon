@@ -9,14 +9,17 @@ namespace VolcanicTransport_WPF.View
 {
     public class VisualChunk : FrameworkElement
     {
-        private static readonly int Dpi = 96;
-        private static readonly int FieldSize = GameSettings.FieldSize;
-        private static readonly int HalfFieldSize = FieldSize / 2;
-        private static readonly int ChunkSizeInFields = GameSettings.ChunkSize * FieldSize;
-        private static readonly Rect ChunkBoundries = new(0, 0, ChunkSizeInFields, ChunkSizeInFields);
+        private const int Dpi = 96;
+
+        #region Fields
+        private static readonly Rect ChunkBoundries = new(0, 0, GameSettings.ChunkSizeInPixels, GameSettings.ChunkSizeInPixels);
+        protected override int VisualChildrenCount => 1;
+        protected override Visual GetVisualChild(int index) => _visual;
 
         private readonly DrawingVisual _visual;
+        #endregion
 
+        #region Constructor
         public VisualChunk()
         {
             _visual = new DrawingVisual();
@@ -35,24 +38,26 @@ namespace VolcanicTransport_WPF.View
                 if (e.NewValue is Chunk newChunk)
                 {
                     newChunk.Changed += OnChunkDataChanged;
-                    //Dispatcher.InvokeAsync(() => PreRender(newChunk));
                     PreRender(newChunk);
                 }
             };
         }
+        #endregion
 
+        #region Events
         private void OnChunkDataChanged(object? sender, EventArgs e)
         {
             if (DataContext is Chunk chunkData)
-                //Dispatcher.InvokeAsync(() => PreRender(chunkData));
                 PreRender(chunkData);
         }
+        #endregion
 
+        #region Methods
         public void PreRender(Chunk chunkData)
         {
 
             RenderTargetBitmap bakedMap = new(
-                ChunkSizeInFields, ChunkSizeInFields, Dpi, Dpi, PixelFormats.Pbgra32
+                GameSettings.ChunkSizeInPixels, GameSettings.ChunkSizeInPixels, Dpi, Dpi, PixelFormats.Pbgra32
             );
 
             DrawingVisual dv = new();
@@ -62,10 +67,10 @@ namespace VolcanicTransport_WPF.View
                 {
                     // Draw the tile based on FieldType
                     Brush brush = FieldBrushProvider.GetBrush(f.Type);
-                    double fieldX = x * FieldSize;
-                    double fieldY = y * FieldSize;
+                    double fieldX = x * GameSettings.FieldSize;
+                    double fieldY = y * GameSettings.FieldSize;
 
-                    Rect rectangle = new(fieldX, fieldY, FieldSize, FieldSize);
+                    Rect rectangle = new(fieldX, fieldY, GameSettings.FieldSize, GameSettings.FieldSize);
 
                     dc.DrawRectangle(brush, null, rectangle);
 
@@ -82,8 +87,8 @@ namespace VolcanicTransport_WPF.View
                             _ => RenderInvalid()
                         };
 
-                        double centerX = fieldX + HalfFieldSize;
-                        double centerY = fieldY + HalfFieldSize;
+                        double centerX = fieldX + GameSettings.FieldSizeP2;
+                        double centerY = fieldY + GameSettings.FieldSizeP2;
 
                         dc.PushTransform(new RotateTransform(imageWithRotation.AngleDegrees, centerX, centerY));
                         dc.DrawImage(imageWithRotation.ImageSource, rectangle);
@@ -112,8 +117,7 @@ namespace VolcanicTransport_WPF.View
             => new(TextureAtlas.FactoryBuildingTexture, 0);
         private ImageWithRotation RenderStation()
             => new(TextureAtlas.StationTexture, 0);
+        #endregion
 
-        protected override int VisualChildrenCount => 1;
-        protected override Visual GetVisualChild(int index) => _visual;
     }
 }
