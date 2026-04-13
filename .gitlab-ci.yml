@@ -27,6 +27,6 @@ test-job:   # This job runs in the test stage.
     --collect="XPlat Code Coverage"
   artifacts:
     reports:
-        junit:
-            - ./*/TestResults/TestResults.xml
+      junit:
+        - ./*/TestResults/TestResults.xml
 
