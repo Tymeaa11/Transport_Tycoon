@@ -581,6 +581,11 @@ namespace VolcanicTransport_WPF.ViewModel
                 CompositionTarget.Rendering -= OnCompositionTargetRendering;
 
                 MessageBox.Show("Csődbe mentél! A játéknak vége.");
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
+                });
             };
 
             StartGameLoop();
