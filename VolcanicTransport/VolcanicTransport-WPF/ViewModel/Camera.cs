@@ -8,8 +8,7 @@ namespace VolcanicTransport_WPF.ViewModel
 {
     public class Camera : ViewModelBase
     {
-        public Vector HalfScreenDimensions { private get; set; }
-
+        #region Fields
         private Vector _position;
         private Vector _velocity;
 
@@ -18,7 +17,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private double _scale;
         private double _previousScale;
+        public bool IsMovingUp { get; set; }
+        public bool IsMovingDown { get; set; }
+        public bool IsMovingLeft { get; set; }
+        public bool IsMovingRight { get; set; }
 
+        #region Camera Config
         private const double CameraMovementSpeed = 8000;
         private const double MovementDrag = 0.005;
         private const double CameraZoomSpeed = 6;
@@ -26,7 +30,8 @@ namespace VolcanicTransport_WPF.ViewModel
         private const double MinimumScale = 0.2;
         private const double MaximumScale = 3;
         private const double ScaleCoefficient = 0.005;
-
+        #endregion
+        public Vector HalfScreenDimensions { private get; set; }
 
         private Vector _currentMousePosition;
         public Vector CurrentMousePosition
@@ -51,11 +56,9 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        public bool IsMovingUp { get; set; }
-        public bool IsMovingDown { get; set; }
-        public bool IsMovingLeft { get; set; }
-        public bool IsMovingRight { get; set; }
+        #endregion
 
+        #region Constructor
         public Camera()
         {
             _position = new Vector(0, 0);
@@ -66,7 +69,9 @@ namespace VolcanicTransport_WPF.ViewModel
             _previousScale = _scale;
 
         }
+        #endregion
 
+        #region Methods
         public void Update(double deltaTime)
         {
             if (IsMovingUp) _velocity.Y += CameraMovementSpeed * deltaTime;
@@ -100,10 +105,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         }
         
-        public void PrintDebug()
-        {
-            System.Diagnostics.Debug.WriteLine($"p:{_position}, v:{_velocity}, s:{_scale}");
-        }
+
 
         private void CalculateScale()
         {
@@ -152,6 +154,11 @@ namespace VolcanicTransport_WPF.ViewModel
 
             return new Rect((Point)topLeft, bottomRight);
         }
+        public void PrintDebug()
+        {
+            System.Diagnostics.Debug.WriteLine($"p:{_position}, v:{_velocity}, s:{_scale}");
+        }
+        #endregion
 
     }
 }
