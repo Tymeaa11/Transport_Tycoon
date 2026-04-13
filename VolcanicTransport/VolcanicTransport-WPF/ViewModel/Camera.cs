@@ -152,7 +152,7 @@ namespace VolcanicTransport_WPF.ViewModel
             Vector topLeft = ScreenToWorld(new Vector(0, 0));
             Vector bottomRight = ScreenToWorld(HalfScreenDimensions * 2);
 
-            return new Rect((Point)topLeft, bottomRight);
+            return new Rect((Point)topLeft, (Point)bottomRight);
         }
         public void PrintDebug()
         {

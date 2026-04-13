@@ -47,8 +47,8 @@
 
             <ItemsControl.ItemContainerStyle>
                 <Style TargetType="ContentPresenter">
-                    <Setter Property="Canvas.Left" Value="{Binding Path=Coordinate.X, Converter={StaticResource ChunkToPixelConverter}}" />
-                    <Setter Property="Canvas.Top" Value="{Binding Path=Coordinate.Y, Converter={StaticResource ChunkToPixelConverter}}" />
+                    <Setter Property="Canvas.Left" Value="{Binding Path=Chunk.Coordinate.X, Converter={StaticResource ChunkToPixelConverter}}" />
+                    <Setter Property="Canvas.Top" Value="{Binding Path=Chunk.Coordinate.Y, Converter={StaticResource ChunkToPixelConverter}}" />
                 </Style>
             </ItemsControl.ItemContainerStyle>
         </ItemsControl>

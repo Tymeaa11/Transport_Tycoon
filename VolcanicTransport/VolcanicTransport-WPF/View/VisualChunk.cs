@@ -4,6 +4,7 @@ using System.Windows.Media.Imaging;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
+using VolcanicTransport_WPF.ViewModel;
 
 namespace VolcanicTransport_WPF.View
 {
@@ -30,15 +31,19 @@ namespace VolcanicTransport_WPF.View
 
             DataContextChanged += (s, e) =>
             {
-                if (e.OldValue is Chunk oldChunk)
+                if (e.OldValue is ChunkViewModel oldCvm)
                 {
-                    oldChunk.Changed -= OnChunkDataChanged;
+                    oldCvm.Rerender -= OnChunkDataChanged;
+                    oldCvm.PropertyChanged -= OnViewModelPropertyChanged;
                 }
 
-                if (e.NewValue is Chunk newChunk)
+                if (e.NewValue is ChunkViewModel cvm)
                 {
-                    newChunk.Changed += OnChunkDataChanged;
-                    PreRender(newChunk);
+                    cvm.Rerender += OnChunkDataChanged;
+                    cvm.PropertyChanged += OnViewModelPropertyChanged;
+
+                    SetVisibility(cvm.IsVisible);
+                    PreRender(cvm.Chunk);
                 }
             };
         }
@@ -47,14 +52,30 @@ namespace VolcanicTransport_WPF.View
         #region Events
         private void OnChunkDataChanged(object? sender, EventArgs e)
         {
-            if (DataContext is Chunk chunkData)
-                PreRender(chunkData);
+            if (DataContext is ChunkViewModel cvm)
+            {
+                SetVisibility(cvm.IsVisible);
+                PreRender(cvm.Chunk);
+            }
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ChunkViewModel.IsVisible) && DataContext is ChunkViewModel cvm)
+                SetVisibility(cvm.IsVisible);
         }
         #endregion
 
         #region Methods
-        public void PreRender(Chunk chunkData)
+
+        private void SetVisibility(bool b) 
+            => Visibility = b ? Visibility.Visible : Visibility.Collapsed;
+
+        private void PreRender(Chunk chunkData)
         {
+
+            System.Diagnostics.Debug.WriteLine($"Generating prerender for {chunkData.Coordinate}");
+
 
             RenderTargetBitmap bakedMap = new(
                 GameSettings.ChunkSizeInPixels, GameSettings.ChunkSizeInPixels, Dpi, Dpi, PixelFormats.Pbgra32

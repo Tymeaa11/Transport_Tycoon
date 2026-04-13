@@ -13,6 +13,7 @@ namespace VolcanicTransport_WPF.ViewModel
     public class GameViewModel : ViewModelBase
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
+
         private bool _isPausedView;
 
         #region Events
@@ -46,7 +47,8 @@ namespace VolcanicTransport_WPF.ViewModel
         }
 
         #region Chunks
-        public ObservableCollection<Chunk> LoadedChunks { get; } = [];
+        public ObservableCollection<ChunkViewModel> LoadedChunks { get; }
+        public Dictionary<Coordinate, ChunkViewModel> ChunkMap { get; }
 
         public void SetViewDimensions(double width, double height)
         {
@@ -54,6 +56,12 @@ namespace VolcanicTransport_WPF.ViewModel
             _lastHeight = height;
             UpdateVisibleChunks();
             Camera.HalfScreenDimensions = new Vector(width * 0.5, height * 0.5);
+        }
+
+        private void On_UpdateChunk(object? sender, ChunkUpdatedEventArgs e)
+        {
+            if (ChunkMap.ContainsKey(e.ChunkCoordinate))
+                ChunkMap[e.ChunkCoordinate].TriggerRerender();
         }
 
         public void UpdateVisibleChunks()
@@ -75,18 +83,9 @@ namespace VolcanicTransport_WPF.ViewModel
                     if (x >= 0 && x < WorldSizeInChunks.X && y >= 0 && y < WorldSizeInChunks.Y)
                         visibleCoords.Add(new Coordinate(x, y));
 
-
-            // 1. Remove if outside
-            //var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();
-            //foreach (var chunk in toRemove) LoadedChunks.Remove(chunk);
-
-            // 2. Add if became visible
-            foreach (var coord in visibleCoords)
-                if (!LoadedChunks.Any(c => c.Coordinate.Equals(coord)))
-                {
-                    var chunk = GameModel.WorldInstance.GetChunk(coord);
-                    if (chunk != null) LoadedChunks.Add(chunk);
-                }
+            // Set visibility based on whether the coordinate is in the visible set
+            foreach (var kvp in ChunkMap)
+                kvp.Value.IsVisible = visibleCoords.Contains(kvp.Key);
         }
 
         #endregion
@@ -118,7 +117,12 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
-            Camera.PrintDebug();
+
+            //Camera.PrintDebug();
+
+            //foreach (var cvm in LoadedChunks)
+            //    System.Diagnostics.Debug.WriteLine($"CVM {cvm.Chunk.Coordinate}, {cvm.IsVisible}");
+            //System.Diagnostics.Debug.WriteLine("\n");
 
             Field? f = GameModel.WorldInstance.GetField(coord);
             if (f == null) return;
@@ -347,6 +351,10 @@ namespace VolcanicTransport_WPF.ViewModel
 
             CurrentTimescale = 1;
 
+            LoadedChunks = [];
+            ChunkMap = [];
+
+
             FieldClickedCommand = new DelegateCommand(param =>
             {
                 if (param is Coordinate coord)
@@ -388,7 +396,7 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 GameModel.WorldInstance.Generate(new Random().Next());
                 LoadedChunks.Clear();
-                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
+                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => GameModel.WorldInstance.UpdateChunk(new(x,y)));
                 UpdateVisibleChunks();
             }
             );
@@ -404,6 +412,16 @@ namespace VolcanicTransport_WPF.ViewModel
         public void Initialise()
         {
             GameModel.Initialise(5, 0);
+
+            GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
+            {
+                ChunkViewModel chunkViewModel = new(c);
+                LoadedChunks.Add(chunkViewModel);
+                ChunkMap[new(x, y)] = chunkViewModel;
+            });
+
+            GameModel.WorldInstance.ChunkChanged += On_UpdateChunk;
+
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
