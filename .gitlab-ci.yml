@@ -19,7 +19,7 @@ test-job:   # This job runs in the test stage.
   tags: [windows]
   before_script:    
     # Restore NuGet packages to the local .nuget folder (inside the project directory).
-    - dotnet restore VolcanicTransport-Tests --packages .nuget
+    - dotnet restore VolcanicTransport/VolcanicTransport-Tests --packages .nuget
 
   script:
     - > 
