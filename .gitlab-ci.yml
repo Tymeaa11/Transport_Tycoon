@@ -28,7 +28,9 @@ test-job:   # This job runs in the test stage.
       --collect="XPlat Code Coverage"
 
   artifacts:
+    paths:
+      - ./*/TestResults/TestResults.xml
     reports:
       junit:
-        - ./VolcanicTransport/*/TestResults/TestResults.xml
+        - ./*/TestResults/TestResults.xml
 
