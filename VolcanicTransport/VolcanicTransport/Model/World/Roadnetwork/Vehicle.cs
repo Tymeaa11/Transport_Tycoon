@@ -4,14 +4,20 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, ProductType type)
+    public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, List<ProductType> allType)
     {
 
-        public Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType type)
-        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, type) { }
+        public Vehicle(string name, GameSettings.VehicleData vehicleData)
+        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.productTypes) { }
 
         public string Name { get; } = name;
-        public ProductType Type { get; protected set; } = type;
+        public List<ProductType> AllType { get { return allType; } }
+
+        protected ProductType currentType = ProductType.NONE;
+        public ProductType CurrentType
+        {
+            get { return currentType; }
+        }
         public int CurrentLoad { get; protected set; } = 0;
         public int Price { get; } = price;
         protected Route? route = null;
@@ -336,11 +342,15 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             return road.RoadType.HasFlag(RoadType.JUNCTION);
         }
 
-        public int Load(int amount)
+        public int Load(int amount, ProductType type)
         {
             int spaceLeft = capacity - CurrentLoad;
             int taken = Math.Min(amount, spaceLeft);
             CurrentLoad += taken;
+            if (currentType == ProductType.NONE)
+            {
+                currentType = type;
+            }
             return taken;
         }
 
@@ -348,6 +358,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         {
             int provided = Math.Min(CurrentLoad, amountNeeded);
             CurrentLoad -= provided;
+            if (CurrentLoad == 0)
+            {
+                currentType = ProductType.NONE;
+            }
             return provided;
         }
 

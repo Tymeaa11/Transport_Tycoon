@@ -20,17 +20,23 @@ namespace VolcanicTransport_WPF.View
     public partial class VehicleNameWindow : Window
     {
         public string VehicleName { get; private set; } = string.Empty;
+        public string? SelectedType => (TypeComboBox.SelectedItem as ComboBoxItem)?.Tag.ToString();
+
+        private void OkButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(NameTextBox.Text) || TypeComboBox.SelectedItem == null)
+            {
+                MessageBox.Show("Válassz típust és adj meg egy nevet!");
+                return;
+            }
+            VehicleName = NameTextBox.Text;
+            this.DialogResult = true;
+        }
 
         public VehicleNameWindow()
         {
             InitializeComponent();
             NameTextBox.Focus();
-        }
-
-        private void OkButton_Click(object sender, RoutedEventArgs e)
-        {
-            VehicleName = NameTextBox.Text;
-            DialogResult = true;
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)

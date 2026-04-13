@@ -178,8 +178,8 @@ namespace VolcanicTransport.Model
                         RoadId
                             => new Road(coordinate) { IsReserved = (low & RoadDataMask) == 1 },
 
-                        CityBuildingId
-                            => new CityBuilding(),
+                        //CityBuildingId
+                            //=> new CityBuilding(),
 
                         _ => field.Surface
                     };

@@ -6,6 +6,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using static System.Collections.Specialized.BitVector32;
 using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
@@ -64,8 +65,6 @@ namespace VolcanicTransport.Model
 
         public static void Initialise(int worldSize, int seed)
         {
-            if (_instance != null) throw new InvalidOperationException("World already initialised");
-
             _instance = new GameModel(worldSize, seed);
         }
         #endregion
@@ -126,6 +125,14 @@ namespace VolcanicTransport.Model
         {
             if (IsPaused) return;
             WorldInstance.Update(deltaTime);
+            foreach (Factory factory in WorldInstance.Factories)
+            {
+                factory.Update(deltaTime, (float)Time);
+            }
+            foreach (Station station in WorldInstance.Stations)
+            {
+                station.GetWaitingPassengers(deltaTime);
+            }
             GameAdvanced?.Invoke(this, EventArgs.Empty);
             Time += deltaTime;
         }
@@ -307,34 +314,56 @@ namespace VolcanicTransport.Model
                 v.TryStartNextRoute();
             }
             v.TriggerRouteChanged();
-            //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
-            //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
-            //{
-            //var path = Pathfinder.FindPath(startNode, targetNode);
-            // if (path != null && path.Count > 0)
-            //  {
-            //    v.StartJourney(path);
-            //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-            //  }
-            // else
-            //  {
-            //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-            // }
-            // }
-
         }
 
         private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
 
-            double ticketIncome = 150;
-            AddMoney(ticketIncome);
-            System.Diagnostics.Debug.WriteLine($"[GameModel] Játékos kapott {ticketIncome}$-t a fuvarért.");
-
-            // load-unload stb
-
-            // tova a viewmodellnek ha kell
+            Vehicle vehicle = e.Vehicle;
+            Station station = e.Station;
+            float currentTime = (float)Time;
+            ProductType productType = vehicle.CurrentType;
+            Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity - vehicle.CurrentLoad}");
+            if (vehicle is CargoTruck or TankerTruck)
+            {
+                int accepted = station.UnLoadProductFromVehicle(vehicle);
+                if (accepted != 0)
+                {
+                    Debug.WriteLine($"{accepted} egység leadva a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(accepted * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (station is FactoryStation fs)
+                {
+                    int amount = fs.LoadProduct(vehicle);
+                    if (amount > 0)
+                    {
+                        Debug.WriteLine($"{accepted} egység felvéve a járműre.");
+                    }
+                }
+            }
+            else
+            {
+                int amount = station.UnBoarding(vehicle);
+                if (amount != 0)
+                {
+                    Debug.WriteLine($"{amount} ember leszállt a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(amount * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (vehicle.Capacity > vehicle.CurrentLoad) // Csak ha van hely
+                {
+                    // Ha a busz embereket szállít 
+                    int loadedAmount = station.Boarding(vehicle);
+                    if (loadedAmount > 0)
+                    {
+                        Debug.WriteLine($"[FELVÉTEL] {loadedAmount} egység felvéve a járműre.");
+                    }
+                }
+            }
             VehicleArrivedAtStation?.Invoke(this, e);
         }
 

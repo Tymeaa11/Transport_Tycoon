@@ -1,4 +1,5 @@
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
@@ -8,41 +9,37 @@ namespace VolcanicTransport.Model.World.Economy
 
         public ProductType GetFactoryNeeds => _factory.BaseProduct;
         public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
-        public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time);
-        public bool LoadProduct()
+        public int GetFactoryFinishedProductAmount => _factory.FinalProductBuffer.CurrentLoad;
+        public int GetFactoryNeedsAmount => _factory.FinalProductBuffer.CurrentLoad;
+        public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time); // 0-1
+        public double PricePerBaseProduct => GameSettings.GetPrice(_factory.BaseProduct);
+        public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
         {
-            if (vehicle == null || vehicle.Type != _factory.FinalProduct.ProductType)
+            if (vehicle == null || (vehicle.CurrentLoad > 0 && vehicle.CurrentType != _factory.FinalProduct.ProductType))
             {
-                return false;
+                return 0;
             }
 
-            //int taken = vehicle.Load(factory.FinalProductBuffer.CurrentLoad());
+            int amountFilled = _factory.FinalProductBuffer.FillVehicle(vehicle);
 
-            return true;
+            return amountFilled;
         }
 
 
-        public override bool UnLoadProductFromVehicle()
+        public override int UnLoadProductFromVehicle(Vehicle vehicle) // kapott-e árut a járműtől
         {
-            if (vehicle == null || vehicle.Type != _factory.BaseProduct)
+            if (vehicle == null || vehicle.CurrentType != _factory.BaseProduct)
             {
-                return false;
+                return 0;
             }
 
             int amountNeededForFactory = _factory.BaseProductBuffer.AmountNeeded();
 
-            if (amountNeededForFactory == 0) { return false; }
+            if (amountNeededForFactory == 0) { return 0; }
 
-            int provided = vehicle.Unload(amountNeededForFactory);
+            int provided = _factory.BaseProductBuffer.ReciveProduct(vehicle, amountNeededForFactory);
 
-            if (provided == 0)
-            {
-                return false;
-            }
-
-            _factory.BaseProductBuffer.ReceiveProduct(vehicle.Type, provided);
-
-            return true;
+            return provided;
         }
     }
 }

@@ -8,7 +8,14 @@
         Title="VehicleNameWindow" Height="450" Width="800">
     <Grid Margin="15">
         <StackPanel>
-            <TextBlock Text="Add meg az új jármű nevét:" Margin="0,0,0,10" FontWeight="Bold"/>
+            <TextBlock Text="Choose vehicle type:" Margin="0,0,0,5"/>
+            <ComboBox x:Name="TypeComboBox" Height="25" Margin="0,0,0,15">
+                <ComboBoxItem Content="Bus (4000$)" Tag="Bus"/>
+                <ComboBoxItem Content="MiniBus (6000$)" Tag="MiniBus"/>
+                <ComboBoxItem Content="CargoTruck (11000$)" Tag="CargoTruck"/>
+                <ComboBoxItem Content="TankerTrunk (10000$)" Tag="TankerTruck"/>
+            </ComboBox>
+            <TextBlock Text="Add meg az új jármű nevét:" Margin="0,0,0,10"/>
             <TextBox x:Name="NameTextBox" Height="25" Padding="2"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
                 <Button Content="Mégse" Width="70" Margin="0,0,10,0" Click="CancelButton_Click"/>

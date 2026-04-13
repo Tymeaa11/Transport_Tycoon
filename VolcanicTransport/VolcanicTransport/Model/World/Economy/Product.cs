@@ -8,7 +8,7 @@ namespace VolcanicTransport.Model.World.Economy
     {
         #region Fields
         public ProductType ProductType { get; } = productType;
-        private readonly Perlin _perlin = new();
+        private readonly Perlin _perlin = new(4, 0.5f);
 
         [JsonInclude]
         private float MinValue { get; } = minvalue;
@@ -33,7 +33,11 @@ namespace VolcanicTransport.Model.World.Economy
             => (int)(Math.Abs(MaxValue - MinValue) * _perlin.Noise(time * Variability) + MinValue);
 
         public float GetFactoryEfficiency(float time)
-            => _perlin.Noise(time * Variability); // 0-1
+            => _perlin.Noise((time + 1000f) * Variability); // 0 - 1
+
+        public float GetPassengerEfficiency(float time)
+            => _perlin.Noise((time + 500f) * Variability);
+
         #endregion
     }
 }
