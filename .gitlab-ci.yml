@@ -30,8 +30,8 @@ test-job:   # This job runs in the test stage.
 
   artifacts:
     paths:
-      - ./*/TestResults/TestResults.xml
+      - ./TestResults/TestResults.xml
     reports:
       junit:
-        - ./*/TestResults/TestResults.xml
+        - ./TestResults/TestResults.xml
 
