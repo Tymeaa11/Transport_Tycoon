@@ -8,26 +8,25 @@ namespace VolcanicTransport_WPF.ViewModel
 {
     public class Camera : ViewModelBase
     {
-        private static readonly bool EnableDevMode = true;
-
         public Vector HalfScreenDimensions { private get; set; }
 
         private Vector _position;
         private Vector _velocity;
-        private const double MovementDrag = 0.005;
 
         private double _zoom;
         private double _zoomSpeed;
-        private const double ZoomDrag = 0.01;
-        private const double MinimumScale = 0.2; // 0.5
-        private const double MaximumScale = 3;
 
         private double _scale;
         private double _previousScale;
-        private const double ScaleCoefficient = 0.005;
 
         private const double CameraMovementSpeed = 8000;
+        private const double MovementDrag = 0.005;
         private const double CameraZoomSpeed = 6;
+        private const double ZoomDrag = 0.01;
+        private const double MinimumScale = 0.2;
+        private const double MaximumScale = 3;
+        private const double ScaleCoefficient = 0.005;
+
 
         private Vector _currentMousePosition;
         public Vector CurrentMousePosition
@@ -35,7 +34,6 @@ namespace VolcanicTransport_WPF.ViewModel
             get => _currentMousePosition;
             set { _currentMousePosition = value; OnPropertyChanged(); }
         }
-
 
         public event EventHandler? CameraChanged;
 
@@ -123,8 +121,6 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Zoom(double delta)
         {
-            if (!EnableDevMode) return;
-
             if (delta > 0)
                 _zoomSpeed += CameraZoomSpeed;
             else
