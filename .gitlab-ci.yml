@@ -26,6 +26,7 @@ test-job:   # This job runs in the test stage.
       dotnet test VolcanicTransport/VolcanicTransport-Tests --no-restore
       --logger:"junit;MethodFormat=Class;FailureBodyFormat=Verbose;LogFilePath=TestResults/TestResults.xml"
       --collect="XPlat Code Coverage"
+    - ls -r
     
 
   artifacts:
