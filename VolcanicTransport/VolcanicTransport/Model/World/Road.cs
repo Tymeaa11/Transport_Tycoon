@@ -2,19 +2,9 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Road : KnowsNeighbour
+    public class Road(Coordinate coordinate) : KnowsNeighbour(coordinate)
     {
-
-        #region Constructors
-        public Road(Coordinate coordinate, bool isPermanent = false) : base(coordinate)
-        {
-            IsPermanent = isPermanent;
-        }
-        #endregion
-
         #region Fields
-        public bool IsPermanent { get; }
-
         public bool IsReserved { get; set; } = false;
         public RoadType RoadType { get; private set; }
         #endregion
@@ -120,10 +110,10 @@ namespace VolcanicTransport.Model.World
         }
 
 
-        public bool IsStraight => (RoadType & RoadType.STRAIGHT) != 0;
-        public bool IsCurved => (RoadType & RoadType.CURVED) != 0;
-        public bool IsJunction => (RoadType & RoadType.JUNCTION) != 0;
-        public bool IsSlope => (RoadType & RoadType.SLOPE) != 0;
+        public bool IsStraight() => (RoadType & RoadType.STRAIGHT) != 0;
+        public bool IsCurved() => (RoadType & RoadType.CURVED) != 0;
+        public bool IsJunction() => (RoadType & RoadType.JUNCTION) != 0;
+        public bool IsSlope() => (RoadType & RoadType.SLOPE) != 0;
 
         public event EventHandler? OnPlacementFailed;
 

@@ -1,3 +1,3 @@
 namespace VolcanicTransport.Model.Exceptions;
 
-public class GenerationErrorException : Exception {}
+public class GenerationErrorException : Exception { }

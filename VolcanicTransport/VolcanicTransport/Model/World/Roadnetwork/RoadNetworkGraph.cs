@@ -56,7 +56,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 if (current is Road r && !(current is Station))
                 {
                     currentPath.Add(r);
-                    currentWeight += r.IsSlope ? 2 : 1;
+                    currentWeight += r.IsSlope() ? 2 : 1;
                 }
                 else if (current is Station) currentWeight += 1;
 
@@ -67,7 +67,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (current is Road currentRoad)
             {
                 currentPath.Add(currentRoad);
-                currentWeight += currentRoad.IsSlope ? 2 : 1;
+                currentWeight += currentRoad.IsSlope() ? 2 : 1;
 
                 CheckAndAddAdjacentStation(startNode, currentRoad.North?.Surface, currentPath, currentWeight);
                 CheckAndAddAdjacentStation(startNode, currentRoad.South?.Surface, currentPath, currentWeight);

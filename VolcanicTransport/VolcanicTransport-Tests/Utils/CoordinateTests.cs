@@ -15,7 +15,7 @@ namespace VolcanicTransport_Tests.Utils
         [TestMethod]
         public void EqualsTest()
         {
-            Assert.AreEqual(new Coordinate(1,2), new Coordinate(1,2));
+            Assert.AreEqual(new Coordinate(1, 2), new Coordinate(1, 2));
         }
 
 

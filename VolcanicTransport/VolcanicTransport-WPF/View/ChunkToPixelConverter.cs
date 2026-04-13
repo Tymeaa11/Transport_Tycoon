@@ -1,6 +1,4 @@
 ﻿using System.Windows.Data;
-using VolcanicTransport;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model;
 
 namespace VolcanicTransport_WPF.View

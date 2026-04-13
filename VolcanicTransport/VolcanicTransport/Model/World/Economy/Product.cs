@@ -1,29 +1,43 @@
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.TerrainGeneration.Layers;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class Product(ProductType type, float minvalue, float maxvalue, float variability = 0.05f)
+    [method: JsonConstructor]
+    public class Product(ProductType productType, float minvalue, float maxvalue, float variability = 0.05f)
     {
         #region Fields
-        public ProductType ProductType { get;} = type;
-        private readonly Perlin _perlin = new();
-        private readonly float _minValue = minvalue;
-        private readonly float _maxValue = maxvalue;
-        private readonly float _variability = variability;
+        public ProductType ProductType { get; } = productType;
+        private readonly Perlin _perlin = new(4, 0.5f);
+
+        [JsonInclude]
+        private float MinValue { get; } = minvalue;
+
+        [JsonInclude]
+        private float MaxValue { get; } = maxvalue;
+
+        [JsonInclude]
+        private float Variability { get; } = variability;
+
         #endregion
-        
+
         #region Constructors
-        public Product(Product other) : 
-            this(other.ProductType, other._minValue, other._maxValue, other._variability) 
-        {}
+        public Product(Product other) :
+            this(other.ProductType, other.MinValue, other.MaxValue, other.Variability)
+        { }
+
         #endregion
 
         #region Methods
         public int GetDemand(float time) // min - max
-            => (int)(Math.Abs(_maxValue - _minValue) * _perlin.Noise(time * _variability) + _minValue);
+            => (int)(Math.Abs(MaxValue - MinValue) * _perlin.Noise(time * Variability) + MinValue);
 
         public float GetFactoryEfficiency(float time)
-            => _perlin.Noise(time * _variability); // 0-1
+            => _perlin.Noise((time + 1000f) * Variability); // 0 - 1
+
+        public float GetPassengerEfficiency(float time)
+            => _perlin.Noise((time + 500f) * Variability);
+
         #endregion
     }
 }

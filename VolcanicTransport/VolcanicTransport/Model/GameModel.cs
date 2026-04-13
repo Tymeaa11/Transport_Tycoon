@@ -7,7 +7,8 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using VolcanicTransport;
+using static System.Collections.Specialized.BitVector32;
+using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {
@@ -19,6 +20,7 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
+        public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;
         private readonly ISaveFileManager _savefileManager;
@@ -59,7 +61,7 @@ namespace VolcanicTransport.Model
                 );
             WorldInstance.Generate();
 
-            PlayerMoney = 10000;
+            PlayerMoney = GameSettings.StartingMoney;
 
             _mushroomGrowthTimer = new ScalableTimer();
             _mushroomGrowthTimer.TimeScale = 1; 
@@ -73,13 +75,32 @@ namespace VolcanicTransport.Model
 
         public static void Initialise(int worldSize, int seed)
         {
-            if (_instance != null) throw new InvalidOperationException("World already initialised");
-
             _instance = new GameModel(worldSize, seed);
         }
         #endregion
 
+        #region SavingAndLoading
+        public void LoadGame(string filename)
+        => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename);
+
+        public void SaveGame(string filename)
+            => _savefileManager.SaveGame(new ISaveFileManager.GameData(this), filename);
+        #endregion
+
         #region  Methods
+        public void GenerateWorld() => WorldInstance.Generate();
+
+        private static double GetMushroomCosts(Field field)
+        {
+            var cost = 0d;
+            
+            if (field.Surface is not Mushroom mushroom) return cost;
+            
+            var stage = (double)mushroom.GrowthStage+1;
+            cost = stage * GameSettings.MushroomPricePerUnit;
+            return cost;
+        }
+        
         public void Pause()
         {
             IsPaused = true;
@@ -129,23 +150,35 @@ namespace VolcanicTransport.Model
             }
 
             WorldInstance.Update(deltaTime);
+            foreach (Factory factory in WorldInstance.Factories)
+            {
+                factory.Update(deltaTime, (float)Time);
+            }
+            foreach (Station station in WorldInstance.Stations)
+            {
+                station.GetWaitingPassengers(deltaTime);
+            }
             GameAdvanced?.Invoke(this, EventArgs.Empty);
             Time += deltaTime;
         }
 
         public bool BuyVehicle(Vehicle v)
         {
-            if (!TryPurchase(v.Price)) return false;
-            
-            WorldInstance.AddVehicle(v);
-            VehicleBought?.Invoke(this, EventArgs.Empty);
-            return true;
+            if (TryPurchase(v.Price))
+            {
+                v.ArrivedAtStation += HandleVehicleArrived;
+
+                WorldInstance.AddVehicle(v);
+                VehicleBought?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+            return false;
         }
 
         public void SellVehicle(Vehicle v)
         {
             if (!WorldInstance.HasVehicle(v)) return;
-            
+
             AddMoney(v.Price * 0.5);
             WorldInstance.RemoveVehicle(v);
             VehicleSold?.Invoke(this, EventArgs.Empty);
@@ -154,7 +187,7 @@ namespace VolcanicTransport.Model
         public bool TryPurchase(double amount)
         {
             if (!(PlayerMoney >= amount)) return false;
-            
+
             PlayerMoney -= amount;
             MoneyChanged?.Invoke(this, EventArgs.Empty);
             return true;
@@ -221,7 +254,7 @@ namespace VolcanicTransport.Model
 
 
             if (tempRoad.RoadType != RoadType.INVALID) return tempRoad;
-            
+
             field.Surface = null;
             tempRoad.RoadLayoutChanged -= OnRoadBecameJunction;
             OnPlacementFailed?.Invoke(this, EventArgs.Empty);
@@ -232,21 +265,15 @@ namespace VolcanicTransport.Model
 
         public void PlaceRoad(Coordinate coord)
         {
-            double roadPrice = 50;
-            const double mushroomPricePerUnit = 20;
-
+            var roadPrice = GameSettings.BaseRoadPrice;
+            
             var field = WorldInstance.GetField(coord);
-            if (null == field) 
+            if (null == field)
                 return;
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                var stage = (double)mushroom.GrowthStage+1;
-                var extraCost = stage * mushroomPricePerUnit;
-                roadPrice += extraCost;
-            }
+            roadPrice += GetMushroomCosts(field);
 
-            if (!TryPurchase(roadPrice)) 
+            if (!TryPurchase(roadPrice))
                 return;
 
             var road = CanPlaceRoadHere(coord, field);
@@ -272,25 +299,19 @@ namespace VolcanicTransport.Model
 
         public bool PlaceStation(Coordinate coord)
         {
-            double stationCost = 500;
-            const double mushroomPricePerUnit = 20;
+            var stationCost = GameSettings.BaseStationPrice;
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
             var nearRoad = Direction.Directions.Any(dir => WorldInstance.GetField(coord + dir)?.Surface is Road);
-            
+
             if (!nearRoad) return false;
 
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                var stage = (double)mushroom.GrowthStage+1;
-                var extraCost = stage * mushroomPricePerUnit;
-                stationCost += extraCost;
-            }
+            stationCost += GetMushroomCosts(field);
 
             var city = WorldInstance.Cities.FirstOrDefault(c => c.CenterCoordinate.Distance(coord) <= 4);
 
@@ -301,7 +322,7 @@ namespace VolcanicTransport.Model
             if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
 
             if (newStation == null || !TryPurchase(stationCost)) return false;
-            
+
             WorldInstance.GetField(coord)!.Surface = newStation;
             WorldInstance.Stations.Add(newStation);
 
@@ -311,28 +332,76 @@ namespace VolcanicTransport.Model
             WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
             return true;
-
         }
 
         public static void AddStopToVehicle(Vehicle v, Station s)
         {
-            v.Route ??= new Route();
+
+            if (v.Route.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
 
             v.Route.AddStop(s);
             Debug.WriteLine($"Megálló hozzáadva: {s.Coordinate}. Összesen: {v.Route.Stops.Count}");
 
-            if (v.Route.Stops.Count < 2)
-            {
-                Debug.WriteLine("Várakozás a második megállóra...");
-                return;
-            }
-            Debug.WriteLine("Két megálló megvan, gráf frissítése...");
-            
             var graph = WorldInstance.Roadnetwork;
-            //graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
             graph.RegisterNodeIfNeeded(s.Coordinate);
             graph.RebuildEdges();
 
+            if (v.State == VehicleState.Waiting)
+            {
+                v.TryStartNextRoute();
+            }
+            v.TriggerRouteChanged();
+        }
+
+        private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
+
+            Vehicle vehicle = e.Vehicle;
+            Station station = e.Station;
+            float currentTime = (float)Time;
+            ProductType productType = vehicle.CurrentType;
+            Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity - vehicle.CurrentLoad}");
+            if (vehicle is CargoTruck or TankerTruck)
+            {
+                int accepted = station.UnLoadProductFromVehicle(vehicle);
+                if (accepted != 0)
+                {
+                    Debug.WriteLine($"{accepted} egység leadva a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(accepted * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (station is FactoryStation fs)
+                {
+                    int amount = fs.LoadProduct(vehicle);
+                    if (amount > 0)
+                    {
+                        Debug.WriteLine($"{accepted} egység felvéve a járműre.");
+                    }
+                }
+            }
+            else
+            {
+                int amount = station.UnBoarding(vehicle);
+                if (amount != 0)
+                {
+                    Debug.WriteLine($"{amount} ember leszállt a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(amount * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (vehicle.Capacity > vehicle.CurrentLoad) // Csak ha van hely
+                {
+                    // Ha a busz embereket szállít 
+                    int loadedAmount = station.Boarding(vehicle);
+                    if (loadedAmount > 0)
+                    {
+                        Debug.WriteLine($"[FELVÉTEL] {loadedAmount} egység felvéve a járműre.");
+                    }
+                }
+            }
+            VehicleArrivedAtStation?.Invoke(this, e);
             //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
             //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
             //{
@@ -389,42 +458,33 @@ namespace VolcanicTransport.Model
 
         #endregion
 
-        private void TerraformField (Coordinate coord, int deltaHeight)
+        private void TerraformField(Coordinate coord, int deltaHeight)
         {
-            double terraformingPrice = 50;
-            const double mushroomPricePerUnit = 20;
+            var terraformationPrice = GameSettings.BaseTerraformationPrice;
 
-
-            Field? field = WorldInstance.GetField(coord);
-            if (null == field)
+            var field = WorldInstance.GetField(coord);
+            
+            if (field == null)
                 return;
 
             if (! ((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
-            {
                 return;
-            }
+            
+            terraformationPrice += GetMushroomCosts(field);
 
-            if (field.Surface is Mushroom mushroom)
-            {
-                double stage = (double)mushroom.GrowthStage + 1;
-                terraformingPrice += stage * mushroomPricePerUnit;
-            }
+            var newFieldType = (FieldType)((int)field.Type + deltaHeight);
 
-            FieldType newFieldType = (FieldType)((int)field.Type + deltaHeight);
-
-            if (FieldType.DEEP_LAVA_OCEAN <= newFieldType && newFieldType <= FieldType.HIGH_MOUNTAINS)
-            {
-                if (TryPurchase(terraformingPrice))
-                {
-                    field.SetFieldTypeTo(newFieldType);
-                    var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
-                    WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
-                }
-            }
+            if (newFieldType > FieldType.HIGH_MOUNTAINS) return;
+            if (!TryPurchase(terraformationPrice)) return;
+            
+            field.SetFieldTypeTo(newFieldType);
+            var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
+            WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
 
         }
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);
         public void LowerField(Coordinate coord) => TerraformField(coord, -1);
+
 
     }
 }

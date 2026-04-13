@@ -1,18 +1,31 @@
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public abstract class Factory(ProductType baseProduct, Product finalProduct, ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer, Coordinate coord)
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(AshProducer), "ash")]
+    [JsonDerivedType(typeof(BoneProducer), "bone")]
+    [JsonDerivedType(typeof(MushroomProducer), "mushroom")]
+    [JsonDerivedType(typeof(SteamProducer), "steam")]
+    [JsonDerivedType(typeof(SulfurProducer), "sulfur")]
+    [JsonDerivedType(typeof(ConcreteFactory), "concrete")]
+    [JsonDerivedType(typeof(CondensatorFactory), "condensator")]
+    public abstract class Factory(string name, ProductType baseProduct, Product finalProduct, ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer, Coordinate originCoordinate)
     {
+        public string Name { get; } = name;
         public ProductType BaseProduct { get; } = baseProduct;
         public Product FinalProduct { get; } = finalProduct;
         public ProductBuffer BaseProductBuffer { get; } = baseProductBuffer;
         public ProductBuffer FinalProductBuffer { get; } = finalProductBuffer;
-        public Coordinate OriginCoordinate { get; } = coord;
+        public Coordinate OriginCoordinate { get; } = originCoordinate;
 
         private readonly List<Field> _factoryFields = [];
 
-        public Factory(Coordinate origin, GameSettings.FactoryData factoryData) : this(
+        private double _productionAccumulator = 0;
+
+        protected Factory(string name, Coordinate origin, GameSettings.FactoryData factoryData) : this(
+            name,
             factoryData.BaseProduct,
             new Product(factoryData.FinalProduct),
             new ProductBuffer(factoryData.BaseProduct, factoryData.BaseProductBufferCapacity),
@@ -22,17 +35,121 @@ namespace VolcanicTransport.Model.World.Economy
 
         public void AddField(Field f)
         {
-            //ELLENŐRZÉSEK TODO//
             _factoryFields.Add(f);
         }
+
+        public void Update(double deltaTime, float totalTime)
+        {
+            float efficiency = FinalProduct.GetFactoryEfficiency(totalTime);
+
+            double currentProduction = GameSettings.BaseProductionRate * efficiency;
+
+            _productionAccumulator += deltaTime * currentProduction;
+
+            if (_productionAccumulator >= 1.0)
+            {
+                int producedCount = (int)_productionAccumulator;
+
+                int actuallyStored = FinalProductBuffer.AddAmount(producedCount);
+
+                if (actuallyStored > 0 || FinalProductBuffer.CurrentLoad < FinalProductBuffer.MaxCapacity)
+                {
+                    _productionAccumulator -= producedCount;
+                }
+            }
+        }
     }
-    
-    public class AshProducer(Coordinate origin) : Factory(origin, GameSettings.AshProducerFactoryData) { }
-    public class BoneProducer(Coordinate origin) : Factory(origin, GameSettings.BoneProducerFactoryData) { }
-    public class MushroomProducer(Coordinate origin) : Factory(origin, GameSettings.MushroomProducerFactoryData) { }
-    public class SteamProducer(Coordinate origin) : Factory(origin, GameSettings.SteamProducerFactoryData) { }
-    public class SulfurProducer(Coordinate origin) : Factory(origin, GameSettings.SulfurProducerFactoryData) { }
-    public class ConcreteFactory(Coordinate origin) : Factory(origin, GameSettings.ConcreteFactoryData) { }
-    public class CondensatorFactory(Coordinate origin) : Factory(origin, GameSettings.CondensatorFactoryData) { }
-    
+
+    public class AshProducer : Factory
+    {
+        [JsonConstructor]
+        public AshProducer(string name, ProductType baseProduct, Product finalProduct,
+            ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+        { }
+
+        public AshProducer(string name, Coordinate origin)
+            : base(name, origin, GameSettings.AshProducerFactoryData)
+        { }
+    }
+    public class BoneProducer : Factory
+    {
+        [JsonConstructor]
+        public BoneProducer(string name, ProductType baseProduct, Product finalProduct,
+            ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+        { }
+
+        public BoneProducer(string name, Coordinate origin)
+            : base(name, origin, GameSettings.BoneProducerFactoryData)
+        { }
+    }
+    public class MushroomProducer : Factory
+    {
+        [JsonConstructor]
+        public MushroomProducer(string name, ProductType baseProduct, Product finalProduct,
+            ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+        { }
+
+        public MushroomProducer(string name, Coordinate origin)
+            : base(name, origin, GameSettings.MushroomProducerFactoryData)
+        { }
+    }
+    public class SteamProducer : Factory
+    {
+        [JsonConstructor]
+        public SteamProducer(string name, ProductType baseProduct, Product finalProduct,
+            ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+        { }
+
+        public SteamProducer(string name, Coordinate origin)
+            : base(name, origin, GameSettings.SteamProducerFactoryData)
+        { }
+    }
+    public class SulfurProducer : Factory
+    {
+        [JsonConstructor]
+        public SulfurProducer(string name, ProductType baseProduct, Product finalProduct,
+            ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+        { }
+
+        public SulfurProducer(string name, Coordinate origin)
+            : base(name, origin, GameSettings.SulfurProducerFactoryData)
+        { }
+    }
+    public class ConcreteFactory : Factory
+    {
+        [JsonConstructor]
+        public ConcreteFactory(string name, ProductType baseProduct, Product finalProduct,
+            ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+        { }
+
+        public ConcreteFactory(string name, Coordinate origin)
+            : base(name, origin, GameSettings.ConcreteFactoryData)
+        { }
+    }
+    public class CondensatorFactory : Factory
+    {
+        [JsonConstructor]
+        public CondensatorFactory(string name, ProductType baseProduct, Product finalProduct,
+            ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+        { }
+
+        public CondensatorFactory(string name, Coordinate origin)
+            : base(name, origin, GameSettings.CondensatorFactoryData)
+        { }
+    }
+
 }

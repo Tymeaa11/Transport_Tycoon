@@ -1,13 +1,13 @@
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
-using VolcanicTransport.Model.Exceptions;
 
 namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class FactoryAndCityGenerator(int cityCount, int factoryCount)
     {
-        private static Field GetField(Coordinate coordinate) 
+        private static Field GetField(Coordinate coordinate)
             => World.World.Instance.GetField(coordinate) ?? throw new GenerationErrorException();
 
         public void Generate()
@@ -54,7 +54,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                         return false;
 
             // Távolság ellenőrzése a már meglévő városoktól/gyáraktól
-            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance)) 
+            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance))
                    && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistance));
         }
 
@@ -69,16 +69,16 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
             fields.ForEach(f => f.SetFieldTypeTo(reference));
 
-            fields[0].Surface = new CityBuilding();
+            fields[0].Surface = new CityBuilding(newCity);
             newCity.AddField(fields[0]);
 
-            fields[2].Surface = new CityBuilding();
+            fields[2].Surface = new CityBuilding(newCity);
             newCity.AddField(fields[0]);
 
-            fields[6].Surface = new CityBuilding();
+            fields[6].Surface = new CityBuilding(newCity);
             newCity.AddField(fields[0]);
 
-            fields[8].Surface = new CityBuilding();
+            fields[8].Surface = new CityBuilding(newCity);
             newCity.AddField(fields[0]);
 
             fields[1].Surface = new Road(center + Direction.North);
@@ -104,17 +104,18 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
         private static void CreateFactory(Coordinate origin)
         {
+            var name = "Factory" + World.World.Instance.SharedRandom.Next() + "_" + World.World.Instance.SharedRandom.Next();
             var factoryType = World.World.Instance.SharedRandom.Next(0, 7);
             Factory newFactory = factoryType switch
             {
-                0 => new CondensatorFactory(origin),
-                1 => new ConcreteFactory(origin),
-                2 => new SulfurProducer(origin),
-                3 => new BoneProducer(origin),
-                4 => new AshProducer(origin),
-                5 => new MushroomProducer(origin),
-                6 => new SteamProducer(origin),
-                _ => new MushroomProducer(origin)
+                0 => new CondensatorFactory(name, origin),
+                1 => new ConcreteFactory(name, origin),
+                2 => new SulfurProducer(name, origin),
+                3 => new BoneProducer(name, origin),
+                4 => new AshProducer(name, origin),
+                5 => new MushroomProducer(name, origin),
+                6 => new SteamProducer(name, origin),
+                _ => new MushroomProducer(name, origin)
             };
 
             var reference = GetField(origin);
@@ -123,9 +124,10 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
             if (fields.Count != 4) throw new GenerationErrorException();
 
-            fields.ForEach(f => {
+            fields.ForEach(f =>
+            {
                 f.SetFieldTypeTo(reference); // Kilapítás az origin magasságára
-                f.Surface = new FactoryBuilding(); // ISurface beállítása
+                f.Surface = new FactoryBuilding(newFactory); // ISurface beállítása
                 newFactory.AddField(f);
             });
 

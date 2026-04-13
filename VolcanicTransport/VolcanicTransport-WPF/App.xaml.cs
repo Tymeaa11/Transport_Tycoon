@@ -38,7 +38,7 @@ namespace VolcanicTransport_WPF
         {
             _gameViewModel = new GameViewModel();
             _gameViewModel.Initialise();
-            //_gameViewModel.ExitToMenuRequested += GameViewModel_ExitToMenuRequested;
+            _gameViewModel.ExitToMenuRequested += GameViewModel_ExitToMenuRequested;
 
             _mainGameWindow = new MainGameWindow
             {
@@ -59,9 +59,9 @@ namespace VolcanicTransport_WPF
 
             _mainMenuViewModel = new MainMenuViewModel();
             _mainMenuViewModel.NewGameRequested += MainMenuViewModel_StartNewGameRequested;
-            _mainMenuWindow = new MainMenuWindow 
-            { 
-                DataContext = _mainMenuViewModel 
+            _mainMenuWindow = new MainMenuWindow
+            {
+                DataContext = _mainMenuViewModel
             };
 
             _mainMenuWindow.Show();

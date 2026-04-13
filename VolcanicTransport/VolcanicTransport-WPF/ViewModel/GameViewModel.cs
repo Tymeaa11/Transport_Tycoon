@@ -1,15 +1,15 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.Text;
+using System.Timers;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using VolcanicTransport;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using VolcanicTransport_WPF.View;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -105,17 +105,19 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetTimescale0Command { get; private set; }
         public DelegateCommand SetTimescale1Command { get; private set; }
         public DelegateCommand SetTimescale2Command { get; private set; }
-        public DelegateCommand SetTimescale4Command { get; private set; }   
+        public DelegateCommand SetTimescale4Command { get; private set; }
         public DelegateCommand TogglePauseCommand { get; private set; }
-        public DelegateCommand ResumeCommand { get; private set; }  
-        public DelegateCommand QuitToMainMenuCommand {  get; private set; }
-        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }   
+        public DelegateCommand ResumeCommand { get; private set; }
+        public DelegateCommand QuitToMainMenuCommand { get; private set; }
+        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
         public DelegateCommand BuyVehicleCommand { get; private set; }
         public DelegateCommand AddStopCommand { get; }
         #endregion
 
         #region FieldClicked
         public DelegateCommand FieldClickedCommand { get; private set; }
+
+        public DelegateCommand ClearRouteCommand { get; private set; }
 
         private void OnFieldClicked(Coordinate coord)
         {
@@ -169,25 +171,63 @@ namespace VolcanicTransport_WPF.ViewModel
 
                         if (startNode != null && endNode != null)
                         {
-                            List<Road>? path = Pathfinder.FindPath(startNode, endNode);
-
-                            if (path != null && path.Count > 0)
+                            if (SelectedVehicle != null)
                             {
+                                Vehicle v = SelectedVehicle.GetVehicle;
 
-                                var newBus = new Bus("buszocska", VolcanicTransport.Model.World.Economy.ProductType.HUMAN);
-                                newBus.StartJourney(path);
-                                GameModelInstance.BuyVehicle(newBus);
+                                Route newRoute = new Route();
+                                newRoute.AddStop(_firstSelectedStation);
+                                newRoute.AddStop(secondSelectedStation);
 
-                                System.Diagnostics.Debug.WriteLine("Busz sikeresen elindítva!");
+                                v.AssignNewRoute(newRoute);
+
+                                System.Diagnostics.Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
                             }
                             else
                             {
-                                System.Diagnostics.Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
-                            }
-                        }
+                                List<Road>? path = Pathfinder.FindPath(startNode, endNode);
 
-                        _firstSelectedStation = null;
-                        CurrentBuildMode = BuildMode.NONE;
+                                if (path != null && path.Count > 0)
+                                {
+                                    var nameDialog = new VolcanicTransport_WPF.View.VehicleNameWindow();
+                                    nameDialog.Owner = System.Windows.Application.Current.MainWindow;
+
+                                    if (nameDialog.ShowDialog() == true)
+                                    {                                        
+                                        string chosenName = nameDialog.VehicleName;
+                                        string? chosenType = nameDialog.SelectedType;
+
+                                        Vehicle newVehicle = chosenType switch
+                                        {
+                                            "CargoTruck" => new CargoTruck(chosenName),
+                                            "TankerTruck" => new TankerTruck(chosenName),
+                                            "MiniBus" => new MiniBus(chosenName),
+                                            _ => new Bus(chosenName)
+                                        };
+
+                                        Route initialRoute = new Route();
+                                        initialRoute.AddStop(_firstSelectedStation);
+                                        initialRoute.AddStop(secondSelectedStation);
+                                        newVehicle.Route = initialRoute;
+                                        newVehicle.CurrentStopIndex = 1;
+
+                                        newVehicle.StartJourney(path, false, _firstSelectedStation);
+                                        GameModelInstance.BuyVehicle(newVehicle);
+                                        System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
+                                    } else
+                                    {
+                                        System.Diagnostics.Debug.WriteLine("Vásárlás megszakítva.");
+                                    }
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
+                                }
+                            }
+
+                            _firstSelectedStation = null;
+                            CurrentBuildMode = BuildMode.NONE;
+                        }
                     }
                 }
                 else
@@ -229,40 +269,133 @@ namespace VolcanicTransport_WPF.ViewModel
 
         #region Hovered field & Tooltips
 
-        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
+        private bool _isInspectorVisible;
+        public bool IsInspectorVisible
         {
-            HoveredCoordinate = Camera.ScreenToField(mouseXY);
-            
-            UpdateBuildability();
-
-            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
-
-            var text = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  ";
-
-            if (_hoveredField != null)
-            {
-                text += $"{_hoveredField.Type} ({(int)_hoveredField.Type})";
-
-                if (_hoveredField.Surface != null)
-                {
-                    text += " - ";
-
-                    text += _hoveredField.Surface switch
-                    {
-                        Mushroom m => $"M({m.GrowthStage})",
-                        Road r => $"R({r.RoadType})",
-                        Station _ => $"S",
-                        CityBuilding _ => $"C",
-                        FactoryBuilding _ => $"F",
-                        _ => "Not listed"
-                    };
-                }
-            }
-            else text += "-";
-
-                ToolTipText = text;
+            get => _isInspectorVisible;
+            set { _isInspectorVisible = value; OnPropertyChanged(); }
         }
 
+        private string _inspectorText = "";
+        public string InspectorText
+        {
+            get => _inspectorText;
+            set { _inspectorText = value; OnPropertyChanged(); }
+        }
+        private Point _lastMousePosition;
+        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
+        {
+            _lastMousePosition = mouseXY;
+            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+            UpdateBuildability();
+            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
+            if (_hoveredField?.Surface != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Surface type: {_hoveredField.Surface.GetType().Name}");
+            }
+
+            var cornerSb = new StringBuilder();
+            cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
+            if (_hoveredField != null)
+            {
+                cornerSb.Append($"| {_hoveredField.Type}");
+                if (_hoveredField.Surface is Mushroom m) cornerSb.Append($" | M({m.GrowthStage})");
+            }
+            ToolTipText = cornerSb.ToString();
+
+            StringBuilder inspectorSb = new StringBuilder();
+            if (_hoveredField?.Surface is Station)
+            {
+                inspectorSb.Append(_hoveredField.Surface switch
+                {
+                    FactoryStation fs => GetFactoryStationInfo(fs),
+                    CityStation cs => GetCityStationInfo(cs),
+                    _ => ""
+                });
+
+                InspectorText = inspectorSb.ToString();
+                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
+            }
+            else if (_hoveredField?.Surface is FactoryBuilding fb)
+            {
+                inspectorSb.Append(GetSimpleFactoryInfo(fb));
+                InspectorText = inspectorSb.ToString();
+                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
+            }
+            else if (_hoveredField?.Surface is CityBuilding cb)
+            {
+                inspectorSb.Append(GetSimpleCityInfo(cb));
+                InspectorText = inspectorSb.ToString();
+                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
+            }
+            else
+            {
+                IsInspectorVisible = false;
+                InspectorText = "";
+            }
+        }
+        private string GetSimpleFactoryInfo(FactoryBuilding fb)
+        {
+            StringBuilder info = new StringBuilder();
+            info.AppendLine($"Factory: {fb.Name}");
+
+            if (fb.BaseProduct != ProductType.NONE)
+            {
+                info.AppendLine($"Base product need / amount:  {fb.BaseProduct} {fb.BaseProductAmount}");
+            }
+
+            info.AppendLine($"Finished product / amount: {fb.FinalProduct} {fb.FinalProductAmount}");
+
+            return info.ToString();
+        }
+
+        private string GetSimpleCityInfo(CityBuilding cb)
+        {
+            StringBuilder info = new StringBuilder();
+            info.AppendLine($"City: {cb.Name}");
+            info.AppendLine("Product needs:");
+
+            foreach (ProductType pt in cb.ProductTypes)
+            {
+                info.AppendLine($"  - {pt}");
+            }
+
+            return info.ToString();
+        }
+        private string GetFactoryStationInfo(FactoryStation fs)
+        {
+            StringBuilder info = new StringBuilder();
+
+            info.AppendLine($"Factory Station: {fs.Name}");
+
+            if (fs.GetFactoryNeeds != ProductType.NONE)
+            {
+                info.AppendLine($"Base product need / amount: ({fs.GetFactoryNeeds} / {fs.GetFactoryNeedsAmount})");
+            }
+
+            info.AppendLine($"Finished product / amount: {fs.GetFactoryFinishedProduct} / {fs.GetFactoryFinishedProductAmount}");
+
+            info.AppendLine($"People waiting: {fs.WaitingPassengers}");
+
+            return info.ToString();
+        }
+
+        private string GetCityStationInfo(CityStation cs)
+        {
+            StringBuilder info = new StringBuilder();
+
+            info.AppendLine($"City Station: {cs.Name}");
+            info.AppendLine("Product needs:");
+
+            foreach (ProductType pt in cs.GetCityProductNeeds)
+            {
+                info.AppendLine($"  - {pt}");
+            }
+
+            info.AppendLine($"People waiting: {cs.WaitingPassengers}");
+
+            return info.ToString();
+        }
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
 
         private Field? _hoveredField;
@@ -278,11 +411,11 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        private string _toolTipText;
-        public string ToolTipText 
+        private string _toolTipText = "";
+        public string ToolTipText
         {
             get => _toolTipText;
-            set 
+            set
             {
                 _toolTipText = value;
                 OnPropertyChanged();
@@ -298,21 +431,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
-            switch(CurrentBuildMode)
+            IsHoveredFieldBuildable = CurrentBuildMode switch
             {
-                case BuildMode.HEIGHTEN:
-                    IsHoveredFieldBuildable = GameModelInstance.IsHeightenable(HoveredCoordinate);
-                    break;
-                case BuildMode.LOWER:
-                    IsHoveredFieldBuildable = GameModelInstance.IsLowerable(HoveredCoordinate);
-                    break;
-                default:
-                    IsHoveredFieldBuildable = GameModelInstance.IsBuildable(HoveredCoordinate);
-                    break;
-
-            }
-
-            
+                BuildMode.HEIGHTEN => GameModelInstance.IsHeightenable(HoveredCoordinate),
+                BuildMode.LOWER => GameModelInstance.IsLowerable(HoveredCoordinate),
+                _ => GameModelInstance.IsBuildable(HoveredCoordinate),
+            };
         }
         #endregion
 
@@ -368,15 +492,20 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimescale1Command = new DelegateCommand(_ => OnSetTimescale1X());
             SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
             SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
+            BuyVehicleCommand = new DelegateCommand(_ =>
+            {
+                SelectedVehicle = null;
+                _firstSelectedStation = null;
+                OnSetBuildMode(BuildMode.BUY_VEHICLE);
+            });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
-            /*
+            
             QuitToMainMenuCommand = new DelegateCommand(_ =>
             {
                 ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
             });
-            */
-            BuyVehicleCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BUY_VEHICLE));
+            
             AddStopCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)
@@ -400,6 +529,18 @@ namespace VolcanicTransport_WPF.ViewModel
             }
             );
 
+            ClearRouteCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle != null)
+                {
+                    SelectedVehicle.GetVehicle.ClearRoute();
+
+                    _firstSelectedStation = null;
+                    CurrentBuildMode = BuildMode.BUY_VEHICLE;
+                    System.Diagnostics.Debug.WriteLine($"Menetrend törölve a {SelectedVehicle.GetName} járművön. Válassz új start állomást!");
+                }
+            });
+
             //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
         }
 
@@ -410,7 +551,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(8,0);
+            int newSeed = new Random().Next(1, 1000000);
+            GameModel.Initialise(8, newSeed);
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
@@ -421,7 +563,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
             GameModelInstance.VehicleBought += (s, e) =>
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     var newModelVehicle = GameModel.WorldInstance.GetLatestVehicle();
                     if (newModelVehicle != null)
@@ -499,10 +641,9 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             get => GameModelInstance.PlayerMoney.ToString("F0") + " $";
         }
+        private readonly object _vehiclesLock = new();
 
-        private readonly object _vehiclesLock = new object();
-
-        private DispatcherTimer _gameLoop;
+        //private readonly DispatcherTimer _gameLoop;
         private System.Diagnostics.Stopwatch _stopwatch;
         private TimeSpan _lastRenderTime = TimeSpan.Zero;
 
@@ -533,6 +674,11 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 GameModelInstance.Update(FIXED_DELTA_TIME);
                 _accumulator -= FIXED_DELTA_TIME;
+            }
+
+            if (IsInspectorVisible && _hoveredField != null)
+            {
+                UpdateHoveredCoordinateAndTooltips(_lastMousePosition);
             }
         }
         private void OnSetBuildMode(BuildMode mode)

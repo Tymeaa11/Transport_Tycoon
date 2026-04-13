@@ -1,5 +1,3 @@
-using System.ComponentModel.Design;
-using System.Runtime.Intrinsics.X86;
 using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.World;
 
@@ -17,8 +15,8 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
         {
             _perlin = new Perlin();
             _falloff = new Falloff();
-            _positiveTerrain =  new LayeredTerrain();
-            _rivers =  new LayeredTerrain();
+            _positiveTerrain = new LayeredTerrain();
+            _rivers = new LayeredTerrain();
 
             Initialise();
         }
@@ -26,7 +24,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
         private PerlinLayer PLayer(float frequency, float amplitude)
             => new(_perlin, frequency, amplitude, World.World.Instance.SharedRandom);
 
-        private void Initialise() 
+        private void Initialise()
         {
             var p1 = PLayer(0.03f, 1.0f);
             var p2 = PLayer(0.1f, .2f);
@@ -64,11 +62,11 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             h = h < 0.78 ? Math.Pow(h, 1.4) : Math.Pow(-4 * h + 4, 3);
 
             h *= 900;
-            
+
             // carve
             var neg = Math.Pow(_rivers.Get(x, y), 0.9);
-            
-            if ( neg is > 0 and < 1)
+
+            if (neg is > 0 and < 1)
                 neg = Math.Pow(1 - 2 * Math.Abs(neg - 0.5), 10);
             else
                 neg = 100000;

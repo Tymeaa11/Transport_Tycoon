@@ -5,7 +5,7 @@ namespace VolcanicTransport.Model.Utils
         #region Fields
         private readonly T[,] _matrix = new T[size, size];
         #endregion
-        
+
         #region Constructors
         public T this[Coordinate index]
         {

@@ -6,10 +6,10 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 {
     public class MushroomGenerator : ITerrainGenerator
     {
-        private readonly PerlinLayer _mushroomLayer 
+        private readonly PerlinLayer _mushroomLayer
             = new(new Perlin(), 0.02f, 1f, World.World.Instance.SharedRandom);
 
-        
+
         public void ModifyField(Field field, int x, int y)
         {
             var height = _mushroomLayer.Get(x, y); // 0.0-1.0 range
