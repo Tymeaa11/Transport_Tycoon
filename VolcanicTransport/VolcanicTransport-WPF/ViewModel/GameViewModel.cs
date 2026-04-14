@@ -298,8 +298,9 @@ namespace VolcanicTransport_WPF.ViewModel
             cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
             if (_hoveredField != null)
             {
-                cornerSb.Append($"| {_hoveredField.Type}");
+                cornerSb.Append($"| {_hoveredField.Type} ({(int)_hoveredField.Type})");
                 if (_hoveredField.Surface is Mushroom m) cornerSb.Append($" | M({m.GrowthStage})");
+                else if (_hoveredField.Surface is Road r) cornerSb.Append($" | R({r.RoadType})");
             }
             ToolTipText = cornerSb.ToString();
 
