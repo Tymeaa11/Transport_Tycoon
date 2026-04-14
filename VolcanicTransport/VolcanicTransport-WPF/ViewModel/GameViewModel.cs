@@ -289,10 +289,6 @@ namespace VolcanicTransport_WPF.ViewModel
             HoveredCoordinate = Camera.ScreenToField(mouseXY);
             UpdateBuildability();
             _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
-            if (_hoveredField?.Surface != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"Surface type: {_hoveredField.Surface.GetType().Name}");
-            }
 
             var cornerSb = new StringBuilder();
             cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");

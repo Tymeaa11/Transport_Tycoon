@@ -303,13 +303,17 @@ namespace VolcanicTransport.Model
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
-            var nearRoad = Direction.Directions.Any(dir => WorldInstance.GetField(coord + dir)?.Surface is Road);
-
-            if (!nearRoad) return false;
-
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;
+
+            var hasValidNearRoad = Direction.Directions.Any(dir =>
+            {
+                var neighbor = WorldInstance.GetField(coord + dir);
+                return neighbor?.Surface is Road && neighbor.Type == field.Type;
+            });
+
+            if (!hasValidNearRoad) return false;
 
             stationCost += GetMushroomCosts(field);
 
