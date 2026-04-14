@@ -9,7 +9,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public class VehicleManager
     {
-        public ObservableCollection<Vehicle> Vehicles { get; } = new ObservableCollection<Vehicle>();
+        public ObservableCollection<Vehicle> Vehicles { get; } = [];
 
         public void AddVehicle(Vehicle vehicle)
         {

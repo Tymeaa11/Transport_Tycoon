@@ -8,7 +8,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     {
 
         public Vehicle(string name, GameSettings.VehicleData vehicleData)
-        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.productTypes) { }
+        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.ProductTypes) { }
 
         public string Name { get; } = name;
         public List<ProductType> AllType { get { return allType; } }
@@ -413,16 +413,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             RouteChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public class VehicleArrivedEventArgs : EventArgs
+        public class VehicleArrivedEventArgs(Vehicle vehicle, Station station) : EventArgs
         {
-            public Vehicle Vehicle { get; }
-            public Station Station { get; }
-
-            public VehicleArrivedEventArgs(Vehicle vehicle, Station station)
-            {
-                Vehicle = vehicle;
-                Station = station;
-            }
+            public Vehicle Vehicle { get; } = vehicle;
+            public Station Station { get; } = station;
         }
     }
 }

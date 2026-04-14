@@ -29,8 +29,8 @@ namespace VolcanicTransport.Model
 
         public event EventHandler? MoneyChanged;
         public event EventHandler? GameOver;
-        public event EventHandler? NewGame;
-        public event EventHandler? StationBought;
+        //public event EventHandler? NewGame;
+        //public event EventHandler? StationBought;
         public event EventHandler? RoadBought;
         public event EventHandler? VehicleBought;
         public event EventHandler? VehicleSold;
@@ -38,8 +38,8 @@ namespace VolcanicTransport.Model
         public event EventHandler? GamePaused;
         public event EventHandler? GameUnpaused;
         public event EventHandler? TimescaleChanged;
-        public event EventHandler? FieldChanged;
-        public event EventHandler? VehicleSelectedIndex;
+        //public event EventHandler? FieldChanged;
+        //public event EventHandler? VehicleSelectedIndex;
         public event EventHandler? OnPlacementFailed;
 
         #endregion
@@ -342,7 +342,7 @@ namespace VolcanicTransport.Model
         public static void AddStopToVehicle(Vehicle v, Station s)
         {
             // TODO what happens if v.Route is null?
-            if (v.Route.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
+            if (v.Route!.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
 
             v.Route.AddStop(s);
             Debug.WriteLine($"Megálló hozzáadva: {s.Coordinate}. Összesen: {v.Route.Stops.Count}");
@@ -360,7 +360,7 @@ namespace VolcanicTransport.Model
 
         private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
+            Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
 
             Vehicle vehicle = e.Vehicle;
             Station station = e.Station;

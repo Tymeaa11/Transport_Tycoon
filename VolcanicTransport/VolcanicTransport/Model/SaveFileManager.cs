@@ -74,23 +74,19 @@ namespace VolcanicTransport.Model
             }
 
             var surfaceEntry = archive.CreateEntry("surface.json");
-            using (var jsonStream = surfaceEntry.Open())
-            {
-                var saveData = new SurfaceSaveData(
-                    game.World.WorldSeed,
-                    game.World.SizeInChunks,
-                    game.Time,
-                    game.IsPaused,
-                    game.PlayerMoney,
-                    game.World.Cities,
-                    game.World.Factories,
-                    GetSurfaceElements()
-                );
+            using var jsonStream = surfaceEntry.Open();
+            var saveData = new SurfaceSaveData(
+                game.World.WorldSeed,
+                game.World.SizeInChunks,
+                game.Time,
+                game.IsPaused,
+                game.PlayerMoney,
+                game.World.Cities,
+                game.World.Factories,
+                GetSurfaceElements()
+            );
 
-
-
-                JsonSerializer.Serialize(jsonStream, saveData, _jsonOptions);
-            }
+            JsonSerializer.Serialize(jsonStream, saveData, _jsonOptions);
         }
 
         #region FieldType

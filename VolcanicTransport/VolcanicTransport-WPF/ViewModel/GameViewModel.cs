@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
@@ -121,7 +122,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnFieldClicked(Coordinate coord)
         {
-            System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
+            Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
 
             //Camera.PrintDebug();
 
@@ -134,7 +135,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
             if (CurrentBuildMode == BuildMode.SELECT_STATION)
             {
-                System.Diagnostics.Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {f.Surface?.GetType().Name}");
+                Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {f.Surface?.GetType().Name}");
                 if (f.Surface is Station clickedStation)
                 {
                     if (SelectedVehicle != null)
@@ -142,7 +143,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         var v = SelectedVehicle.GetVehicle;
                         if (v != null)
                         {
-                            System.Diagnostics.Debug.WriteLine("Station megvan, küldöm a modellnek!");
+                            Debug.WriteLine("Station megvan, küldöm a modellnek!");
                             GameModel.AddStopToVehicle(v, clickedStation);
                         }
                     }
@@ -159,7 +160,7 @@ namespace VolcanicTransport_WPF.ViewModel
                     {
                         // 1. KATTINTÁS: Eltároljuk a start állomást
                         _firstSelectedStation = clickedStation;
-                        System.Diagnostics.Debug.WriteLine($"1. állomás rögzítve: {clickedStation.Coordinate}. Kattints a célra!");
+                        Debug.WriteLine($"1. állomás rögzítve: {clickedStation.Coordinate}. Kattints a célra!");
                     }
                     else
                     {
@@ -168,7 +169,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
                         if (_firstSelectedStation == secondSelectedStation)
                         {
-                            System.Diagnostics.Debug.WriteLine("A cél nem lehet ugyanaz, mint a start!");
+                            Debug.WriteLine("A cél nem lehet ugyanaz, mint a start!");
                             return;
                         }
 
@@ -188,7 +189,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
                                 v.AssignNewRoute(newRoute);
 
-                                System.Diagnostics.Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
+                                Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
                             }
                             else
                             {
@@ -220,15 +221,15 @@ namespace VolcanicTransport_WPF.ViewModel
 
                                         newVehicle.StartJourney(path, false, _firstSelectedStation);
                                         GameModelInstance.BuyVehicle(newVehicle);
-                                        System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
+                                        Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
                                     } else
                                     {
-                                        System.Diagnostics.Debug.WriteLine("Vásárlás megszakítva.");
+                                        Debug.WriteLine("Vásárlás megszakítva.");
                                     }
                                 }
                                 else
                                 {
-                                    System.Diagnostics.Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
+                                    Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
                                 }
                             }
 
@@ -239,7 +240,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("Kérlek egy állomásra kattints!");
+                    Debug.WriteLine("Kérlek egy állomásra kattints!");
                 }
             }
 
@@ -520,12 +521,12 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (SelectedVehicle != null)
                 {
                     CurrentBuildMode = BuildMode.SELECT_STATION;
-                    System.Diagnostics.Debug.WriteLine("Válassz megállót a térképen!");
-                    System.Diagnostics.Debug.WriteLine($"Siker: Mód átváltva: {CurrentBuildMode}");
+                    Debug.WriteLine("Válassz megállót a térképen!");
+                    Debug.WriteLine($"Siker: Mód átváltva: {CurrentBuildMode}");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
+                    Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
                 }
             });
 
@@ -553,7 +554,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
                     _firstSelectedStation = null;
                     CurrentBuildMode = BuildMode.BUY_VEHICLE;
-                    System.Diagnostics.Debug.WriteLine($"Menetrend törölve a {SelectedVehicle.GetName} járművön. Válassz új start állomást!");
+                    Debug.WriteLine($"Menetrend törölve a {SelectedVehicle.GetName} járművön. Válassz új start állomást!");
                 }
             });
 
@@ -598,7 +599,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         var vvm = new VehicleViewModel(newModelVehicle);
                         VehicleViewModels.Add(vvm);
                         SelectedVehicle = vvm;
-                        System.Diagnostics.Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
+                        Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
                     }
                 });
             };
@@ -676,12 +677,12 @@ namespace VolcanicTransport_WPF.ViewModel
         private readonly object _vehiclesLock = new();
 
         //private readonly DispatcherTimer _gameLoop;
-        private System.Diagnostics.Stopwatch _stopwatch;
+        private Stopwatch? _stopwatch;
         private TimeSpan _lastRenderTime = TimeSpan.Zero;
 
         public void StartGameLoop()
         {
-            _stopwatch = new System.Diagnostics.Stopwatch();
+            _stopwatch = new Stopwatch();
             _stopwatch.Start();
 
             CompositionTarget.Rendering += OnCompositionTargetRendering;
@@ -689,7 +690,7 @@ namespace VolcanicTransport_WPF.ViewModel
         private const double BASE_SPEED_MULTIPLIER = 10.0;
         private void OnCompositionTargetRendering(object? sender, EventArgs e)
         {
-            TimeSpan currentRenderTime = _stopwatch.Elapsed;
+            TimeSpan currentRenderTime = _stopwatch!.Elapsed;
             double deltaTime = (currentRenderTime - _lastRenderTime).TotalSeconds;
             _lastRenderTime = currentRenderTime;
 
@@ -732,8 +733,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
             if (previousMode == BuildMode.ROAD && CurrentBuildMode != BuildMode.ROAD)
             {
-                System.Diagnostics.Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
-
+                Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
                 GameModel.WorldInstance.Roadnetwork.RebuildEdges();
             }
 

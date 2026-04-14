@@ -22,9 +22,9 @@ namespace VolcanicTransport_Tests.Utils
         [TestMethod]
         public void AdditionCoordCoord()
         {
-            Coordinate A = new Coordinate(1, 1);
-            Coordinate B = new Coordinate(1, 1);
-            Coordinate result = new Coordinate(2, 2);
+            Coordinate A = new(1, 1);
+            Coordinate B = new(1, 1);
+            Coordinate result = new(2, 2);
             Assert.AreEqual(result, A + B);
         }
     }

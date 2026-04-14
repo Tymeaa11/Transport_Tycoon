@@ -6,13 +6,8 @@ using System.Threading.Tasks;
 
 namespace VolcanicTransport.Model.Utils
 {
-    public class FieldsEventArgs : EventArgs
+    public class FieldsEventArgs(List<Coordinate> coordinates) : EventArgs
     {
-        public List<Coordinate> ChangedCoordinates { get; }
-
-        public FieldsEventArgs(List<Coordinate> coordinates)
-        {
-            ChangedCoordinates = coordinates;
-        }
+        public List<Coordinate> ChangedCoordinates { get; } = coordinates;
     }
 }
