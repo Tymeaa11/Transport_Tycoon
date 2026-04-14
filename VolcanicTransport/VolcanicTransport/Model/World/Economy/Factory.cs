@@ -40,11 +40,17 @@ namespace VolcanicTransport.Model.World.Economy
 
         public void Update(double deltaTime, float totalTime)
         {
+            if (BaseProduct != ProductType.NONE && BaseProductBuffer.CurrentLoad <= 0)
+            {
+                return;
+            }
+
             float efficiency = FinalProduct.GetFactoryEfficiency(totalTime);
 
             double currentProduction = GameSettings.BaseProductionRate * efficiency;
 
             _productionAccumulator += deltaTime * currentProduction;
+
 
             if (_productionAccumulator >= 1.0)
             {
@@ -52,9 +58,18 @@ namespace VolcanicTransport.Model.World.Economy
 
                 int actuallyStored = FinalProductBuffer.AddAmount(producedCount);
 
-                if (actuallyStored > 0 || FinalProductBuffer.CurrentLoad < FinalProductBuffer.MaxCapacity)
+                if (actuallyStored > 0)
                 {
-                    _productionAccumulator -= producedCount;
+                    if (BaseProduct != ProductType.NONE)
+                    {
+                        BaseProductBuffer.DeductAmount(actuallyStored);
+                    }
+
+                    _productionAccumulator -= actuallyStored;
+                }
+                else if (FinalProductBuffer.CurrentLoad >= FinalProductBuffer.MaxCapacity)
+                {
+                    _productionAccumulator = 0.99;
                 }
             }
         }

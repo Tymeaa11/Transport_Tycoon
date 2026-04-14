@@ -10,7 +10,9 @@ namespace VolcanicTransport.Model.World.Economy
 
         public ProductType FinalProduct => factory.FinalProduct.ProductType;
 
-        public int BaseProductAmount => factory.BaseProductBuffer.AmountNeeded();
+        public int BaseProductNeed => factory.BaseProductBuffer.MaxCapacity;
+
+        public int BaseProductAmount => factory.BaseProductBuffer.CurrentLoad;
 
         public int FinalProductAmount => factory.FinalProductBuffer.CurrentLoad;
 

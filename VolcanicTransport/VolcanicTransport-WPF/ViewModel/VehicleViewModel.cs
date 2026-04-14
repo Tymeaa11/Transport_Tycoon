@@ -23,6 +23,9 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged(nameof(VisualY));
                 OnPropertyChanged(nameof(VisualAngle));
                 OnPropertyChanged(nameof(StateDisplay));
+                OnPropertyChanged(nameof(Type));
+                OnPropertyChanged(nameof(GetCurrentCapacity));
+                OnPropertyChanged(nameof(SpeedDisplay));
             };
             _vehicle.RouteChanged += (sender, args) => RefreshScheduleList();
             RefreshScheduleList();
@@ -66,8 +69,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public string Type => _vehicle.CurrentType.ToString();
 
-        public string GetCapacity => _vehicle.Capacity.ToString();
-        public string SpeedDisplay => (_vehicle.MaxSpeed * 45).ToString() + " km/h";
+        public string GetCurrentCapacity => (_vehicle.Capacity - _vehicle.CurrentLoad).ToString();
+        public string SpeedDisplay => (_vehicle.CurrentSpeed).ToString() + " km/h";
 
         public string StateDisplay => _vehicle.State.ToString();
 

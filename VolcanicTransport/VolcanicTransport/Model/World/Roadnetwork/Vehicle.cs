@@ -26,6 +26,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public Route? PendingRoute { get; set; } = null;
 
         protected float currentSpeed = 0;
+        public float CurrentSpeed => currentSpeed;
+
         protected float maxSpeed = maxSpeed;
         protected int capacity = capacity;
 
@@ -68,6 +70,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             CurrentRoad = currentPath[0];
 
             currentSpeed = maxSpeed;
+            StateUpdated?.Invoke(this, EventArgs.Empty);
 
             LoadWaypointsForField();
 
@@ -104,6 +107,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (State == VehicleState.Loading)
             {
                 currentSpeed = 0;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
                 waitTimer += deltaTime;
                 if (waitTimer >= LOAD_TIME)
                 {
@@ -112,15 +116,22 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     {
                         State = VehicleState.Moving;
                         currentSpeed = maxSpeed;
+                        StateUpdated?.Invoke(this, EventArgs.Empty);
                     }
                     else HandleRouteCycle();
                 }
                 return;
             }
 
-            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
+            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0)
+            {
+                State = VehicleState.Waiting;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
+                return;
+            }
 
             currentSpeed = maxSpeed;
+            StateUpdated?.Invoke(this, EventArgs.Empty);
             float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
 
             int safetyCounter = 0;
@@ -175,12 +186,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 PendingRoute = null;
                 CurrentStopIndex = 0;
                 System.Diagnostics.Debug.WriteLine($"{Name} elolvasta az új menetrendet! Váltás a {Route.Stops[0].Coordinate} állomásra.");
+                State = VehicleState.Moving;
             }
             else
             {
                 if (Route == null || Route.Stops.Count < 2)
                 {
                     State = VehicleState.Waiting;
+                    StateUpdated?.Invoke(this, EventArgs.Empty);
                     System.Diagnostics.Debug.WriteLine($"{Name} várakozik további megállókra...");
                     return;
                 }
@@ -224,6 +237,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 State = VehicleState.Waiting;
                 System.Diagnostics.Debug.WriteLine($"[HIBA] A gráf nem találja a megállót vagy a busz jelenlegi helyét!");
             }
+            StateUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void TryStartNextRoute()
@@ -239,6 +253,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (currentPathIndex + 1 >= currentPath.Count)
             {
                 State = VehicleState.Loading;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
                 waitTimer = 0;
                 if (CurrentRoad != null)
                     ReleaseJunctionLock(CurrentRoad);
@@ -350,6 +365,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (currentType == ProductType.NONE)
             {
                 currentType = type;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
             }
             return taken;
         }
@@ -361,6 +377,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (CurrentLoad == 0)
             {
                 currentType = ProductType.NONE;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
             }
             return provided;
         }

@@ -303,13 +303,17 @@ namespace VolcanicTransport.Model
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
-            var nearRoad = Direction.Directions.Any(dir => WorldInstance.GetField(coord + dir)?.Surface is Road);
-
-            if (!nearRoad) return false;
-
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;
+
+            var hasValidNearRoad = Direction.Directions.Any(dir =>
+            {
+                var neighbor = WorldInstance.GetField(coord + dir);
+                return neighbor?.Surface is Road && neighbor.Type == field.Type;
+            });
+
+            if (!hasValidNearRoad) return false;
 
             stationCost += GetMushroomCosts(field);
 
@@ -391,9 +395,8 @@ namespace VolcanicTransport.Model
                     AddMoney(amount * price);
                     Debug.WriteLine("Pénz hozzáadva!");
                 }
-                if (vehicle.Capacity > vehicle.CurrentLoad) // Csak ha van hely
+                if (vehicle.Capacity > vehicle.CurrentLoad)
                 {
-                    // Ha a busz embereket szállít 
                     int loadedAmount = station.Boarding(vehicle);
                     if (loadedAmount > 0)
                     {
@@ -401,22 +404,7 @@ namespace VolcanicTransport.Model
                     }
                 }
             }
-            VehicleArrivedAtStation?.Invoke(this, e);
-            //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
-            //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
-            //{
-                //var path = Pathfinder.FindPath(startNode, targetNode);
-               // if (path != null && path.Count > 0)
-              //  {
-                //    v.StartJourney(path);
-               //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-              //  }
-               // else
-              //  {
-              //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-               // }
-           // }
-            
+            VehicleArrivedAtStation?.Invoke(this, e);            
         }
 
         private void UpdateAllMushrooms(double deltaTime)

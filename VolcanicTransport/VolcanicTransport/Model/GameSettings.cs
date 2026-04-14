@@ -83,6 +83,7 @@ public static class GameSettings
 
     public const double BaseProductionRate = 0.2;
     public const double PeopleGrowthRate = 0.01;
+    public const double ChanceToUnboard = 0.2;
 
     #region FactoryData
     public readonly record struct FactoryData(

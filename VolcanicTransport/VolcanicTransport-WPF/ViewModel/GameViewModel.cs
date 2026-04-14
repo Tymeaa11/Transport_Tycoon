@@ -289,17 +289,14 @@ namespace VolcanicTransport_WPF.ViewModel
             HoveredCoordinate = Camera.ScreenToField(mouseXY);
             UpdateBuildability();
             _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
-            if (_hoveredField?.Surface != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"Surface type: {_hoveredField.Surface.GetType().Name}");
-            }
 
             var cornerSb = new StringBuilder();
             cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
             if (_hoveredField != null)
             {
-                cornerSb.Append($"| {_hoveredField.Type}");
+                cornerSb.Append($"| {_hoveredField.Type} ({(int)_hoveredField.Type})");
                 if (_hoveredField.Surface is Mushroom m) cornerSb.Append($" | M({m.GrowthStage})");
+                else if (_hoveredField.Surface is Road r) cornerSb.Append($" | R({r.RoadType})");
             }
             ToolTipText = cornerSb.ToString();
 
@@ -341,7 +338,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
             if (fb.BaseProduct != ProductType.NONE)
             {
-                info.AppendLine($"Base product need / amount:  {fb.BaseProduct} {fb.BaseProductAmount}");
+                info.AppendLine($"Base product need / amount:  {fb.BaseProduct} {fb.BaseProductNeed}/{fb.BaseProductAmount}");
             }
 
             info.AppendLine($"Finished product / amount: {fb.FinalProduct} {fb.FinalProductAmount}");
@@ -370,10 +367,10 @@ namespace VolcanicTransport_WPF.ViewModel
 
             if (fs.GetFactoryNeeds != ProductType.NONE)
             {
-                info.AppendLine($"Base product need / amount: ({fs.GetFactoryNeeds} / {fs.GetFactoryNeedsAmount})");
+                info.AppendLine($"Base product need / amount: {fs.GetFactoryNeeds} {fs.GetFactoryBaseProductAmount}/{fs.GetFactoryNeedsAmount}");
             }
 
-            info.AppendLine($"Finished product / amount: {fs.GetFactoryFinishedProduct} / {fs.GetFactoryFinishedProductAmount}");
+            info.AppendLine($"Finished product / amount: {fs.GetFactoryFinishedProduct} {fs.GetFactoryFinishedProductAmount}");
 
             info.AppendLine($"People waiting: {fs.WaitingPassengers}");
 

@@ -10,7 +10,8 @@ namespace VolcanicTransport.Model.World.Economy
         public ProductType GetFactoryNeeds => _factory.BaseProduct;
         public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
         public int GetFactoryFinishedProductAmount => _factory.FinalProductBuffer.CurrentLoad;
-        public int GetFactoryNeedsAmount => _factory.FinalProductBuffer.CurrentLoad;
+        public int GetFactoryBaseProductAmount => _factory.BaseProductBuffer.CurrentLoad;
+        public int GetFactoryNeedsAmount => _factory.BaseProductBuffer.MaxCapacity;
         public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time); // 0-1
         public double PricePerBaseProduct => GameSettings.GetPrice(_factory.BaseProduct);
         public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
