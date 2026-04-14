@@ -192,7 +192,7 @@ public static class GameSettings
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;
-    
+
     public const double MushroomPricePerUnit = 200;
 
 

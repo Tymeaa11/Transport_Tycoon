@@ -2,7 +2,7 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Mushroom( Coordinate coordinate, MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT) : KnowsNeighbour(coordinate)
+    public class Mushroom(Coordinate coordinate, MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT) : KnowsNeighbour(coordinate)
     {
         public Coordinate GetCoordinate => Coordinate;
 
@@ -20,7 +20,7 @@ namespace VolcanicTransport.Model.World
             Random rand = World.Instance.SharedRandom;
             bool hasChanged = false;
 
-            if (rand.NextDouble() < GameSettings.GrowthBaseChance) 
+            if (rand.NextDouble() < GameSettings.GrowthBaseChance)
             {
                 var oldStage = GrowthStage;
                 Grow();
@@ -34,7 +34,7 @@ namespace VolcanicTransport.Model.World
             if (IsAbleToSpread() && rand.NextDouble() < GameSettings.SpreadBaseChance)
             {
                 Coordinate targetCoord = myCoord + Direction.GetRandomDirection();
-;
+                ;
                 Field? targetField = World.Instance.GetField(targetCoord);
 
                 if (targetField != null && (targetField.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS)) return (null, hasChanged);

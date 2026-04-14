@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Threading.Channels;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
@@ -7,7 +6,6 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static System.Collections.Specialized.BitVector32;
 using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
@@ -64,8 +62,9 @@ namespace VolcanicTransport.Model
 
             PlayerMoney = GameSettings.StartingMoney;
 
-            _mushroomGrowthTimer = new ScalableTimer {TimeScale = 1};
-            _mushroomGrowthTimer.Elapsed += (s, e) => {
+            _mushroomGrowthTimer = new ScalableTimer { TimeScale = 1 };
+            _mushroomGrowthTimer.Elapsed += (s, e) =>
+            {
                 UpdateMushroomsOnTimer();
             };
             _mushroomGrowthTimer.Start();
@@ -93,14 +92,14 @@ namespace VolcanicTransport.Model
         private static double GetMushroomCosts(Field field)
         {
             var cost = 0d;
-            
+
             if (field.Surface is not Mushroom mushroom) return cost;
-            
-            var stage = (double)mushroom.GrowthStage+1;
+
+            var stage = (double)mushroom.GrowthStage + 1;
             cost = stage * GameSettings.MushroomPricePerUnit;
             return cost;
         }
-        
+
         public void Pause()
         {
             IsPaused = true;
@@ -266,7 +265,7 @@ namespace VolcanicTransport.Model
         public void PlaceRoad(Coordinate coord)
         {
             var roadPrice = GameSettings.BaseRoadPrice;
-            
+
             var field = WorldInstance.GetField(coord);
             if (null == field)
                 return;
@@ -405,7 +404,7 @@ namespace VolcanicTransport.Model
                     }
                 }
             }
-            VehicleArrivedAtStation?.Invoke(this, e);            
+            VehicleArrivedAtStation?.Invoke(this, e);
         }
 
         private void UpdateAllMushrooms(double deltaTime)
@@ -452,20 +451,20 @@ namespace VolcanicTransport.Model
             var terraformationPrice = GameSettings.BaseTerraformationPrice;
 
             var field = WorldInstance.GetField(coord);
-            
+
             if (field == null)
                 return;
 
-            if (! ((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
+            if (!((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
                 return;
-            
+
             terraformationPrice += GetMushroomCosts(field);
 
             var newFieldType = (FieldType)((int)field.Type + deltaHeight);
 
             if (newFieldType > FieldType.HIGH_MOUNTAINS) return;
             if (!TryPurchase(terraformationPrice)) return;
-            
+
             field.SetFieldTypeTo(newFieldType);
             var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
 

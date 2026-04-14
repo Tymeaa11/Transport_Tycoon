@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Numerics;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -87,7 +86,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {Position} pixelre.");
                 }
             }
-            else if (currentStation != null) {
+            else if (currentStation != null)
+            {
 
                 float stationCenterX = (currentStation.Coordinate.X * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
                 float stationCenterY = (currentStation.Coordinate.Y * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
@@ -215,7 +215,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     .FirstOrDefault();
             }
 
-    
+
 
             if (startNode != null && targetNode != null)
             {

@@ -198,10 +198,10 @@ namespace VolcanicTransport_WPF.ViewModel
                                 if (path != null && path.Count > 0)
                                 {
                                     // TODO : Is this allowed in MVVM?
-                                    var nameDialog = new VehicleNameWindow {Owner = Application.Current.MainWindow}; 
+                                    var nameDialog = new VehicleNameWindow { Owner = Application.Current.MainWindow };
 
                                     if (nameDialog.ShowDialog() == true)
-                                    {                                        
+                                    {
                                         string chosenName = nameDialog.VehicleName;
                                         string? chosenType = nameDialog.SelectedType;
 
@@ -222,7 +222,8 @@ namespace VolcanicTransport_WPF.ViewModel
                                         newVehicle.StartJourney(path, false, _firstSelectedStation);
                                         GameModelInstance.BuyVehicle(newVehicle);
                                         Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
-                                    } else
+                                    }
+                                    else
                                     {
                                         Debug.WriteLine("Vásárlás megszakítva.");
                                     }
@@ -510,12 +511,12 @@ namespace VolcanicTransport_WPF.ViewModel
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
-            
+
             QuitToMainMenuCommand = new DelegateCommand(_ =>
             {
                 ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
             });
-            
+
             AddStopCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VolcanicTransport.Model.World;
+﻿using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport_WPF.ViewModel;
 public class ChunkViewModel(Chunk chunk) : ViewModelBase
@@ -12,7 +7,8 @@ public class ChunkViewModel(Chunk chunk) : ViewModelBase
     public Chunk Chunk { get; init; } = chunk;
 
     private bool _isVisible = false;
-    public bool IsVisible { 
+    public bool IsVisible
+    {
         get => _isVisible;
         set
         {

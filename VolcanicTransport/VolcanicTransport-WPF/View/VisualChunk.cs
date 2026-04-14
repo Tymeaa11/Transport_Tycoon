@@ -76,7 +76,7 @@ namespace VolcanicTransport_WPF.View
 
         #region Methods
 
-        private void SetVisibility(bool b) 
+        private void SetVisibility(bool b)
             => Visibility = b ? Visibility.Visible : Visibility.Collapsed;
 
         private void PreRender(Chunk chunkData)

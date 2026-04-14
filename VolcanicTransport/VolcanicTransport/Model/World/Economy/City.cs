@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.World.Economy
 {

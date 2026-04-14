@@ -44,7 +44,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public Matrix ProjectionMatrix
         {
-            get {
+            get
+            {
                 Matrix matrix = Matrix.Identity;
 
                 matrix.Scale(_scale, _scale);
@@ -104,7 +105,7 @@ namespace VolcanicTransport_WPF.ViewModel
             CameraChanged?.Invoke(this, EventArgs.Empty);
 
         }
-        
+
 
 
         private void CalculateScale()
@@ -118,7 +119,7 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        private void CalculateZoomFromScale() 
+        private void CalculateZoomFromScale()
             => _zoom = Math.Sqrt((_scale - MinimumScale) / ScaleCoefficient);
 
         public void Zoom(double delta)
