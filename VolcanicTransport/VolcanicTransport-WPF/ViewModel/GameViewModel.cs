@@ -293,9 +293,11 @@ namespace VolcanicTransport_WPF.ViewModel
         public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
         {
             _lastMousePosition = mouseXY;
-            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+            HoveredCoordinate = Camera.ScreenToField((Vector)mouseXY);
             UpdateBuildability();
             _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
+
+            Camera.CurrentMousePosition = (Vector)mouseXY;
 
             var cornerSb = new StringBuilder();
             cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
@@ -712,6 +714,9 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 UpdateHoveredCoordinateAndTooltips(_lastMousePosition);
             }
+
+            Camera.Update(deltaTime);
+
         }
         private void OnSetBuildMode(BuildMode mode)
         {

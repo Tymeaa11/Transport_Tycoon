@@ -442,7 +442,7 @@ namespace VolcanicTransport.Model
 
             foreach (Chunk? chunk in chunksToRedraw)
             {
-                chunk.TriggerRerender();
+                WorldInstance.UpdateChunk(chunk.Coordinate);
             }
         }
 
