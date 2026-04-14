@@ -15,12 +15,13 @@ namespace VolcanicTransport_WPF.View
         {
             InitializeComponent();
 
-            this.MouseWheel += MainGameWindow_MouseWheel;
-            this.MouseLeftButtonDown += MainGameWindow_MouseLeftButtonDown;
-            this.MouseMove += MainGameWindow_MouseMove;
-            this.KeyDown += MainGameWindow_KeyDown;
+            MouseWheel += MainGameWindow_MouseWheel;
+            MouseLeftButtonDown += MainGameWindow_MouseLeftButtonDown;
+            MouseMove += MainGameWindow_MouseMove;
+            KeyDown += MainGameWindow_KeyDown;
+            KeyUp += MainGameWindow_KeyUp;
 
-            this.SizeChanged += (s, e) =>
+            SizeChanged += (s, e) =>
             {
                 if (DataContext is GameViewModel vm)
                     vm.SetViewDimensions(ViewPort.ActualWidth, ViewPort.ActualHeight);
@@ -30,18 +31,36 @@ namespace VolcanicTransport_WPF.View
 
         private void MainGameWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape)
+            if (DataContext is GameViewModel vm)
             {
-                (DataContext as GameViewModel)?.TogglePauseCommand.Execute(null);
+                UpdateCameraInput(vm.Camera, e.Key, true);
+
+                if (e.Key == Key.Escape)
+                    vm.TogglePauseCommand.Execute(null); //
             }
         }
 
         private void MainGameWindow_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (DataContext is GameViewModel vm)
+                vm.Camera.Zoom(e.Delta);
+        }
+
+        private void MainGameWindow_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (DataContext is GameViewModel vm)
             {
-                // Zoom around the current mouse position
-                vm.Camera.Zoom(e.Delta, e.GetPosition(ViewPort));
+                UpdateCameraInput(vm.Camera, e.Key, false);
+            }
+        }
+        private void UpdateCameraInput(Camera camera, Key key, bool isPressed)
+        {
+            switch (key)
+            {
+                case Key.W: camera.IsMovingUp = isPressed; break;
+                case Key.S: camera.IsMovingDown = isPressed; break;
+                case Key.A: camera.IsMovingLeft = isPressed; break;
+                case Key.D: camera.IsMovingRight = isPressed; break;
             }
         }
 
@@ -49,7 +68,7 @@ namespace VolcanicTransport_WPF.View
         {
             if (DataContext is GameViewModel vm)
             {
-                Coordinate fieldCoord = vm.Camera.ScreenToField(e.GetPosition(ViewPort));
+                Coordinate fieldCoord = vm.Camera.ScreenToField((Vector)e.GetPosition(ViewPort));
 
                 if (vm.FieldClickedCommand.CanExecute(fieldCoord))
                     vm.FieldClickedCommand.Execute(fieldCoord);

@@ -12,10 +12,6 @@
         >
 
     <Window.InputBindings>
-        <KeyBinding Key="W" Command="{Binding Camera.MoveUp}" />
-        <KeyBinding Key="S" Command="{Binding Camera.MoveDown}" />
-        <KeyBinding Key="A" Command="{Binding Camera.MoveLeft}" />
-        <KeyBinding Key="D" Command="{Binding Camera.MoveRight}" />
         <KeyBinding Key="G" Command="{Binding ReGenerateWithRandomSeed}" />
     </Window.InputBindings>
 
@@ -59,8 +55,8 @@
 
             <ItemsControl.ItemContainerStyle>
                 <Style TargetType="ContentPresenter">
-                    <Setter Property="Canvas.Left" Value="{Binding Path=Coordinate.X, Converter={StaticResource ChunkToPixelConverter}}" />
-                    <Setter Property="Canvas.Top" Value="{Binding Path=Coordinate.Y, Converter={StaticResource ChunkToPixelConverter}}" />
+                    <Setter Property="Canvas.Left" Value="{Binding Path=Chunk.Coordinate.X, Converter={StaticResource ChunkToPixelConverter}}" />
+                    <Setter Property="Canvas.Top" Value="{Binding Path=Chunk.Coordinate.Y, Converter={StaticResource ChunkToPixelConverter}}" />
                 </Style>
             </ItemsControl.ItemContainerStyle>
         </ItemsControl>

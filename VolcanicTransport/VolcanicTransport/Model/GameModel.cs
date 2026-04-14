@@ -41,6 +41,7 @@ namespace VolcanicTransport.Model
         public event EventHandler? FieldChanged;
         public event EventHandler? VehicleSelectedIndex;
         public event EventHandler? OnPlacementFailed;
+
         #endregion
 
         #region Instance
@@ -333,7 +334,8 @@ namespace VolcanicTransport.Model
             WorldInstance.Roadnetwork.RegisterNodeIfNeeded(coord);
 
             var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
-            WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
+
+            WorldInstance.UpdateChunk(chunkCoord);
 
             return true;
         }
@@ -467,7 +469,8 @@ namespace VolcanicTransport.Model
             
             field.SetFieldTypeTo(newFieldType);
             var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
-            WorldInstance.GetChunk(chunkCoord)?.TriggerRerender();
+
+            WorldInstance.UpdateChunk(chunkCoord);
 
         }
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);

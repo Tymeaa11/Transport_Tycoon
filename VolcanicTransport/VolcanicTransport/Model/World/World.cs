@@ -34,6 +34,8 @@ namespace VolcanicTransport.Model.World
         public GameWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
 
+        public event EventHandler<ChunkUpdatedEventArgs>? ChunkChanged;
+
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
         #endregion
@@ -113,6 +115,8 @@ namespace VolcanicTransport.Model.World
             Generate();
         }
 
+        public void UpdateChunk(Coordinate chunkCoordinate)
+            => ChunkChanged?.Invoke(this, new(chunkCoordinate));     
 
 
         public void AddVehicle(Vehicle v) => Vehicles.Add(v);
@@ -145,9 +149,7 @@ namespace VolcanicTransport.Model.World
             }
 
             foreach (var chunk in chunksToRender)
-            {
-                chunk.TriggerRerender();
-            }
+                UpdateChunk(chunk.Coordinate);
         }
 
         #endregion

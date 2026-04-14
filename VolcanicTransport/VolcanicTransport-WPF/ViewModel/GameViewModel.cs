@@ -16,6 +16,7 @@ namespace VolcanicTransport_WPF.ViewModel
     public class GameViewModel : ViewModelBase
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
+
         private bool _isPausedView;
 
         #region Events
@@ -49,18 +50,26 @@ namespace VolcanicTransport_WPF.ViewModel
         }
 
         #region Chunks
-        public ObservableCollection<Chunk> LoadedChunks { get; } = [];
+        public ObservableCollection<ChunkViewModel> LoadedChunks { get; }
+        public Dictionary<Coordinate, ChunkViewModel> ChunkMap { get; }
 
         public void SetViewDimensions(double width, double height)
         {
             _lastWidth = width;
             _lastHeight = height;
-            UpdateVisibleChunks(width, height);
+            UpdateVisibleChunks();
+            Camera.HalfScreenDimensions = new Vector(width * 0.5, height * 0.5);
         }
 
-        public void UpdateVisibleChunks(double width, double height)
+        private void On_UpdateChunk(object? sender, ChunkUpdatedEventArgs e)
         {
-            Rect bounds = Camera.GetVisibleWorldBounds(width, height);
+            if (ChunkMap.ContainsKey(e.ChunkCoordinate))
+                ChunkMap[e.ChunkCoordinate].TriggerRerender();
+        }
+
+        public void UpdateVisibleChunks()
+        {
+            Rect bounds = Camera.GetVisibleWorldBounds();
 
             // Get visible chunk coordinates (+1 buffer)
             int chunkPX = GameSettings.ChunkSize * GameSettings.FieldSize;
@@ -77,18 +86,9 @@ namespace VolcanicTransport_WPF.ViewModel
                     if (x >= 0 && x < WorldSizeInChunks.X && y >= 0 && y < WorldSizeInChunks.Y)
                         visibleCoords.Add(new Coordinate(x, y));
 
-
-            // 1. Remove if outside
-            var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();
-            foreach (var chunk in toRemove) LoadedChunks.Remove(chunk);
-
-            // 2. Add if became visible
-            foreach (var coord in visibleCoords)
-                if (!LoadedChunks.Any(c => c.Coordinate.Equals(coord)))
-                {
-                    var chunk = GameModel.WorldInstance.GetChunk(coord);
-                    if (chunk != null) LoadedChunks.Add(chunk);
-                }
+            // Set visibility based on whether the coordinate is in the visible set
+            foreach (var kvp in ChunkMap)
+                kvp.Value.IsVisible = visibleCoords.Contains(kvp.Key);
         }
 
         #endregion
@@ -122,6 +122,13 @@ namespace VolcanicTransport_WPF.ViewModel
         private void OnFieldClicked(Coordinate coord)
         {
             System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
+
+            //Camera.PrintDebug();
+
+            //foreach (var cvm in LoadedChunks)
+            //    System.Diagnostics.Debug.WriteLine($"CVM {cvm.Chunk.Coordinate}, {cvm.IsVisible}");
+            //System.Diagnostics.Debug.WriteLine("\n");
+
             Field? f = GameModel.WorldInstance.GetField(coord);
             if (f == null) return;
 
@@ -469,11 +476,15 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public GameViewModel()
         {
-            Camera = new Camera(Matrix.Identity);
+            Camera = new Camera();
 
-            Camera.CameraChanged += (s, e) => UpdateVisibleChunks(_lastWidth, _lastHeight);
+            Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
             CurrentTimescale = 1;
+
+            LoadedChunks = [];
+            ChunkMap = [];
+
 
             FieldClickedCommand = new DelegateCommand(param =>
             {
@@ -521,8 +532,15 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 GameModel.WorldInstance.Generate(new Random().Next());
                 LoadedChunks.Clear();
-                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
-                UpdateVisibleChunks(_lastWidth, _lastHeight);
+                ChunkMap.Clear();
+                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
+                {
+                    ChunkViewModel chunkViewModel = new(c);
+                    LoadedChunks.Add(chunkViewModel);
+                    ChunkMap[new(x, y)] = chunkViewModel;
+                });
+
+                UpdateVisibleChunks();
             }
             );
 
@@ -548,8 +566,19 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            int newSeed = new Random().Next(1, 1000000);
-            GameModel.Initialise(8, newSeed);
+            GameModel.Initialise(5, 0);
+
+            GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
+            {
+                ChunkViewModel chunkViewModel = new(c);
+                LoadedChunks.Add(chunkViewModel);
+                ChunkMap[new(x, y)] = chunkViewModel;
+            });
+
+            GameModel.WorldInstance.ChunkChanged += On_UpdateChunk;
+
+            var halfWorldSizeInPixels = GameModel.WorldInstance.SizeInFields * -GameSettings.FieldSizeP2;
+            Camera.Position = new Vector(halfWorldSizeInPixels.X, halfWorldSizeInPixels.Y);
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
@@ -675,6 +704,7 @@ namespace VolcanicTransport_WPF.ViewModel
             while (_accumulator >= FIXED_DELTA_TIME)
             {
                 GameModelInstance.Update(FIXED_DELTA_TIME);
+
                 _accumulator -= FIXED_DELTA_TIME;
             }
 
