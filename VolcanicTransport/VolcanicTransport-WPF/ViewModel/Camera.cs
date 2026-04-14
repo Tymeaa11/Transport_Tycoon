@@ -9,7 +9,7 @@ namespace VolcanicTransport_WPF.ViewModel
     public class Camera : ViewModelBase
     {
         #region Fields
-        private Vector _position;
+        public Vector Position { get; set; }
         private Vector _velocity;
 
         private double _zoom;
@@ -49,7 +49,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
                 matrix.Scale(_scale, _scale);
 
-                Vector t = _position + HalfScreenDimensions;
+                Vector t = Position + HalfScreenDimensions;
                 matrix.Translate(t.X, t.Y);
 
                 return matrix;
@@ -61,7 +61,7 @@ namespace VolcanicTransport_WPF.ViewModel
         #region Constructor
         public Camera()
         {
-            _position = new Vector(0, 0);
+            Position = new Vector(0, 0);
             _velocity = new Vector(0, 0);
 
             _scale = 1;
@@ -79,7 +79,7 @@ namespace VolcanicTransport_WPF.ViewModel
             if (IsMovingLeft) _velocity.X += CameraMovementSpeed * deltaTime;
             if (IsMovingRight) _velocity.X -= CameraMovementSpeed * deltaTime;
 
-            _position += _velocity * deltaTime;
+            Position += _velocity * deltaTime;
             _velocity *= Math.Pow(MovementDrag, deltaTime);
 
             _zoom += _zoomSpeed * deltaTime;
@@ -92,10 +92,10 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 Vector mouse = CurrentMousePosition - HalfScreenDimensions;
 
-                _position -= mouse;
-                _position *= _scale;
-                _position /= _previousScale;
-                _position += mouse;
+                Position -= mouse;
+                Position *= _scale;
+                Position /= _previousScale;
+                Position += mouse;
 
                 _previousScale = _scale;
             }
@@ -133,7 +133,7 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             Vector output = new(screenPoint.X, screenPoint.Y);
 
-            output -= _position + HalfScreenDimensions;
+            output -= Position + HalfScreenDimensions;
             output /= _scale;
 
             return output;
@@ -156,7 +156,7 @@ namespace VolcanicTransport_WPF.ViewModel
         }
         public void PrintDebug()
         {
-            System.Diagnostics.Debug.WriteLine($"p:{_position}, v:{_velocity}, s:{_scale}");
+            System.Diagnostics.Debug.WriteLine($"p:{Position}, v:{_velocity}, s:{_scale}");
         }
         #endregion
 

@@ -396,7 +396,14 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 GameModel.WorldInstance.Generate(new Random().Next());
                 LoadedChunks.Clear();
-                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => GameModel.WorldInstance.UpdateChunk(new(x,y)));
+                ChunkMap.Clear();
+                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
+                {
+                    ChunkViewModel chunkViewModel = new(c);
+                    LoadedChunks.Add(chunkViewModel);
+                    ChunkMap[new(x, y)] = chunkViewModel;
+                });
+
                 UpdateVisibleChunks();
             }
             );
@@ -422,6 +429,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
             GameModel.WorldInstance.ChunkChanged += On_UpdateChunk;
 
+            var halfWorldSizeInPixels = GameModel.WorldInstance.SizeInFields * -GameSettings.FieldSizeP2;
+            Camera.Position = new Vector(halfWorldSizeInPixels.X, halfWorldSizeInPixels.Y);
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
