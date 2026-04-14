@@ -15,21 +15,54 @@ namespace VolcanicTransport.Model.World.Economy
 
         public int AmountNeeded() => MaxCapacity - CurrentLoad;
 
-        public int ReceiveProduct(ProductType type, int amount) //visszatérési érték: amennyit átvett 
+        public int AddAmount(int amount) // visszatérési érték: amennyit fel tudott felvenni
         {
-            if (ProductType != type) return 0;
-
-            var canReceive = Math.Min(amount, MaxCapacity - CurrentLoad);
-
-            CurrentLoad += canReceive;
-
-            return canReceive;
+            int capacity = MaxCapacity - CurrentLoad;
+            if (capacity < amount)
+            {
+                CurrentLoad += capacity;
+                return capacity;
+            }
+            CurrentLoad += amount;
+            return amount;
+                
         }
-        public int FillVehicle(Vehicle? vehicle)
+
+        public void DeductAmount(int amount)
+        {
+            if (amount > CurrentLoad)
+            {
+                CurrentLoad = 0;
+            } else
+            {
+                CurrentLoad -= amount; 
+            }
+        }
+
+        public int ReciveProduct(Vehicle vehicle, int amount) //visszatérési érték: amennyit átvett 
+        {
+            if (vehicle.CurrentType != ProductType) return 0;
+
+            int provided = vehicle.Unload(amount);
+            int capacity = MaxCapacity - CurrentLoad;
+            if (capacity < provided)
+            {
+                int plus = provided - capacity;
+                vehicle.Load(plus, ProductType);
+                CurrentLoad += capacity;
+                return capacity;
+            } else
+            {
+                CurrentLoad += provided;
+                return provided;
+            }
+        }
+
+        public int FillVehicle(Vehicle vehicle) //visszatérési érték: amennyit leadott
         {
             if (vehicle == null || CurrentLoad <= 0) { return 0; }
 
-            var taken = vehicle.Load(CurrentLoad);
+            var taken = vehicle.Load(CurrentLoad, ProductType);
 
             CurrentLoad -= taken;
 

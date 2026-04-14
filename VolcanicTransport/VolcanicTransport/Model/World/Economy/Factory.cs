@@ -22,6 +22,8 @@ namespace VolcanicTransport.Model.World.Economy
 
         private readonly List<Field> _factoryFields = [];
 
+        private double _productionAccumulator = 0;
+
         protected Factory(string name, Coordinate origin, GameSettings.FactoryData factoryData) : this(
             name,
             factoryData.BaseProduct,
@@ -33,8 +35,43 @@ namespace VolcanicTransport.Model.World.Economy
 
         public void AddField(Field f)
         {
-            //ELLENŐRZÉSEK TODO//
             _factoryFields.Add(f);
+        }
+
+        public void Update(double deltaTime, float totalTime)
+        {
+            if (BaseProduct != ProductType.NONE && BaseProductBuffer.CurrentLoad <= 0)
+            {
+                return;
+            }
+
+            float efficiency = FinalProduct.GetFactoryEfficiency(totalTime);
+
+            double currentProduction = GameSettings.BaseProductionRate * efficiency;
+
+            _productionAccumulator += deltaTime * currentProduction;
+
+
+            if (_productionAccumulator >= 1.0)
+            {
+                int producedCount = (int)_productionAccumulator;
+
+                int actuallyStored = FinalProductBuffer.AddAmount(producedCount);
+
+                if (actuallyStored > 0)
+                {
+                    if (BaseProduct != ProductType.NONE)
+                    {
+                        BaseProductBuffer.DeductAmount(actuallyStored);
+                    }
+
+                    _productionAccumulator -= actuallyStored;
+                }
+                else if (FinalProductBuffer.CurrentLoad >= FinalProductBuffer.MaxCapacity)
+                {
+                    _productionAccumulator = 0.99;
+                }
+            }
         }
     }
 
@@ -61,7 +98,7 @@ namespace VolcanicTransport.Model.World.Economy
         { }
 
         public BoneProducer(string name, Coordinate origin)
-            : base(name, origin, GameSettings.AshProducerFactoryData)
+            : base(name, origin, GameSettings.BoneProducerFactoryData)
         { }
     }
     public class MushroomProducer : Factory
@@ -74,7 +111,7 @@ namespace VolcanicTransport.Model.World.Economy
         { }
 
         public MushroomProducer(string name, Coordinate origin)
-            : base(name, origin, GameSettings.AshProducerFactoryData)
+            : base(name, origin, GameSettings.MushroomProducerFactoryData)
         { }
     }
     public class SteamProducer : Factory
@@ -87,7 +124,7 @@ namespace VolcanicTransport.Model.World.Economy
         { }
 
         public SteamProducer(string name, Coordinate origin)
-            : base(name, origin, GameSettings.AshProducerFactoryData)
+            : base(name, origin, GameSettings.SteamProducerFactoryData)
         { }
     }
     public class SulfurProducer : Factory
@@ -100,7 +137,7 @@ namespace VolcanicTransport.Model.World.Economy
         { }
 
         public SulfurProducer(string name, Coordinate origin)
-            : base(name, origin, GameSettings.AshProducerFactoryData)
+            : base(name, origin, GameSettings.SulfurProducerFactoryData)
         { }
     }
     public class ConcreteFactory : Factory
@@ -113,7 +150,7 @@ namespace VolcanicTransport.Model.World.Economy
         { }
 
         public ConcreteFactory(string name, Coordinate origin)
-            : base(name, origin, GameSettings.AshProducerFactoryData)
+            : base(name, origin, GameSettings.ConcreteFactoryData)
         { }
     }
     public class CondensatorFactory : Factory
@@ -126,7 +163,7 @@ namespace VolcanicTransport.Model.World.Economy
         { }
 
         public CondensatorFactory(string name, Coordinate origin)
-            : base(name, origin, GameSettings.AshProducerFactoryData)
+            : base(name, origin, GameSettings.CondensatorFactoryData)
         { }
     }
 

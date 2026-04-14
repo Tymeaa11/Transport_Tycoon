@@ -38,7 +38,7 @@ namespace VolcanicTransport_WPF
         {
             _gameViewModel = new GameViewModel();
             _gameViewModel.Initialise();
-            //_gameViewModel.ExitToMenuRequested += GameViewModel_ExitToMenuRequested;
+            _gameViewModel.ExitToMenuRequested += GameViewModel_ExitToMenuRequested;
 
             _mainGameWindow = new MainGameWindow
             {

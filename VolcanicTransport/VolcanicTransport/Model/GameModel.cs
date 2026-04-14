@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading.Channels;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
@@ -6,15 +7,20 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using static System.Collections.Specialized.BitVector32;
+using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {
     public class GameModel
     {
         public static World.World WorldInstance => World.World.Instance;
+        private ScalableTimer _mushroomGrowthTimer;
+        private double _monthlyExpenseAccumulator = 0;
 
         #region Fields
 
+        public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;
         private readonly ISaveFileManager _savefileManager;
@@ -57,14 +63,19 @@ namespace VolcanicTransport.Model
             WorldInstance.Generate();
 
             PlayerMoney = GameSettings.StartingMoney;
+
+            _mushroomGrowthTimer = new ScalableTimer();
+            _mushroomGrowthTimer.TimeScale = 1; 
+            _mushroomGrowthTimer.Elapsed += (s, e) => {
+                UpdateMushroomsOnTimer();
+            };
+            _mushroomGrowthTimer.Start();
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
         public static void Initialise(int worldSize, int seed)
         {
-            if (_instance != null) throw new InvalidOperationException("World already initialised");
-
             _instance = new GameModel(worldSize, seed);
         }
         #endregion
@@ -94,6 +105,7 @@ namespace VolcanicTransport.Model
         public void Pause()
         {
             IsPaused = true;
+            _mushroomGrowthTimer.TimeScale = 0;
             GamePaused?.Invoke(this, EventArgs.Empty);
         }
 
@@ -106,36 +118,62 @@ namespace VolcanicTransport.Model
         public void ChangeTimeSpeed1X()
         {
             UnPause();
+            _mushroomGrowthTimer.TimeScale = 1;
             TimescaleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void ChangeTimeSpeed2X()
         {
             UnPause();
+            _mushroomGrowthTimer.TimeScale = 2;
             TimescaleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void ChangeTimeSpeed4X()
         {
             UnPause();
+            _mushroomGrowthTimer.TimeScale = 4;
             TimescaleChanged?.Invoke(this, EventArgs.Empty);
         }
-
+        private void UpdateMushroomsOnTimer()
+        {
+            UpdateAllMushrooms(0.1);
+        }
         public void Update(double deltaTime)
         {
             if (IsPaused) return;
+            _monthlyExpenseAccumulator += deltaTime;
+
+            if (_monthlyExpenseAccumulator >= 600.0)
+            {
+                HandleMonthlyExpenses();
+                _monthlyExpenseAccumulator = 0;
+            }
+
             WorldInstance.Update(deltaTime);
+            foreach (Factory factory in WorldInstance.Factories)
+            {
+                factory.Update(deltaTime, (float)Time);
+            }
+            foreach (Station station in WorldInstance.Stations)
+            {
+                station.GetWaitingPassengers(deltaTime);
+            }
             GameAdvanced?.Invoke(this, EventArgs.Empty);
             Time += deltaTime;
         }
 
         public bool BuyVehicle(Vehicle v)
         {
-            if (!TryPurchase(v.Price)) return false;
+            if (TryPurchase(v.Price))
+            {
+                v.ArrivedAtStation += HandleVehicleArrived;
 
-            WorldInstance.AddVehicle(v);
-            VehicleBought?.Invoke(this, EventArgs.Empty);
-            return true;
+                WorldInstance.AddVehicle(v);
+                VehicleBought?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+            return false;
         }
 
         public void SellVehicle(Vehicle v)
@@ -167,14 +205,26 @@ namespace VolcanicTransport.Model
 
         private void HandleMonthlyExpenses()
         {
-            // Levonja a fenntartási költségeket
-            CheckBankruptcy();
-        }
+            double totalExpense = 0;
 
-        private void CheckBankruptcy()
-        {
-            if (PlayerMoney < 0)
-                GameOver?.Invoke(this, EventArgs.Empty);
+            lock (WorldInstance.Vehicles)
+            {
+                foreach (var vehicle in WorldInstance.Vehicles)
+                {
+                    totalExpense += 500;
+                }
+            }
+
+            if (totalExpense > 0)
+            {
+                bool able = TryPurchase(totalExpense);
+                if (!able)
+                {
+                    Pause();
+                    GameOver?.Invoke(this, EventArgs.Empty);
+                }
+                Debug.WriteLine($"Havi kiadások levonva: -{totalExpense}$ (Járművek száma: {WorldInstance.Vehicles.Count})");
+            }
         }
 
         public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
@@ -254,13 +304,17 @@ namespace VolcanicTransport.Model
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
-            var nearRoad = Direction.Directions.Any(dir => WorldInstance.GetField(coord + dir)?.Surface is Road);
-
-            if (!nearRoad) return false;
-
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;
+
+            var hasValidNearRoad = Direction.Directions.Any(dir =>
+            {
+                var neighbor = WorldInstance.GetField(coord + dir);
+                return neighbor?.Surface is Road && neighbor.Type == field.Type;
+            });
+
+            if (!hasValidNearRoad) return false;
 
             stationCost += GetMushroomCosts(field);
 
@@ -288,38 +342,108 @@ namespace VolcanicTransport.Model
 
         public static void AddStopToVehicle(Vehicle v, Station s)
         {
-            v.Route ??= new Route();
+
+            if (v.Route.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
 
             v.Route.AddStop(s);
             Debug.WriteLine($"Megálló hozzáadva: {s.Coordinate}. Összesen: {v.Route.Stops.Count}");
 
-            if (v.Route.Stops.Count < 2)
-            {
-                Debug.WriteLine("Várakozás a második megállóra...");
-                return;
-            }
-            Debug.WriteLine("Két megálló megvan, gráf frissítése...");
-
             var graph = WorldInstance.Roadnetwork;
-            //graph.RegisterNodeIfNeeded(v.Route.Stops[v.Route.Stops.Count - 2].Field);
             graph.RegisterNodeIfNeeded(s.Coordinate);
             graph.RebuildEdges();
 
-            //if (graph.NodeMap.TryGetValue(v.Route.Stops[v.Route.Stops.Count - 2].Field, out var startNode) &&
-            //    graph.NodeMap.TryGetValue(s.Field, out var targetNode))
-            //{
-            //var path = Pathfinder.FindPath(startNode, targetNode);
-            // if (path != null && path.Count > 0)
-            //  {
-            //    v.StartJourney(path);
-            //     System.Diagnostics.Debug.WriteLine("Siker! Busz indul.");
-            //  }
-            // else
-            //  {
-            //      System.Diagnostics.Debug.WriteLine("Pathfinder: Nem található összeköttetés az utak között.");
-            // }
-            // }
+            if (v.State == VehicleState.Waiting)
+            {
+                v.TryStartNextRoute();
+            }
+            v.TriggerRouteChanged();
+        }
 
+        private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
+
+            Vehicle vehicle = e.Vehicle;
+            Station station = e.Station;
+            float currentTime = (float)Time;
+            ProductType productType = vehicle.CurrentType;
+            Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity - vehicle.CurrentLoad}");
+            if (vehicle is CargoTruck or TankerTruck)
+            {
+                int accepted = station.UnLoadProductFromVehicle(vehicle);
+                if (accepted != 0)
+                {
+                    Debug.WriteLine($"{accepted} egység leadva a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(accepted * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (station is FactoryStation fs)
+                {
+                    int amount = fs.LoadProduct(vehicle);
+                    if (amount > 0)
+                    {
+                        Debug.WriteLine($"{accepted} egység felvéve a járműre.");
+                    }
+                }
+            }
+            else
+            {
+                int amount = station.UnBoarding(vehicle);
+                if (amount != 0)
+                {
+                    Debug.WriteLine($"{amount} ember leszállt a járműről.");
+                    double price = GameSettings.GetPrice(productType);
+                    AddMoney(amount * price);
+                    Debug.WriteLine("Pénz hozzáadva!");
+                }
+                if (vehicle.Capacity > vehicle.CurrentLoad)
+                {
+                    int loadedAmount = station.Boarding(vehicle);
+                    if (loadedAmount > 0)
+                    {
+                        Debug.WriteLine($"[FELVÉTEL] {loadedAmount} egység felvéve a járműre.");
+                    }
+                }
+            }
+            VehicleArrivedAtStation?.Invoke(this, e);            
+        }
+
+        private void UpdateAllMushrooms(double deltaTime)
+        {
+            int samplesCount = (int)(GameSettings.SamplesCount * deltaTime);
+            HashSet<Chunk> chunksToRedraw = new HashSet<Chunk>();
+
+            for (int i = 0; i < samplesCount; i++)
+            {
+                int x = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.X);
+                int y = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.Y);
+                Coordinate randomCoord = new Coordinate(x, y);
+
+                Field? field = WorldInstance.GetField(randomCoord);
+
+                if (field == null) continue;
+
+                if (field.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS) continue;
+
+                if (field.Surface is Mushroom mushroom)
+                {
+                    (Coordinate? target, bool spread) = mushroom.UpdateMushroom(randomCoord);
+                    if (spread)
+                    {
+                        if (target != null)
+                        {
+                            var chunk = WorldInstance.GetChunk(WorldInstance.GetChunkCoordinate((Coordinate)target));
+                            if (chunk != null) chunksToRedraw.Add(chunk);
+                        }
+                    }
+                }
+            }
+
+            foreach (Chunk? chunk in chunksToRedraw)
+            {
+                chunk.TriggerRerender();
+            }
         }
 
         #endregion
@@ -351,6 +475,7 @@ namespace VolcanicTransport.Model
         }
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);
         public void LowerField(Coordinate coord) => TerraformField(coord, -1);
+
 
     }
 }

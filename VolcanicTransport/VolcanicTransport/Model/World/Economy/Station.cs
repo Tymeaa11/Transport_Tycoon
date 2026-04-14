@@ -1,3 +1,4 @@
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -5,39 +6,74 @@ namespace VolcanicTransport.Model.World.Economy
 {
     public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
     {
-        protected string name = name; // menteni
-        protected readonly ProductBuffer passangerBuffer = passangerBuffer; // menteni
-        protected Vehicle? vehicle = null; // ?? egyenlőre nem mentjük IsOccupied lesz majdd
-        protected Product passengerDemand = passengerDemand;  // menteni
+        protected string name = name;
+        protected ProductBuffer passangerBuffer = passangerBuffer;
+        protected Product PassengerDemand = passengerDemand;
 
-        public abstract bool UnLoadProductFromVehicle();
-        public bool Boarding()
+        protected bool isOccupied = false;
+        public bool IsOccupied { get { return isOccupied; } }
+        public string Name { get { return name; } }
+        public int WaitingPassengers => passangerBuffer.CurrentLoad;
+
+        private double _passengerAccumulator = 0;
+        public int GetWaitingPassengers(double deltaTime)
         {
-            if (vehicle is not { Type: ProductType.HUMAN })
+            _passengerAccumulator += deltaTime * GameSettings.PeopleGrowthRate;
+
+            if (_passengerAccumulator >= 1.0)
             {
-                return false;
+                int newPeople = (int)_passengerAccumulator;
+                int left = passangerBuffer.AddAmount(newPeople);
+                _passengerAccumulator -= left;
+            }
+            return passangerBuffer.CurrentLoad;
+        }
+        public int GetPricePerPassenger(float time)
+        {
+            return PassengerDemand.GetDemand(time);
+        }
+        public abstract int UnLoadProductFromVehicle(Vehicle vehicle);
+        public int Boarding(Vehicle vehicle) // mennyi ember szállt fel
+        {
+            if (vehicle.CurrentLoad > 0 && vehicle.CurrentType != ProductType.HUMAN)
+            {
+                return 0;
             }
 
             var waitingPassengers = passangerBuffer.CurrentLoad;
 
             if (waitingPassengers == 0)
             {
-                return false;
+                return 0;
             }
 
             var taken = passangerBuffer.FillVehicle(vehicle);
 
-            return taken != 0;
+            return taken;
         }
 
-        public bool UnBoarding()
+        public int UnBoarding(Vehicle vehicle) // mennyi ember szállt le
         {
-            if (vehicle is not { Type: ProductType.HUMAN })
-                return false;
+            if (vehicle.CurrentType != ProductType.HUMAN)
+            {
+                return 0;
+            }
 
-            //vehicle.UnBoard() //TODO//
+            var rnd = new Random();
+            int leavingCount = 0;
+            int currentPassengers = vehicle.CurrentLoad;
 
-            return true;
+            for (int i = 0; i < currentPassengers; i++)
+            {
+                if (rnd.NextDouble() < GameSettings.ChanceToUnboard)
+                {
+                    leavingCount++;
+                }
+            }
+
+            int actualUnloaded = vehicle.Unload(leavingCount);
+
+            return actualUnloaded;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
+using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.World.Economy
 {
@@ -11,17 +12,22 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonInclude]
         private List<Product> Products { get; set; }
 
+        public List<ProductType> ProductTypes
+        {
+            get
+            {
+                List<ProductType> l = new List<ProductType>();
+                foreach (Product product in Products)
+                {
+                    l.Add(product.ProductType);
+                }
+                return l;
+            }
+        }
+
         private readonly List<Field> _fields;
 
         [JsonConstructor]
-        public City(string name, Coordinate centerCoordinate, List<Product> products)
-        {
-            Name = name;
-            CenterCoordinate = centerCoordinate;
-            _fields = [];
-            Products = [];
-            RandomizeNeeds();
-        }
 
         public City(string name, Coordinate centerCoordinate)
         {
@@ -40,24 +46,20 @@ namespace VolcanicTransport.Model.World.Economy
             var rnd = new Random();
             Products.Clear();
 
+            List<int> possibleIndexes = Enumerable.Range(2, 7).ToList();
+
+            possibleIndexes = possibleIndexes.OrderBy(x => rnd.Next()).ToList();
+
             for (var i = 0; i < 3; i++)
             {
-                var typeIndex = rnd.Next(1, 9);
-
-                var randomType = (ProductType)typeIndex;
+                var randomType = (ProductType)possibleIndexes[i];
                 Product newProduct = new(randomType, 0, 100, 5);
 
                 Products.Add(newProduct);
             }
         }
 
-        public bool IsProductNeeded(ProductType productType)
+        public bool IsProductNeeded(ProductType? productType)
             => Products.Count(f => f.ProductType == productType) != 0;
-
-        /* TODOOO public int RecieveProduct(ProductType type, int amount)
-        {
-            //TODO//
-            return 0;
-        }*/
     }
 }

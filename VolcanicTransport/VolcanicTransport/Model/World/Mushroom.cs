@@ -2,15 +2,9 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Mushroom(
-        Coordinate coordinate,
-        MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT
-        )
-        : KnowsNeighbour(coordinate)
+    public class Mushroom( Coordinate coordinate, MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT) : KnowsNeighbour(coordinate)
     {
-        private static bool SpreadAttempt()
-            => World.Instance.SharedRandom.Next(100) > GameSettings.SpreadChance;
-        private static bool IsFieldSpreadable(Field? f) => SpreadAttempt() && f is { Surface: null };
+        public Coordinate GetCoordinate => this.Coordinate;
 
         public MushroomGrowthStage GrowthStage { get; private set; } = growthStage; // 1 - 4
 
@@ -21,16 +15,46 @@ namespace VolcanicTransport.Model.World
             if (GrowthStage < MushroomGrowthStage.FULLY_GROWN) GrowthStage++;
         }
 
-
-        public void Spread()
+        public (Coordinate?, bool) UpdateMushroom(Coordinate myCoord)
         {
-            if (!IsAbleToSpread()) return;
+            Random rand = World.Instance.SharedRandom;
+            bool hasChanged = false;
 
-            if (IsFieldSpreadable(North)) North!.Surface = new Mushroom(Coordinate + Direction.North);
-            if (IsFieldSpreadable(South)) South!.Surface = new Mushroom(Coordinate + Direction.South);
-            if (IsFieldSpreadable(East)) East!.Surface = new Mushroom(Coordinate + Direction.East);
-            if (IsFieldSpreadable(West)) West!.Surface = new Mushroom(Coordinate + Direction.West);
+            if (rand.NextDouble() < GameSettings.GrowthBaseChance) 
+            {
+                int oldStage = (int)GrowthStage;
+                Grow();
+                if ((int)GrowthStage != oldStage)
+                {
+                    hasChanged = true;
+                    return (myCoord, hasChanged);
+                }
+            }
+
+            if (IsAbleToSpread() && rand.NextDouble() < GameSettings.SpreadBaseChance)
+            {
+                Coordinate dir = rand.Next(4) switch
+                {
+                    0 => new Coordinate(0, -1), 
+                    1 => new Coordinate(0, 1),  
+                    2 => new Coordinate(1, 0),
+                    _ => new Coordinate(-1, 0)
+                };
+
+                Coordinate targetCoord = myCoord + dir;
+                Field? targetField = World.Instance.GetField(targetCoord);
+
+                if (targetField != null && (targetField.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS)) return (null, hasChanged);
+
+                if (targetField != null && targetField.Surface == null && targetField.IsBuildable())
+                {
+                    targetField.Surface = new Mushroom(targetCoord, MushroomGrowthStage.SPROUT);
+                    hasChanged = true;
+                    return (targetCoord, hasChanged);
+                }
+            }
+
+            return (null, hasChanged);
         }
-
     }
 }
