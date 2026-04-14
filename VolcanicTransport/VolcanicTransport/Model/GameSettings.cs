@@ -148,35 +148,35 @@ public static class GameSettings
 
     #region Vehicles
     public readonly record struct VehicleData(
-        List<ProductType> productTypes,
+        List<ProductType> ProductTypes,
         float MaxSpeed,
         int Capacity,
         int Price)
     { }
 
     public static readonly VehicleData BusData = new(
-        productTypes: new List<ProductType> { ProductType.HUMAN },
+        ProductTypes: [ProductType.HUMAN],
         MaxSpeed: 60.0f,
         Capacity: 50,
          Price: 4000
     );
 
     public static readonly VehicleData MiniBusData = new(
-        new List<ProductType> { ProductType.HUMAN },
+        ProductTypes: [ProductType.HUMAN],
         MaxSpeed: 60.0f,
         Capacity: 15,
         Price: 6000
     );
 
     public static readonly VehicleData TankerTruckData = new(
-        new List<ProductType> { ProductType.STEAM, ProductType.WATER, ProductType.CONCRETE },
+        ProductTypes: [ProductType.STEAM, ProductType.WATER, ProductType.CONCRETE],
         MaxSpeed: 60.0f,
         Capacity: 800,
         Price: 10000
     );
 
     public static readonly VehicleData CargoTruckData = new(
-        new List<ProductType> { ProductType.ASH, ProductType.SULFUR, ProductType.MUSHROOM, ProductType.BONE },
+        ProductTypes: [ProductType.ASH, ProductType.SULFUR, ProductType.MUSHROOM, ProductType.BONE],
         MaxSpeed: 70.0f,
         Capacity: 900,
         Price: 11000

@@ -1,9 +1,7 @@
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class FactoryBuilding : ISurface
+    public class FactoryBuilding(Factory factory) : ISurface
     {
-        private Factory factory;
-
         public string Name => factory.Name;
 
         public ProductType BaseProduct => factory.BaseProduct;
@@ -15,10 +13,5 @@ namespace VolcanicTransport.Model.World.Economy
         public int BaseProductAmount => factory.BaseProductBuffer.CurrentLoad;
 
         public int FinalProductAmount => factory.FinalProductBuffer.CurrentLoad;
-
-        public FactoryBuilding(Factory factory)
-        {
-            this.factory = factory;
-        }
     }
 }

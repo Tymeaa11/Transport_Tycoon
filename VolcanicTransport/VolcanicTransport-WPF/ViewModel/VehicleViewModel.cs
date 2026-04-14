@@ -12,7 +12,7 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         private readonly Vehicle _vehicle;
 
-        public ObservableCollection<string> ScheduleList { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> ScheduleList { get; } = [];
 
         public VehicleViewModel(Vehicle vehicle)
         {

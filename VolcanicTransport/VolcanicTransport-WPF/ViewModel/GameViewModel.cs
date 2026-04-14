@@ -1,9 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
-using System.Timers;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Threading;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -53,6 +51,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public ObservableCollection<ChunkViewModel> LoadedChunks { get; }
         public Dictionary<Coordinate, ChunkViewModel> ChunkMap { get; }
 
+        private double _lastWidth;
+        private double _lastHeight;
         public void SetViewDimensions(double width, double height)
         {
             _lastWidth = width;
@@ -182,7 +182,7 @@ namespace VolcanicTransport_WPF.ViewModel
                             {
                                 Vehicle v = SelectedVehicle.GetVehicle;
 
-                                Route newRoute = new Route();
+                                var newRoute = new Route();
                                 newRoute.AddStop(_firstSelectedStation);
                                 newRoute.AddStop(secondSelectedStation);
 
@@ -196,8 +196,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
                                 if (path != null && path.Count > 0)
                                 {
-                                    var nameDialog = new VolcanicTransport_WPF.View.VehicleNameWindow();
-                                    nameDialog.Owner = System.Windows.Application.Current.MainWindow;
+                                    // TODO : Is this allowed in MVVM?
+                                    var nameDialog = new VehicleNameWindow {Owner = Application.Current.MainWindow}; 
 
                                     if (nameDialog.ShowDialog() == true)
                                     {                                        
@@ -212,7 +212,7 @@ namespace VolcanicTransport_WPF.ViewModel
                                             _ => new Bus(chosenName)
                                         };
 
-                                        Route initialRoute = new Route();
+                                        var initialRoute = new Route();
                                         initialRoute.AddStop(_firstSelectedStation);
                                         initialRoute.AddStop(secondSelectedStation);
                                         newVehicle.Route = initialRoute;
@@ -309,7 +309,7 @@ namespace VolcanicTransport_WPF.ViewModel
             }
             ToolTipText = cornerSb.ToString();
 
-            StringBuilder inspectorSb = new StringBuilder();
+            var inspectorSb = new StringBuilder();
             if (_hoveredField?.Surface is Station)
             {
                 inspectorSb.Append(_hoveredField.Surface switch
@@ -342,7 +342,7 @@ namespace VolcanicTransport_WPF.ViewModel
         }
         private string GetSimpleFactoryInfo(FactoryBuilding fb)
         {
-            StringBuilder info = new StringBuilder();
+            var info = new StringBuilder();
             info.AppendLine($"Factory: {fb.Name}");
 
             if (fb.BaseProduct != ProductType.NONE)
@@ -357,7 +357,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private string GetSimpleCityInfo(CityBuilding cb)
         {
-            StringBuilder info = new StringBuilder();
+            var info = new StringBuilder();
             info.AppendLine($"City: {cb.Name}");
             info.AppendLine("Product needs:");
 
@@ -370,7 +370,7 @@ namespace VolcanicTransport_WPF.ViewModel
         }
         private string GetFactoryStationInfo(FactoryStation fs)
         {
-            StringBuilder info = new StringBuilder();
+            var info = new StringBuilder();
 
             info.AppendLine($"Factory Station: {fs.Name}");
 
@@ -388,7 +388,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private string GetCityStationInfo(CityStation cs)
         {
-            StringBuilder info = new StringBuilder();
+            var info = new StringBuilder();
 
             info.AppendLine($"City Station: {cs.Name}");
             info.AppendLine("Product needs:");
@@ -473,8 +473,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         #endregion
 
-        private double _lastWidth;
-        private double _lastHeight;
+
 
         public GameViewModel()
         {

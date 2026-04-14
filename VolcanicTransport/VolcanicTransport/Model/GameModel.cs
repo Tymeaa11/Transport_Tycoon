@@ -12,10 +12,10 @@ using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {
-    public class GameModel
+    public class GameModel : IDisposable
     {
         public static World.World WorldInstance => World.World.Instance;
-        private ScalableTimer _mushroomGrowthTimer;
+        private readonly ScalableTimer _mushroomGrowthTimer;
         private double _monthlyExpenseAccumulator = 0;
 
         #region Fields
@@ -64,8 +64,7 @@ namespace VolcanicTransport.Model
 
             PlayerMoney = GameSettings.StartingMoney;
 
-            _mushroomGrowthTimer = new ScalableTimer();
-            _mushroomGrowthTimer.TimeScale = 1; 
+            _mushroomGrowthTimer = new ScalableTimer {TimeScale = 1};
             _mushroomGrowthTimer.Elapsed += (s, e) => {
                 UpdateMushroomsOnTimer();
             };
@@ -342,7 +341,7 @@ namespace VolcanicTransport.Model
 
         public static void AddStopToVehicle(Vehicle v, Station s)
         {
-
+            // TODO what happens if v.Route is null?
             if (v.Route.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
 
             v.Route.AddStop(s);
@@ -412,13 +411,13 @@ namespace VolcanicTransport.Model
         private void UpdateAllMushrooms(double deltaTime)
         {
             int samplesCount = (int)(GameSettings.SamplesCount * deltaTime);
-            HashSet<Chunk> chunksToRedraw = new HashSet<Chunk>();
+            HashSet<Chunk> chunksToRedraw = [];
 
             for (int i = 0; i < samplesCount; i++)
             {
                 int x = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.X);
                 int y = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.Y);
-                Coordinate randomCoord = new Coordinate(x, y);
+                Coordinate randomCoord = new(x, y);
 
                 Field? field = WorldInstance.GetField(randomCoord);
 
@@ -476,6 +475,9 @@ namespace VolcanicTransport.Model
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);
         public void LowerField(Coordinate coord) => TerraformField(coord, -1);
 
-
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

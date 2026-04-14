@@ -8,5 +8,8 @@ namespace VolcanicTransport.Model.Utils
         public static readonly Coordinate West = new(-1, 0);
 
         public static readonly Coordinate[] Directions = [North, South, East, West];
+
+        public static Coordinate GetRandomDirection() 
+            => Directions[World.World.Instance.SharedRandom.Next(Directions.Length)];
     }
 }
