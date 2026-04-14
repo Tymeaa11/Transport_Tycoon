@@ -26,6 +26,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public Route? PendingRoute { get; set; } = null;
 
         protected float currentSpeed = 0;
+        public float CurrentSpeed => currentSpeed;
+
         protected float maxSpeed = maxSpeed;
         protected int capacity = capacity;
 
@@ -68,6 +70,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             CurrentRoad = currentPath[0];
 
             currentSpeed = maxSpeed;
+            StateUpdated?.Invoke(this, EventArgs.Empty);
 
             LoadWaypointsForField();
 
@@ -104,6 +107,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (State == VehicleState.Loading)
             {
                 currentSpeed = 0;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
                 waitTimer += deltaTime;
                 if (waitTimer >= LOAD_TIME)
                 {
@@ -127,6 +131,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             }
 
             currentSpeed = maxSpeed;
+            StateUpdated?.Invoke(this, EventArgs.Empty);
             float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
 
             int safetyCounter = 0;

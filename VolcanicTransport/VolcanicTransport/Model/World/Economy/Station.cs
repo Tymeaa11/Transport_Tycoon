@@ -59,9 +59,21 @@ namespace VolcanicTransport.Model.World.Economy
                 return 0;
             }
 
-            int amount = vehicle.Unload(20); //most fix de át kell majd írni randomra
+            var rnd = new Random();
+            int leavingCount = 0;
+            int currentPassengers = vehicle.CurrentLoad;
 
-            return amount;
+            for (int i = 0; i < currentPassengers; i++)
+            {
+                if (rnd.NextDouble() < GameSettings.ChanceToUnboard)
+                {
+                    leavingCount++;
+                }
+            }
+
+            int actualUnloaded = vehicle.Unload(leavingCount);
+
+            return actualUnloaded;
         }
     }
 }
