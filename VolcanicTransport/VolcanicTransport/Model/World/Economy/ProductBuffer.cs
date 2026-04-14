@@ -25,7 +25,7 @@ namespace VolcanicTransport.Model.World.Economy
             }
             CurrentLoad += amount;
             return amount;
-                
+
         }
 
         public void DeductAmount(int amount)
@@ -33,9 +33,10 @@ namespace VolcanicTransport.Model.World.Economy
             if (amount > CurrentLoad)
             {
                 CurrentLoad = 0;
-            } else
+            }
+            else
             {
-                CurrentLoad -= amount; 
+                CurrentLoad -= amount;
             }
         }
 
@@ -51,7 +52,8 @@ namespace VolcanicTransport.Model.World.Economy
                 vehicle.Load(plus, ProductType);
                 CurrentLoad += capacity;
                 return capacity;
-            } else
+            }
+            else
             {
                 CurrentLoad += provided;
                 return provided;

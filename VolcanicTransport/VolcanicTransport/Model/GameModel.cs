@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Threading.Channels;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
@@ -7,15 +6,14 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static System.Collections.Specialized.BitVector32;
 using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {
-    public class GameModel
+    public class GameModel : IDisposable
     {
         public static World.World WorldInstance => World.World.Instance;
-        private ScalableTimer _mushroomGrowthTimer;
+        private readonly ScalableTimer _mushroomGrowthTimer;
         private double _monthlyExpenseAccumulator = 0;
 
         #region Fields
@@ -29,8 +27,8 @@ namespace VolcanicTransport.Model
 
         public event EventHandler? MoneyChanged;
         public event EventHandler? GameOver;
-        public event EventHandler? NewGame;
-        public event EventHandler? StationBought;
+        //public event EventHandler? NewGame;
+        //public event EventHandler? StationBought;
         public event EventHandler? RoadBought;
         public event EventHandler? VehicleBought;
         public event EventHandler? VehicleSold;
@@ -38,8 +36,8 @@ namespace VolcanicTransport.Model
         public event EventHandler? GamePaused;
         public event EventHandler? GameUnpaused;
         public event EventHandler? TimescaleChanged;
-        public event EventHandler? FieldChanged;
-        public event EventHandler? VehicleSelectedIndex;
+        //public event EventHandler? FieldChanged;
+        //public event EventHandler? VehicleSelectedIndex;
         public event EventHandler? OnPlacementFailed;
 
         #endregion
@@ -64,9 +62,9 @@ namespace VolcanicTransport.Model
 
             PlayerMoney = GameSettings.StartingMoney;
 
-            _mushroomGrowthTimer = new ScalableTimer();
-            _mushroomGrowthTimer.TimeScale = 1; 
-            _mushroomGrowthTimer.Elapsed += (s, e) => {
+            _mushroomGrowthTimer = new ScalableTimer { TimeScale = 1 };
+            _mushroomGrowthTimer.Elapsed += (s, e) =>
+            {
                 UpdateMushroomsOnTimer();
             };
             _mushroomGrowthTimer.Start();
@@ -94,14 +92,14 @@ namespace VolcanicTransport.Model
         private static double GetMushroomCosts(Field field)
         {
             var cost = 0d;
-            
+
             if (field.Surface is not Mushroom mushroom) return cost;
-            
-            var stage = (double)mushroom.GrowthStage+1;
+
+            var stage = (double)mushroom.GrowthStage + 1;
             cost = stage * GameSettings.MushroomPricePerUnit;
             return cost;
         }
-        
+
         public void Pause()
         {
             IsPaused = true;
@@ -267,7 +265,7 @@ namespace VolcanicTransport.Model
         public void PlaceRoad(Coordinate coord)
         {
             var roadPrice = GameSettings.BaseRoadPrice;
-            
+
             var field = WorldInstance.GetField(coord);
             if (null == field)
                 return;
@@ -342,8 +340,8 @@ namespace VolcanicTransport.Model
 
         public static void AddStopToVehicle(Vehicle v, Station s)
         {
-
-            if (v.Route.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
+            // TODO what happens if v.Route is null?
+            if (v.Route!.Stops.Count > 0 && v.Route.Stops.Last() == s) return;
 
             v.Route.AddStop(s);
             Debug.WriteLine($"Megálló hozzáadva: {s.Coordinate}. Összesen: {v.Route.Stops.Count}");
@@ -361,7 +359,7 @@ namespace VolcanicTransport.Model
 
         private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
+            Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
 
             Vehicle vehicle = e.Vehicle;
             Station station = e.Station;
@@ -406,19 +404,19 @@ namespace VolcanicTransport.Model
                     }
                 }
             }
-            VehicleArrivedAtStation?.Invoke(this, e);            
+            VehicleArrivedAtStation?.Invoke(this, e);
         }
 
         private void UpdateAllMushrooms(double deltaTime)
         {
             int samplesCount = (int)(GameSettings.SamplesCount * deltaTime);
-            HashSet<Chunk> chunksToRedraw = new HashSet<Chunk>();
+            HashSet<Chunk> chunksToRedraw = [];
 
             for (int i = 0; i < samplesCount; i++)
             {
                 int x = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.X);
                 int y = WorldInstance.SharedRandom.Next(0, WorldInstance.SizeInFields.Y);
-                Coordinate randomCoord = new Coordinate(x, y);
+                Coordinate randomCoord = new(x, y);
 
                 Field? field = WorldInstance.GetField(randomCoord);
 
@@ -442,7 +440,7 @@ namespace VolcanicTransport.Model
 
             foreach (Chunk? chunk in chunksToRedraw)
             {
-                chunk.TriggerRerender();
+                WorldInstance.UpdateChunk(chunk.Coordinate);
             }
         }
 
@@ -453,20 +451,20 @@ namespace VolcanicTransport.Model
             var terraformationPrice = GameSettings.BaseTerraformationPrice;
 
             var field = WorldInstance.GetField(coord);
-            
+
             if (field == null)
                 return;
 
-            if (! ((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
+            if (!((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable())))
                 return;
-            
+
             terraformationPrice += GetMushroomCosts(field);
 
             var newFieldType = (FieldType)((int)field.Type + deltaHeight);
 
             if (newFieldType > FieldType.HIGH_MOUNTAINS) return;
             if (!TryPurchase(terraformationPrice)) return;
-            
+
             field.SetFieldTypeTo(newFieldType);
             var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
 
@@ -476,6 +474,9 @@ namespace VolcanicTransport.Model
         public void HeightenField(Coordinate coord) => TerraformField(coord, +1);
         public void LowerField(Coordinate coord) => TerraformField(coord, -1);
 
-
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

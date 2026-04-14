@@ -116,7 +116,7 @@ namespace VolcanicTransport.Model.World
         }
 
         public void UpdateChunk(Coordinate chunkCoordinate)
-            => ChunkChanged?.Invoke(this, new(chunkCoordinate));     
+            => ChunkChanged?.Invoke(this, new(chunkCoordinate));
 
 
         public void AddVehicle(Vehicle v) => Vehicles.Add(v);

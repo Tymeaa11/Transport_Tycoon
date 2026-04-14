@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Numerics;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -8,7 +7,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     {
 
         public Vehicle(string name, GameSettings.VehicleData vehicleData)
-        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.productTypes) { }
+        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.ProductTypes) { }
 
         public string Name { get; } = name;
         public List<ProductType> AllType { get { return allType; } }
@@ -87,7 +86,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {Position} pixelre.");
                 }
             }
-            else if (currentStation != null) {
+            else if (currentStation != null)
+            {
 
                 float stationCenterX = (currentStation.Coordinate.X * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
                 float stationCenterY = (currentStation.Coordinate.Y * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
@@ -215,7 +215,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     .FirstOrDefault();
             }
 
-    
+
 
             if (startNode != null && targetNode != null)
             {
@@ -413,16 +413,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             RouteChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public class VehicleArrivedEventArgs : EventArgs
+        public class VehicleArrivedEventArgs(Vehicle vehicle, Station station) : EventArgs
         {
-            public Vehicle Vehicle { get; }
-            public Station Station { get; }
-
-            public VehicleArrivedEventArgs(Vehicle vehicle, Station station)
-            {
-                Vehicle = vehicle;
-                Station = station;
-            }
+            public Vehicle Vehicle { get; } = vehicle;
+            public Station Station { get; } = station;
         }
     }
 }

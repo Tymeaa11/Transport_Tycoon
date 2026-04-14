@@ -52,6 +52,14 @@ namespace VolcanicTransport_WPF.View
         #region Events
         private void OnChunkDataChanged(object? sender, EventArgs e)
         {
+            if (Dispatcher.CheckAccess())
+                ExecuteRerender();
+            else
+                Dispatcher.BeginInvoke(ExecuteRerender);
+        }
+
+        private void ExecuteRerender()
+        {
             if (DataContext is ChunkViewModel cvm)
             {
                 SetVisibility(cvm.IsVisible);
@@ -68,7 +76,7 @@ namespace VolcanicTransport_WPF.View
 
         #region Methods
 
-        private void SetVisibility(bool b) 
+        private void SetVisibility(bool b)
             => Visibility = b ? Visibility.Visible : Visibility.Collapsed;
 
         private void PreRender(Chunk chunkData)

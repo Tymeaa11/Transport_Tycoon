@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport_WPF.ViewModel
@@ -12,7 +7,7 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         private readonly Vehicle _vehicle;
 
-        public ObservableCollection<string> ScheduleList { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> ScheduleList { get; } = [];
 
         public VehicleViewModel(Vehicle vehicle)
         {
