@@ -41,17 +41,15 @@ test-job:   # This job runs in the test stage.
     - ./reportgenerator "-reports:$CI_PROJECT_DIR/VolcanicTransport/*/TestResults/*/coverage.cobertura.xml" "-targetdir:report/html" "-reporttypes:Html"
     # The generated Cobertura.xml file contains the overall code coverage in a format like this:
     # <coverage line-rate="..." ...>
-    # Let's get that with the powers of sed :)
-   # - $line_rate="$(select -first 3 ./report/Cobertura.xml | %{ $_ -replace 'N;N;s/.*line-rate="\([^" ]*\).*/\1/g'})"
-   # - $coverage=$line_rate * 100
-  #  - 'printf "TOTAL_COVERAGE=%2.2f\n" "$coverage"'
+    - $coverage = [float](gc ./report/Cobertura.xml | select -first 1 -skip 2 | %{ $_ -replace '(.*)line-rate="(\d+\.\d+)"(.*)', '$2'}) * 100
+    - echo "TOTAL_COVERAGE=$coverage"
 
 
     
 
   artifacts:
     paths:
-      - ./*
+     # - ./*
       - ./VolcanicTransport/*/TestResults/TestResults.xml
       - ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
       - ./report/html/
