@@ -59,10 +59,10 @@ namespace VolcanicTransport_WPF.ViewModel
         }
         private void RefreshTimescaleProperties()
         {
-            OnPropertyChanged(nameof(IsTimescale0));
-            OnPropertyChanged(nameof(IsTimescale1));
-            OnPropertyChanged(nameof(IsTimescale2));
-            OnPropertyChanged(nameof(IsTimescale4));
+            OnPropertyChanged(nameof(IsTimeScale0));
+            OnPropertyChanged(nameof(IsTimeScale1));
+            OnPropertyChanged(nameof(IsTimeScale2));
+            OnPropertyChanged(nameof(IsTimeScale4));
         }
         #endregion
 
@@ -423,7 +423,7 @@ namespace VolcanicTransport_WPF.ViewModel
             Camera = new Camera();
             Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
-            CurrentTimescale = 1;
+            CurrentTimeScale = 1;
 
             LoadedChunks = [];
             ChunkMap = [];
@@ -578,27 +578,30 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
         #endregion
 
-        private int currentTimescale;
-        public int CurrentTimescale
+        #region TimeScale
+        private int currentTimeScale;
+        public int CurrentTimeScale
         {
-            get => currentTimescale;
+            get => currentTimeScale;
             set
             {
-                if (currentTimescale == value) return;
+                if (currentTimeScale == value) 
+                    return;
 
-                currentTimescale = value;
-                OnPropertyChanged(nameof(IsTimescale0));
-                OnPropertyChanged(nameof(IsTimescale1));
-                OnPropertyChanged(nameof(IsTimescale2));
-                OnPropertyChanged(nameof(IsTimescale4));
+                currentTimeScale = value;
 
+                OnPropertyChanged(nameof(IsTimeScale0));
+                OnPropertyChanged(nameof(IsTimeScale1));
+                OnPropertyChanged(nameof(IsTimeScale2));
+                OnPropertyChanged(nameof(IsTimeScale4));
             }
         }
 
-        public bool IsTimescale0 => CurrentTimescale == 0 || IsPausedView || GameModelInstance.IsPaused;
-        public bool IsTimescale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 1;
-        public bool IsTimescale2 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 2;
-        public bool IsTimescale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 4;
+        public bool IsTimeScale0 => CurrentTimeScale == 0 || IsPausedView || GameModelInstance.IsPaused;
+        public bool IsTimeScale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 1;
+        public bool IsTimeScale2 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 2;
+        public bool IsTimeScale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 4;
+        #endregion
 
         public string CurrentMoney
         {
@@ -624,14 +627,14 @@ namespace VolcanicTransport_WPF.ViewModel
             double deltaTime = (currentRenderTime - _lastRenderTime).TotalSeconds;
             _lastRenderTime = currentRenderTime;
 
-            if (CurrentTimescale == 0)
+            if (CurrentTimeScale == 0)
             {
                 _accumulator = 0;
             }
 
             if (deltaTime > 0.1) deltaTime = 0.1;
 
-            _accumulator += deltaTime * CurrentTimescale * BASE_SPEED_MULTIPLIER;
+            _accumulator += deltaTime * CurrentTimeScale * BASE_SPEED_MULTIPLIER;
 
             while (_accumulator >= FIXED_DELTA_TIME)
             {
@@ -671,28 +674,28 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnSetTimescale0X()
         {
-            CurrentTimescale = 0;
+            CurrentTimeScale = 0;
             GameModelInstance.Pause();
 
         }
 
         private void OnSetTimescale1X()
         {
-            CurrentTimescale = 1;
+            CurrentTimeScale = 1;
             GameModelInstance.UnPause();
             GameModelInstance.ChangeTimeSpeed1X();
         }
 
         private void OnSetTimescale2X()
         {
-            CurrentTimescale = 2;
+            CurrentTimeScale = 2;
             GameModelInstance.UnPause();
             GameModelInstance.ChangeTimeSpeed2X();
         }
 
         private void OnSetTimescale4X()
         {
-            CurrentTimescale = 4;
+            CurrentTimeScale = 4;
             GameModelInstance.UnPause();
             GameModelInstance.ChangeTimeSpeed4X();
         }
