@@ -13,6 +13,8 @@ public static class GameSettings
     public const int FieldSize = 32; // should be divisible by 8
     public const int ChunkSize = 32; // should be even
 
+    public const int DefaultWorldSize = 8;
+
     public const int FieldSizeP2 = FieldSize / 2;
     public const int FieldSizeP4 = FieldSize / 4;
     public const int FieldSizeP8 = FieldSize / 8;
@@ -37,13 +39,17 @@ public static class GameSettings
 
     #region FactoryAndCityGeneration
     // Városok és gyárak közötti minimális távolság mezőkben
-    public const double MinimumDistance = 15.0;
+    public const double MinimumDistanceInFields = 15.0;
 
     // Keresési próbálkozások száma
-    public const int MaxAttempts = 100;
+    public const int MaxAttempts = 500;
 
     // Minimum távolság a világ szélétől
     public const int WorldEdgeBufferZone = 2;
+
+    public const int CityCount = 10;
+    public const int FactoryCount = 20;
+
     #endregion
 
     #region Mushrooms
@@ -53,10 +59,13 @@ public static class GameSettings
     public const double SpreadBaseChance = 0.1;
     public const int SamplesCount = 100;
 
-    #region MushroomGeneration
-    public const float Stage0MinHeight = 0.5f;
-    public const float Stage1MinHeight = 0.55f;
-    public const float Stage2MinHeight = 0.6f;
+    #region MushroomGeneration 
+    public const float MushroomPerlinFrequency = 0.07f;
+
+    // Must be in increasing order
+    public const float Stage0MinHeight = 0.615f;
+    public const float Stage1MinHeight = 0.62f;
+    public const float Stage2MinHeight = 0.63f;
     public const float Stage3MinHeight = 0.65f;
     #endregion
 
@@ -78,10 +87,7 @@ public static class GameSettings
         { ProductType.NONE, 0.0 }
     };
 
-    public static double GetPrice(ProductType type)
-    {
-        return productPrices.TryGetValue(type, out double price) ? price : 0.0;
-    }
+    public static double GetPrice(ProductType type) => productPrices.GetValueOrDefault(type, 0.0);
 
     public const double BaseProductionRate = 0.2;
     public const double PeopleGrowthRate = 0.01;

@@ -56,7 +56,7 @@ namespace VolcanicTransport.Model
             WorldInstance.GameWorldGenerator = new GameWorldGenerator(
                 new TerrainHeightGenerator(),
                 new MushroomGenerator(),
-                new FactoryAndCityGenerator(5, 10)
+                new FactoryAndCityGenerator(GameSettings.CityCount, GameSettings.FactoryCount)
                 );
             WorldInstance.Generate();
 

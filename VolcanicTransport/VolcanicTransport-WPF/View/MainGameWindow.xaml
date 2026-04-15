@@ -234,20 +234,20 @@
                 </StackPanel.Resources>
 
                 <ToggleButton Content="||" 
-                              Command="{Binding SetTimescale0Command}" 
-                              IsChecked="{Binding IsTimescale0, Mode=OneWay}">
+                              Command="{Binding SetTimeScale0Command}" 
+                              IsChecked="{Binding IsTimeScale0, Mode=OneWay}">
                 </ToggleButton>
                 <ToggleButton Content="1x" 
-                              Command="{Binding SetTimescale1Command}" 
-                              IsChecked="{Binding IsTimescale1, Mode=OneWay}">
+                              Command="{Binding SetTimeScale1Command}" 
+                              IsChecked="{Binding IsTimeScale1, Mode=OneWay}">
                 </ToggleButton>
                 <ToggleButton Content="2x" 
-                              Command="{Binding SetTimescale2Command}" 
-                              IsChecked="{Binding IsTimescale2, Mode=OneWay}">
+                              Command="{Binding SetTimeScale2Command}" 
+                              IsChecked="{Binding IsTimeScale2, Mode=OneWay}">
                 </ToggleButton>
                 <ToggleButton Content="4x" 
-                              Command="{Binding SetTimescale4Command}" 
-                              IsChecked="{Binding IsTimescale4, Mode=OneWay}">
+                              Command="{Binding SetTimeScale4Command}" 
+                              IsChecked="{Binding IsTimeScale4, Mode=OneWay}">
                 </ToggleButton>
 
             </StackPanel>
