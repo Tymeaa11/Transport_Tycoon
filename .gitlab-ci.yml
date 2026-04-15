@@ -30,5 +30,5 @@ test-job:   # This job runs in the test stage.
   artifacts:
     reports:
       junit:
-        - ./VolcanicTransport/TestResults/TestResults.xml
+        - ./VolcanicTransport/*/TestResults/TestResults.xml
 
