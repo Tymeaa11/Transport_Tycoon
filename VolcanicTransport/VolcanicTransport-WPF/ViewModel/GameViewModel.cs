@@ -116,10 +116,10 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetBuildModeBridgeCommand { get; private set; }
         public DelegateCommand SetBuildModeLowerCommand { get; private set; }
         public DelegateCommand SetBuildModeHeightenCommand { get; private set; }
-        public DelegateCommand SetTimescale0Command { get; private set; }
-        public DelegateCommand SetTimescale1Command { get; private set; }
-        public DelegateCommand SetTimescale2Command { get; private set; }
-        public DelegateCommand SetTimescale4Command { get; private set; }
+        public DelegateCommand SetTimeScale0Command { get; private set; }
+        public DelegateCommand SetTimeScale1Command { get; private set; }
+        public DelegateCommand SetTimeScale2Command { get; private set; }
+        public DelegateCommand SetTimeScale4Command { get; private set; }
         public DelegateCommand TogglePauseCommand { get; private set; }
         public DelegateCommand ResumeCommand { get; private set; }
         public DelegateCommand QuitToMainMenuCommand { get; private set; }
@@ -440,10 +440,10 @@ namespace VolcanicTransport_WPF.ViewModel
             SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
             SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
             SetBuildModeHeightenCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.HEIGHTEN));
-            SetTimescale0Command = new DelegateCommand(_ => OnSetTimescale0X());
-            SetTimescale1Command = new DelegateCommand(_ => OnSetTimescale1X());
-            SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
-            SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
+            SetTimeScale0Command = new DelegateCommand(_ => OnSetTimescale0X());
+            SetTimeScale1Command = new DelegateCommand(_ => OnSetTimescale1X());
+            SetTimeScale2Command = new DelegateCommand(_ => OnSetTimescale2X());
+            SetTimeScale4Command = new DelegateCommand(_ => OnSetTimescale4X());
             BuyVehicleCommand = new DelegateCommand(_ =>
             {
                 SelectedVehicle = null;
@@ -691,10 +691,5 @@ namespace VolcanicTransport_WPF.ViewModel
         }
 
         #endregion
-        
-
-
-
-
     }
 }
