@@ -53,10 +53,13 @@ public static class GameSettings
     public const double SpreadBaseChance = 0.1;
     public const int SamplesCount = 100;
 
-    #region MushroomGeneration
-    public const float Stage0MinHeight = 0.5f;
-    public const float Stage1MinHeight = 0.55f;
-    public const float Stage2MinHeight = 0.6f;
+    #region MushroomGeneration 
+    public const float MushroomPerlinFrequency = 0.07f;
+
+    // Must be in increasing order
+    public const float Stage0MinHeight = 0.615f;
+    public const float Stage1MinHeight = 0.62f;
+    public const float Stage2MinHeight = 0.63f;
     public const float Stage3MinHeight = 0.65f;
     #endregion
 
