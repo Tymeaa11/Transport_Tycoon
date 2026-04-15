@@ -39,9 +39,9 @@ test-job:   # This job runs in the test stage.
     # Compute code coverage percentage from Cobertura XML files through merging them with ReportGenerator
     # This is useful when you have multiple test projects in a repository
     # https://github.com/danielpalme/ReportGenerator
-    - ./reportgenerator "-reports:$CI_PROJECT_DIR/*/TestResults/*/coverage.cobertura.xml" "-targetdir:report" "-reporttypes:Cobertura"
+    - ./reportgenerator "-reports:$CI_PROJECT_DIR/VolcanicTransport/*/TestResults/*/coverage.cobertura.xml" "-targetdir:report" "-reporttypes:Cobertura"
     # Also generate a web-based summary of the code coverage, which we can publish later through GitLab Pages
-    - ./reportgenerator "-reports:$CI_PROJECT_DIR/*/TestResults/*/coverage.cobertura.xml" "-targetdir:report/html" "-reporttypes:Html"
+    - ./reportgenerator "-reports:$CI_PROJECT_DIR/VolcanicTransport/*/TestResults/*/coverage.cobertura.xml" "-targetdir:report/html" "-reporttypes:Html"
     # The generated Cobertura.xml file contains the overall code coverage in a format like this:
     # <coverage line-rate="..." ...>
     # Let's get that with the powers of sed :)
@@ -54,7 +54,7 @@ test-job:   # This job runs in the test stage.
 
   artifacts:
     paths:
-      #- ./*
+      - ./*
       - ./VolcanicTransport/*/TestResults/TestResults.xml
       - ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
       - ./report/html/
