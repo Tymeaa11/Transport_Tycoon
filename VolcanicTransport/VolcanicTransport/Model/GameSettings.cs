@@ -39,10 +39,10 @@ public static class GameSettings
 
     #region FactoryAndCityGeneration
     // Városok és gyárak közötti minimális távolság mezőkben
-    public const double MinimumDistance = 15.0;
+    public const double MinimumDistanceInFields = 15.0;
 
     // Keresési próbálkozások száma
-    public const int MaxAttempts = 100;
+    public const int MaxAttempts = 500;
 
     // Minimum távolság a világ szélétől
     public const int WorldEdgeBufferZone = 2;

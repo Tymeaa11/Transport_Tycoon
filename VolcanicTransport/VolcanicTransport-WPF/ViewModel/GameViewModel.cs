@@ -471,9 +471,11 @@ namespace VolcanicTransport_WPF.ViewModel
             });
             ReGenerateWithRandomSeed = new DelegateCommand(_ =>
             {
-                GameModel.WorldInstance.Generate(new Random().Next());
                 LoadedChunks.Clear();
                 ChunkMap.Clear();
+                
+                Initialise();
+
                 GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
                 {
                     ChunkViewModel chunkViewModel = new(c);
@@ -482,6 +484,9 @@ namespace VolcanicTransport_WPF.ViewModel
                 });
 
                 UpdateVisibleChunks();
+
+                Camera.Reset();
+
             }
             );
             ClearRouteCommand = new DelegateCommand(_ =>
@@ -500,7 +505,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(GameSettings.DefaultWorldSize, 0);
+            GameModel.Initialise(GameSettings.DefaultWorldSize, new Random().Next());
 
             GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
             {
@@ -511,8 +516,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
             GameModel.WorldInstance.ChunkChanged += On_UpdateChunk;
 
-            var halfWorldSizeInPixels = GameModel.WorldInstance.SizeInFields * -GameSettings.FieldSizeP2;
-            Camera.Position = new Vector(halfWorldSizeInPixels.X, halfWorldSizeInPixels.Y);
+            Camera.Reset();
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 

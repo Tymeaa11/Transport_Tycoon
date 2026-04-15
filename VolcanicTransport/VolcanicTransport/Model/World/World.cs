@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
@@ -107,6 +108,8 @@ namespace VolcanicTransport.Model.World
                     (x, y, f) => GameWorldGenerator.ModifyField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
 
             GameWorldGenerator.GenerateCitiesAndFactories();
+
+            Debug.WriteLine($"Generated {Cities.Count} cities and {Factories.Count} factories");
         }
 
         public void Generate(int seed)

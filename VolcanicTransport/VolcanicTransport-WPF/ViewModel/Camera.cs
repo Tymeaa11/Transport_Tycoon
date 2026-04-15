@@ -73,6 +73,18 @@ namespace VolcanicTransport_WPF.ViewModel
         #endregion
 
         #region Methods
+
+        public void Reset()
+        {
+            var halfWorldSizeInPixels = GameModel.WorldInstance.SizeInFields * -GameSettings.FieldSizeP2;
+            Position = new Vector(halfWorldSizeInPixels.X, halfWorldSizeInPixels.Y);
+            _velocity = new Vector(0, 0);
+
+            _scale = 1;
+            CalculateZoomFromScale();
+            _previousScale = _scale;
+        }
+
         public void Update(double deltaTime)
         {
             if (IsMovingUp) _velocity.Y += CameraMovementSpeed * deltaTime;
