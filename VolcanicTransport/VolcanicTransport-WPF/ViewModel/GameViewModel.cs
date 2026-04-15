@@ -336,78 +336,11 @@ namespace VolcanicTransport_WPF.ViewModel
 
             ToolTipText = cornerSb.ToString();
 
-            InspectorText = _hoveredField?.Surface switch
-            {
-                FactoryStation fs => GetFactoryStationInfo(fs),
-                CityStation cs => GetCityStationInfo(cs),
-                FactoryBuilding fb => GetSimpleFactoryInfo(fb),
-                CityBuilding cb => GetSimpleCityInfo(cb),
-                _ => ""
-            };
+            InspectorText = (_hoveredField?.Surface is IInspectable inspectable)
+                ? inspectable.Inspect()
+                : "";
 
             IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-        }
-        private string GetSimpleFactoryInfo(FactoryBuilding fb)
-        {
-            var info = new StringBuilder();
-            info.AppendLine($"Factory: {fb.Name}");
-
-            if (fb.BaseProduct != ProductType.NONE)
-            {
-                info.AppendLine($"Base product need / amount:  {fb.BaseProduct} {fb.BaseProductNeed}/{fb.BaseProductAmount}");
-            }
-
-            info.AppendLine($"Finished product / amount: {fb.FinalProduct} {fb.FinalProductAmount}");
-
-            return info.ToString();
-        }
-
-        private string GetSimpleCityInfo(CityBuilding cb)
-        {
-            var info = new StringBuilder();
-            info.AppendLine($"City: {cb.Name}");
-            info.AppendLine("Product needs:");
-
-            foreach (ProductType pt in cb.ProductTypes)
-            {
-                info.AppendLine($"  - {pt}");
-            }
-
-            return info.ToString();
-        }
-        private string GetFactoryStationInfo(FactoryStation fs)
-        {
-            var info = new StringBuilder();
-
-            info.AppendLine($"Factory Station: {fs.Name}");
-
-            if (fs.GetFactoryNeeds != ProductType.NONE)
-            {
-                info.AppendLine($"Base product need / amount: {fs.GetFactoryNeeds} {fs.GetFactoryBaseProductAmount}/{fs.GetFactoryNeedsAmount}");
-            }
-
-            info.AppendLine($"Finished product / amount: {fs.GetFactoryFinishedProduct} {fs.GetFactoryFinishedProductAmount}");
-
-            info.AppendLine($"People waiting: {fs.WaitingPassengers}");
-
-            return info.ToString();
-        }
-
-        private string GetCityStationInfo(CityStation cs)
-        {
-            var info = new StringBuilder();
-
-            info.AppendLine($"City Station: {cs.Name}");
-            info.AppendLine("Product needs:");
-
-            foreach (ProductType pt in cs.GetCityProductNeeds)
-            {
-                info.AppendLine($"  - {pt}");
-            }
-
-            info.AppendLine($"People waiting: {cs.WaitingPassengers}");
-
-            return info.ToString();
         }
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
 
