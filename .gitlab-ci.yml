@@ -28,9 +28,7 @@ test-job:   # This job runs in the test stage.
     
 
   artifacts:
-    paths:
-      - ./*
     reports:
       junit:
-        - ./TestResults/TestResults.xml
+        - ./VolcanicTransport/TestResults/TestResults.xml
 
