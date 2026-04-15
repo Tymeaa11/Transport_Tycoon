@@ -390,7 +390,6 @@ namespace VolcanicTransport_WPF.ViewModel
         
         #endregion
 
-
         #region Vehicles
         public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
 
@@ -422,14 +421,12 @@ namespace VolcanicTransport_WPF.ViewModel
         public GameViewModel()
         {
             Camera = new Camera();
-
             Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
             CurrentTimescale = 1;
 
             LoadedChunks = [];
             ChunkMap = [];
-
 
             FieldClickedCommand = new DelegateCommand(param =>
             {
@@ -453,12 +450,10 @@ namespace VolcanicTransport_WPF.ViewModel
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
-
             QuitToMainMenuCommand = new DelegateCommand(_ =>
             {
                 ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
             });
-
             AddStopCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)
@@ -472,7 +467,6 @@ namespace VolcanicTransport_WPF.ViewModel
                     Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
                 }
             });
-
             ReGenerateWithRandomSeed = new DelegateCommand(_ =>
             {
                 GameModel.WorldInstance.Generate(new Random().Next());
@@ -488,7 +482,6 @@ namespace VolcanicTransport_WPF.ViewModel
                 UpdateVisibleChunks();
             }
             );
-
             ClearRouteCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)
@@ -501,9 +494,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 }
             });
 
-            //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
         }
-
 
         public void Initialise()
         {
@@ -558,25 +549,34 @@ namespace VolcanicTransport_WPF.ViewModel
             StartGameLoop();
         }
 
+        #region BuildMode
         private BuildMode currentBuildMode = BuildMode.NONE;
         public BuildMode CurrentBuildMode
         {
             get => currentBuildMode;
             set
             {
-                if (currentBuildMode != value)
-                {
-                    currentBuildMode = value;
-                    OnPropertyChanged(nameof(IsBuildModeRoad));
-                    OnPropertyChanged(nameof(IsBuildModeStation));
-                    OnPropertyChanged(nameof(IsBuildModeBuyVehicle));
-                    OnPropertyChanged(nameof(IsBuildModeSelectStation));
-                    OnPropertyChanged(nameof(IsBuildModeBridge));
-                    OnPropertyChanged(nameof(IsBuildModeLower));
-                    OnPropertyChanged(nameof(IsBuildModeHeighten));
-                }
+                if (currentBuildMode == value) return;
+
+                currentBuildMode = value;
+                OnPropertyChanged(nameof(IsBuildModeRoad));
+                OnPropertyChanged(nameof(IsBuildModeStation));
+                OnPropertyChanged(nameof(IsBuildModeBuyVehicle));
+                OnPropertyChanged(nameof(IsBuildModeSelectStation));
+                OnPropertyChanged(nameof(IsBuildModeBridge));
+                OnPropertyChanged(nameof(IsBuildModeLower));
+                OnPropertyChanged(nameof(IsBuildModeHeighten));
             }
         }
+       
+        public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
+        public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
+        public bool IsBuildModeSelectStation => CurrentBuildMode == BuildMode.SELECT_STATION;
+        public bool IsBuildModeBuyVehicle => CurrentBuildMode == BuildMode.BUY_VEHICLE;
+        public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
+        public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
+        public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
+        #endregion
 
         private int currentTimescale;
         public int CurrentTimescale
@@ -594,15 +594,6 @@ namespace VolcanicTransport_WPF.ViewModel
 
             }
         }
-        public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
-        public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
-
-        public bool IsBuildModeSelectStation => CurrentBuildMode == BuildMode.SELECT_STATION;
-
-        public bool IsBuildModeBuyVehicle => CurrentBuildMode == BuildMode.BUY_VEHICLE;
-        public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
-        public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
-        public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
 
         public bool IsTimescale0 => CurrentTimescale == 0 || IsPausedView || GameModelInstance.IsPaused;
         public bool IsTimescale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 1;
