@@ -46,6 +46,10 @@ public static class GameSettings
 
     // Minimum távolság a világ szélétől
     public const int WorldEdgeBufferZone = 2;
+
+    public const int CityCount = 10;
+    public const int FactoryCount = 20;
+
     #endregion
 
     #region Mushrooms
@@ -83,10 +87,7 @@ public static class GameSettings
         { ProductType.NONE, 0.0 }
     };
 
-    public static double GetPrice(ProductType type)
-    {
-        return productPrices.TryGetValue(type, out double price) ? price : 0.0;
-    }
+    public static double GetPrice(ProductType type) => productPrices.GetValueOrDefault(type, 0.0);
 
     public const double BaseProductionRate = 0.2;
     public const double PeopleGrowthRate = 0.01;
