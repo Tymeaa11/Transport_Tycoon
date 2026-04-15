@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using Microsoft.Win32;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
 using System.Windows;
@@ -15,13 +16,28 @@ namespace VolcanicTransport_WPF.ViewModel
     public class GameViewModel : ViewModelBase
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
+        public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
+        public Camera Camera { get; }
 
-        private bool _isPausedView;
 
         #region Events
         public event EventHandler? ExitToMenuRequested;
+
+        private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(CurrentMoney));
+        }
+
+        private void On_UpdateChunk(object? sender, ChunkUpdatedEventArgs e)
+        {
+            if (ChunkMap.ContainsKey(e.ChunkCoordinate))
+                ChunkMap[e.ChunkCoordinate].TriggerRerender();
+        }
+
         #endregion
 
+        #region Pause
+        private bool _isPausedView;
         public bool IsPausedView
         {
             get => _isPausedView;
@@ -47,6 +63,7 @@ namespace VolcanicTransport_WPF.ViewModel
             OnPropertyChanged(nameof(IsTimescale2));
             OnPropertyChanged(nameof(IsTimescale4));
         }
+        #endregion
 
         #region Chunks
         public ObservableCollection<ChunkViewModel> LoadedChunks { get; }
@@ -62,11 +79,7 @@ namespace VolcanicTransport_WPF.ViewModel
             Camera.HalfScreenDimensions = new Vector(width * 0.5, height * 0.5);
         }
 
-        private void On_UpdateChunk(object? sender, ChunkUpdatedEventArgs e)
-        {
-            if (ChunkMap.ContainsKey(e.ChunkCoordinate))
-                ChunkMap[e.ChunkCoordinate].TriggerRerender();
-        }
+
 
         public void UpdateVisibleChunks()
         {
@@ -93,9 +106,6 @@ namespace VolcanicTransport_WPF.ViewModel
         }
 
         #endregion
-
-        public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
-        public Camera Camera { get; }
 
         #region Commands
         public DelegateCommand SetBuildModeRoadCommand { get; private set; }
@@ -130,153 +140,157 @@ namespace VolcanicTransport_WPF.ViewModel
             //    System.Diagnostics.Debug.WriteLine($"CVM {cvm.Chunk.Coordinate}, {cvm.IsVisible}");
             //System.Diagnostics.Debug.WriteLine("\n");
 
-            Field? f = GameModel.WorldInstance.GetField(coord);
-            if (f == null) return;
+            Field? field = GameModel.WorldInstance.GetField(coord);
+            if (field == null) return;
 
-            if (CurrentBuildMode == BuildMode.SELECT_STATION)
+            switch (CurrentBuildMode)
             {
-                Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {f.Surface?.GetType().Name}");
-                if (f.Surface is Station clickedStation)
-                {
-                    if (SelectedVehicle != null)
-                    {
-                        var v = SelectedVehicle.GetVehicle;
-                        if (v != null)
-                        {
-                            Debug.WriteLine("Station megvan, küldöm a modellnek!");
-                            GameModel.AddStopToVehicle(v, clickedStation);
-                        }
-                    }
-                    CurrentBuildMode = BuildMode.NONE;
-                }
-                return;
+                case BuildMode.SELECT_STATION:
+                    OnBuildModeSelectStation(field);
+                    break;
+
+                case BuildMode.BUY_VEHICLE:
+                    OnBuildModeBuyVehicle(field);
+                    break;
+
+                case BuildMode.ROAD:
+                    if (field.IsBuildable()) 
+                        GameModelInstance.PlaceRoad(coord);
+                    break;
+
+                case BuildMode.STATION:
+                    if (field.IsBuildable()) 
+                        GameModelInstance.PlaceStation(coord);
+                    break;
+
+                case BuildMode.HEIGHTEN:
+                    GameModelInstance.HeightenField(coord);
+                    break;
+
+                case BuildMode.LOWER:
+                    GameModelInstance.LowerField(coord);
+                    break;
+
+                default:
+                    // Handle BuildMode.NONE or unhandled cases
+                    break;
             }
+        }
 
-            if (CurrentBuildMode == BuildMode.BUY_VEHICLE)
+        private void OnBuildModeSelectStation(Field field)
+        {
+            Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {field.Surface?.GetType().Name}");
+            if (field.Surface is Station clickedStation)
             {
-                if (f.Surface is Station clickedStation)
+                if (SelectedVehicle != null)
                 {
-                    if (_firstSelectedStation == null)
+                    var v = SelectedVehicle.GetVehicle;
+                    if (v != null)
                     {
-                        // 1. KATTINTÁS: Eltároljuk a start állomást
-                        _firstSelectedStation = clickedStation;
-                        Debug.WriteLine($"1. állomás rögzítve: {clickedStation.Coordinate}. Kattints a célra!");
+                        Debug.WriteLine("Station megvan, küldöm a modellnek!");
+                        GameModel.AddStopToVehicle(v, clickedStation);
                     }
-                    else
-                    {
-                        // 2. KATTINTÁS: Megvan a cél állomás
-                        Station secondSelectedStation = clickedStation;
+                }
+                CurrentBuildMode = BuildMode.NONE;
+            }
+        }
 
-                        if (_firstSelectedStation == secondSelectedStation)
-                        {
-                            Debug.WriteLine("A cél nem lehet ugyanaz, mint a start!");
-                            return;
-                        }
-
-                        var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
-                        RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == _firstSelectedStation.Coordinate);
-                        RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondSelectedStation.Coordinate);
-
-                        if (startNode != null && endNode != null)
-                        {
-                            if (SelectedVehicle != null)
-                            {
-                                Vehicle v = SelectedVehicle.GetVehicle;
-
-                                var newRoute = new Route();
-                                newRoute.AddStop(_firstSelectedStation);
-                                newRoute.AddStop(secondSelectedStation);
-
-                                v.AssignNewRoute(newRoute);
-
-                                Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
-                            }
-                            else
-                            {
-                                List<Road>? path = Pathfinder.FindPath(startNode, endNode);
-
-                                if (path != null && path.Count > 0)
-                                {
-                                    // TODO : Is this allowed in MVVM?
-                                    var nameDialog = new VehicleNameWindow { Owner = Application.Current.MainWindow };
-
-                                    if (nameDialog.ShowDialog() == true)
-                                    {
-                                        string chosenName = nameDialog.VehicleName;
-                                        string? chosenType = nameDialog.SelectedType;
-
-                                        Vehicle newVehicle = chosenType switch
-                                        {
-                                            "CargoTruck" => new CargoTruck(chosenName),
-                                            "TankerTruck" => new TankerTruck(chosenName),
-                                            "MiniBus" => new MiniBus(chosenName),
-                                            _ => new Bus(chosenName)
-                                        };
-
-                                        var initialRoute = new Route();
-                                        initialRoute.AddStop(_firstSelectedStation);
-                                        initialRoute.AddStop(secondSelectedStation);
-                                        newVehicle.Route = initialRoute;
-                                        newVehicle.CurrentStopIndex = 1;
-
-                                        newVehicle.StartJourney(path, false, _firstSelectedStation);
-                                        GameModelInstance.BuyVehicle(newVehicle);
-                                        Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
-                                    }
-                                    else
-                                    {
-                                        Debug.WriteLine("Vásárlás megszakítva.");
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
-                                }
-                            }
-
-                            _firstSelectedStation = null;
-                            CurrentBuildMode = BuildMode.NONE;
-                        }
-                    }
+        private void OnBuildModeBuyVehicle(Field field)
+        {
+            if (field.Surface is Station clickedStation)
+            {
+                if (_firstSelectedStation == null)
+                {
+                    // 1. KATTINTÁS: Eltároljuk a start állomást
+                    _firstSelectedStation = clickedStation;
+                    Debug.WriteLine($"1. állomás rögzítve: {clickedStation.Coordinate}. Kattints a célra!");
                 }
                 else
                 {
-                    Debug.WriteLine("Kérlek egy állomásra kattints!");
+                    // 2. KATTINTÁS: Megvan a cél állomás
+                    Station secondSelectedStation = clickedStation;
+
+                    if (_firstSelectedStation == secondSelectedStation)
+                    {
+                        Debug.WriteLine("A cél nem lehet ugyanaz, mint a start!");
+                        return;
+                    }
+
+                    var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
+                    RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == _firstSelectedStation.Coordinate);
+                    RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondSelectedStation.Coordinate);
+
+                    if (startNode != null && endNode != null)
+                    {
+                        if (SelectedVehicle != null)
+                        {
+                            Vehicle v = SelectedVehicle.GetVehicle;
+
+                            var newRoute = new Route();
+                            newRoute.AddStop(_firstSelectedStation);
+                            newRoute.AddStop(secondSelectedStation);
+
+                            v.AssignNewRoute(newRoute);
+
+                            Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
+                        }
+                        else
+                        {
+                            List<Road>? path = Pathfinder.FindPath(startNode, endNode);
+
+                            if (path != null && path.Count > 0)
+                            {
+                                // TODO : Is this allowed in MVVM?
+                                var nameDialog = new VehicleNameWindow { Owner = Application.Current.MainWindow };
+
+                                if (nameDialog.ShowDialog() == true)
+                                {
+                                    string chosenName = nameDialog.VehicleName;
+                                    string? chosenType = nameDialog.SelectedType;
+
+                                    Vehicle newVehicle = chosenType switch
+                                    {
+                                        "CargoTruck" => new CargoTruck(chosenName),
+                                        "TankerTruck" => new TankerTruck(chosenName),
+                                        "MiniBus" => new MiniBus(chosenName),
+                                        _ => new Bus(chosenName)
+                                    };
+
+                                    var initialRoute = new Route();
+                                    initialRoute.AddStop(_firstSelectedStation);
+                                    initialRoute.AddStop(secondSelectedStation);
+                                    newVehicle.Route = initialRoute;
+                                    newVehicle.CurrentStopIndex = 1;
+
+                                    newVehicle.StartJourney(path, false, _firstSelectedStation);
+                                    GameModelInstance.BuyVehicle(newVehicle);
+                                    Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
+                                }
+                                else
+                                {
+                                    Debug.WriteLine("Vásárlás megszakítva.");
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
+                            }
+                        }
+
+                        _firstSelectedStation = null;
+                        CurrentBuildMode = BuildMode.NONE;
+                    }
                 }
             }
-
-
-            if (f.IsBuildable())
+            else
             {
-                switch (CurrentBuildMode)
-                {
-                    case BuildMode.ROAD:
-                        GameModelInstance.PlaceRoad(coord);
-                        break;
-
-                    case BuildMode.STATION:
-                        GameModelInstance.PlaceStation(coord);
-                        break;
-
-                    case BuildMode.BUY_VEHICLE:
-                        break;
-                }
-            }
-
-            if (CurrentBuildMode == BuildMode.HEIGHTEN)
-            {
-                GameModelInstance.HeightenField(coord);
-            }
-
-            if (CurrentBuildMode == BuildMode.LOWER)
-            {
-                GameModelInstance.LowerField(coord);
+                Debug.WriteLine("Kérlek egy állomásra kattints!");
             }
         }
 
         #endregion
 
-        #region Hovered field & Tooltips
+        #region Hovered field & Inspector
 
         private bool _isInspectorVisible;
         public bool IsInspectorVisible
@@ -295,52 +309,43 @@ namespace VolcanicTransport_WPF.ViewModel
         public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
         {
             _lastMousePosition = mouseXY;
+            Camera.CurrentMousePosition = (Vector)mouseXY;
+
             HoveredCoordinate = Camera.ScreenToField((Vector)mouseXY);
-            UpdateBuildability();
             _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
 
-            Camera.CurrentMousePosition = (Vector)mouseXY;
+            UpdateBuildability();
+
 
             var cornerSb = new StringBuilder();
             cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
+
             if (_hoveredField != null)
             {
                 cornerSb.Append($"| {_hoveredField.Type} ({(int)_hoveredField.Type})");
-                if (_hoveredField.Surface is Mushroom m) cornerSb.Append($" | M({m.GrowthStage})");
-                else if (_hoveredField.Surface is Road r) cornerSb.Append($" | R({r.RoadType})");
+
+                string surfaceDetail = _hoveredField.Surface switch
+                {
+                    Mushroom m => $" | M({m.GrowthStage})",
+                    Road r => $" | R({r.RoadType})",
+                    _ => ""
+                };
+
+                cornerSb.Append(surfaceDetail);
             }
+
             ToolTipText = cornerSb.ToString();
 
-            var inspectorSb = new StringBuilder();
-            if (_hoveredField?.Surface is Station)
+            InspectorText = _hoveredField?.Surface switch
             {
-                inspectorSb.Append(_hoveredField.Surface switch
-                {
-                    FactoryStation fs => GetFactoryStationInfo(fs),
-                    CityStation cs => GetCityStationInfo(cs),
-                    _ => ""
-                });
+                FactoryStation fs => GetFactoryStationInfo(fs),
+                CityStation cs => GetCityStationInfo(cs),
+                FactoryBuilding fb => GetSimpleFactoryInfo(fb),
+                CityBuilding cb => GetSimpleCityInfo(cb),
+                _ => ""
+            };
 
-                InspectorText = inspectorSb.ToString();
-                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-            }
-            else if (_hoveredField?.Surface is FactoryBuilding fb)
-            {
-                inspectorSb.Append(GetSimpleFactoryInfo(fb));
-                InspectorText = inspectorSb.ToString();
-                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-            }
-            else if (_hoveredField?.Surface is CityBuilding cb)
-            {
-                inspectorSb.Append(GetSimpleCityInfo(cb));
-                InspectorText = inspectorSb.ToString();
-                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-            }
-            else
-            {
-                IsInspectorVisible = false;
-                InspectorText = "";
-            }
+            IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
         }
         private string GetSimpleFactoryInfo(FactoryBuilding fb)
         {
@@ -562,10 +567,6 @@ namespace VolcanicTransport_WPF.ViewModel
             //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
         }
 
-        private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
-        {
-            OnPropertyChanged(nameof(CurrentMoney));
-        }
 
         public void Initialise()
         {
