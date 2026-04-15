@@ -29,7 +29,7 @@ test-job:   # This job runs in the test stage.
     - dotnet test VolcanicTransport/VolcanicTransport-Tests --no-restore --logger:"junit;MethodFormat=Class;FailureBodyFormat=Verbose" --collect="XPlat Code Coverage
 
     - > 
-      dotnet test TicTacToeGame.Test --no-restore
+      dotnet test VolcanicTransport/VolcanicTransport-Tests --no-restore
       --logger:"junit;MethodFormat=Class;FailureBodyFormat=Verbose"
       --collect="XPlat Code Coverage"
     # Install tools for code coverage extraction from Cobertura XML files
@@ -54,7 +54,7 @@ test-job:   # This job runs in the test stage.
 
   artifacts:
     paths:
-      - ./*
+      #- ./*
       - ./VolcanicTransport/*/TestResults/TestResults.xml
       - ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
       - ./report/html/
