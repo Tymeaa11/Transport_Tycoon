@@ -54,6 +54,7 @@ test-job:   # This job runs in the test stage.
 
   artifacts:
     paths:
+      - ./*
       - ./VolcanicTransport/*/TestResults/TestResults.xml
       - ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
       - ./report/html/
