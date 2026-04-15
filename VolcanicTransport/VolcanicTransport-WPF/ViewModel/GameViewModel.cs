@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
@@ -19,6 +20,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
         public Camera Camera { get; }
+        public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
 
 
         #region Events
@@ -576,6 +578,22 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
+
+        private void OnSetBuildMode(BuildMode mode)
+        {
+            BuildMode previousMode = CurrentBuildMode;
+
+            CurrentBuildMode = (CurrentBuildMode == mode)
+                ? BuildMode.NONE
+                : mode;
+
+            if (previousMode == BuildMode.ROAD && CurrentBuildMode != BuildMode.ROAD)
+            {
+                Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
+                GameModel.WorldInstance.Roadnetwork.RebuildEdges();
+            }
+
+        }
         #endregion
 
         #region TimeScale
@@ -603,13 +621,9 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsTimeScale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 4;
         #endregion
 
-        public string CurrentMoney
-        {
-            get => GameModelInstance.PlayerMoney.ToString("F0") + " $";
-        }
+        #region GameLoop
         private readonly object _vehiclesLock = new();
 
-        //private readonly DispatcherTimer _gameLoop;
         private Stopwatch? _stopwatch;
         private TimeSpan _lastRenderTime = TimeSpan.Zero;
 
@@ -651,26 +665,9 @@ namespace VolcanicTransport_WPF.ViewModel
             Camera.Update(deltaTime);
 
         }
-        private void OnSetBuildMode(BuildMode mode)
-        {
-            BuildMode previousMode = CurrentBuildMode;
 
-            if (CurrentBuildMode == mode)
-            {
-                CurrentBuildMode = BuildMode.NONE;
-            }
-            else
-            {
-                CurrentBuildMode = mode;
-            }
-
-            if (previousMode == BuildMode.ROAD && CurrentBuildMode != BuildMode.ROAD)
-            {
-                Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
-                GameModel.WorldInstance.Roadnetwork.RebuildEdges();
-            }
-
-        }
+        #endregion
+        
 
         private void OnSetTimescale0X()
         {
