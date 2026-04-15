@@ -23,8 +23,7 @@ test-job:   # This job runs in the test stage.
 
   script:
     - > 
-      dotnet test VolcanicTransport/VolcanicTransport-Tests --no-restore
-      --logger:"juuuuunit;MethodFormat=Class;FailureBodyFormat=Verbose"
+      dotnet test VolcanicTransport/VolcanicTransport-Tests --no-restore --logger:"junit;MethodFormat=Class;FailureBodyFormat=Verbose"
 
     
 
