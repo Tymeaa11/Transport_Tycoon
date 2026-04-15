@@ -500,7 +500,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Initialise()
         {
-            GameModel.Initialise(5, 0);
+            GameModel.Initialise(GameSettings.DefaultWorldSize, 0);
 
             GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
             {

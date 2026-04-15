@@ -13,6 +13,8 @@ public static class GameSettings
     public const int FieldSize = 32; // should be divisible by 8
     public const int ChunkSize = 32; // should be even
 
+    public const int DefaultWorldSize = 8;
+
     public const int FieldSizeP2 = FieldSize / 2;
     public const int FieldSizeP4 = FieldSize / 4;
     public const int FieldSizeP8 = FieldSize / 8;
