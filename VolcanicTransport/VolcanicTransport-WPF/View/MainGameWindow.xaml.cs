@@ -78,9 +78,7 @@ namespace VolcanicTransport_WPF.View
         private void MainGameWindow_MouseMove(object sender, MouseEventArgs e)
         {
             if (DataContext is GameViewModel vm)
-            {
-                vm.UpdateHoveredCoordinateAndTooltips(e.GetPosition(ViewPort));
-            }
+                vm.UpdateHoveredCoordinateAndTooltips((Vector)e.GetPosition(ViewPort));
         }
     }
 }

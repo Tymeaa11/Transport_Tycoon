@@ -17,6 +17,7 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
         public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
+        public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
         public Camera Camera { get; }
 
 
@@ -305,44 +306,7 @@ namespace VolcanicTransport_WPF.ViewModel
             get => _inspectorText;
             set { _inspectorText = value; OnPropertyChanged(); }
         }
-        private Point _lastMousePosition;
-        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
-        {
-            _lastMousePosition = mouseXY;
-            Camera.CurrentMousePosition = (Vector)mouseXY;
-
-            HoveredCoordinate = Camera.ScreenToField((Vector)mouseXY);
-            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
-
-            UpdateBuildability();
-
-
-            var cornerSb = new StringBuilder();
-            cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
-
-            if (_hoveredField != null)
-            {
-                cornerSb.Append($"| {_hoveredField.Type} ({(int)_hoveredField.Type})");
-
-                string surfaceDetail = _hoveredField.Surface switch
-                {
-                    Mushroom m => $" | M({m.GrowthStage})",
-                    Road r => $" | R({r.RoadType})",
-                    _ => ""
-                };
-
-                cornerSb.Append(surfaceDetail);
-            }
-
-            ToolTipText = cornerSb.ToString();
-
-            InspectorText = (_hoveredField?.Surface is IInspectable inspectable)
-                ? inspectable.Inspect()
-                : "";
-
-            IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-        }
-        public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
+        private Vector _lastMousePosition;
 
         private Field? _hoveredField;
 
@@ -384,6 +348,46 @@ namespace VolcanicTransport_WPF.ViewModel
                 _ => GameModelInstance.IsBuildable(HoveredCoordinate),
             };
         }
+
+
+        public void UpdateHoveredCoordinateAndTooltips(Vector mouseXY)
+        {
+            _lastMousePosition = mouseXY;
+            Camera.CurrentMousePosition = mouseXY;
+
+            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
+
+            UpdateBuildability();
+
+
+            var cornerSb = new StringBuilder();
+            cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
+
+            if (_hoveredField != null)
+            {
+                cornerSb.Append($"| {_hoveredField.Type} ({(int)_hoveredField.Type})");
+
+                string surfaceDetail = _hoveredField.Surface switch
+                {
+                    Mushroom m => $" | M({m.GrowthStage})",
+                    Road r => $" | R({r.RoadType})",
+                    _ => ""
+                };
+
+                cornerSb.Append(surfaceDetail);
+            }
+
+            ToolTipText = cornerSb.ToString();
+
+            InspectorText = (_hoveredField?.Surface is IInspectable inspectable)
+                ? inspectable.Inspect()
+                : "";
+
+            IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
+        }
+       
+        
         #endregion
 
 
