@@ -1,0 +1,12 @@
+<testsuites>
+  <testsuite name="VolcanicTransport-Tests.dll" tests="3" skipped="0" failures="0" errors="0" time="0.6998975000000001" timestamp="2026-04-15T11:27:36" hostname="THECONSEQUENCES" id="0" package="VolcanicTransport-Tests.dll">
+    <properties />
+    <testcase classname="VolcanicTransport_Tests.Utils.CoordinateTests" name="CoordinateTests.MetaTest" time="0.0092494" />
+    <testcase classname="VolcanicTransport_Tests.Utils.CoordinateTests" name="CoordinateTests.AdditionCoordCoord" time="0.3453262" />
+    <testcase classname="VolcanicTransport_Tests.Utils.CoordinateTests" name="CoordinateTests.EqualsTest" time="0.3453219" />
+    <system-out>
+Test Framework Informational Messages:
+Test Parallelization enabled for D:\Documents\Code\szoptech\drbt\VolcanicTransport\VolcanicTransport-Tests\bin\Debug\net9.0\VolcanicTransport-Tests.dll (Workers: 8, Scope: MethodLevel)
+</system-out>
+  </testsuite>
+</testsuites>
