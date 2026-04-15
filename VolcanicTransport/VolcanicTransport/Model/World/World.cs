@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
@@ -31,7 +32,7 @@ namespace VolcanicTransport.Model.World
         public List<Station> Stations { get; } = [];
         public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
-        public GameWorldGenerator? GameWorldGenerator { get; set; }
+        public IWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
 
         public event EventHandler<ChunkUpdatedEventArgs>? ChunkChanged;
@@ -103,7 +104,7 @@ namespace VolcanicTransport.Model.World
             if (GameWorldGenerator == null) throw new NoWorldGeneratorProvidedException();
             ChunkMatrix.ReadEach(
                 (cx, cy, c) => c.FieldMatrix.ReadEach(
-                    (x, y, f) => GameWorldGenerator.GenerateField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
+                    (x, y, f) => GameWorldGenerator.ModifyField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
 
             GameWorldGenerator.GenerateCitiesAndFactories();
         }
