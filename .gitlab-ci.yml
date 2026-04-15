@@ -3,6 +3,10 @@ image: mcr.microsoft.com/dotnet/sdk:9.0
 stages:          # List of stages for jobs, and their order of execution
   - build
   - test
+  - deploy
+
+include:
+  - component: szofttech.inf.elte.hu/components/code-quality-dotnet/windows@2
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
@@ -22,13 +26,60 @@ test-job:   # This job runs in the test stage.
     - dotnet restore VolcanicTransport/VolcanicTransport-Tests --packages .nuget
 
   script:
+    - dotnet test VolcanicTransport/VolcanicTransport-Tests --no-restore --logger:"junit;MethodFormat=Class;FailureBodyFormat=Verbose" --collect="XPlat Code Coverage
+
     - > 
-      dotnet test VolcanicTransport/VolcanicTransport-Tests --no-restore --logger:"junit;MethodFormat=Class;FailureBodyFormat=Verbose"
+      dotnet test TicTacToeGame.Test --no-restore
+      --logger:"junit;MethodFormat=Class;FailureBodyFormat=Verbose"
+      --collect="XPlat Code Coverage"
+    # Install tools for code coverage extraction from Cobertura XML files
+    - apt-get update -yqq
+    - apt-get install -yqq bc
+    - dotnet tool install --tool-path . dotnet-reportgenerator-globaltool
+    # Compute code coverage percentage from Cobertura XML files through merging them with ReportGenerator
+    # This is useful when you have multiple test projects in a repository
+    # https://github.com/danielpalme/ReportGenerator
+    - ./reportgenerator "-reports:$CI_PROJECT_DIR/*/TestResults/*/coverage.cobertura.xml" "-targetdir:report" "-reporttypes:Cobertura"
+    # Also generate a web-based summary of the code coverage, which we can publish later through GitLab Pages
+    - ./reportgenerator "-reports:$CI_PROJECT_DIR/*/TestResults/*/coverage.cobertura.xml" "-targetdir:report/html" "-reporttypes:Html"
+    # The generated Cobertura.xml file contains the overall code coverage in a format like this:
+    # <coverage line-rate="..." ...>
+    # Let's get that with the powers of sed :)
+    - line_rate="$(head -n 3 ./report/Cobertura.xml | sed 'N;N;s/.*line-rate="\([^" ]*\).*/\1/g')"
+    - coverage=$(echo "${line_rate} * 100" | bc)
+    - 'printf "TOTAL_COVERAGE=%2.2f\n" "$coverage"'
+
 
     
 
   artifacts:
+    paths:
+      - ./VolcanicTransport/*/TestResults/TestResults.xml
+      - ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
+      - ./report/html/
+
     reports:
       junit:
         - ./VolcanicTransport/*/TestResults/TestResults.xml
+      coverage_report:
+          coverage_format: cobertura
+          path: ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
+
+pages:
+  stage: deploy
+  image: ubuntu:24.04 # .NET SDK is not needed for this job
+  before_script:
+    - apt-get update -yqq
+    - apt-get install -yqq doxygen graphviz
+  script:
+    # Generate code documentation with Doxygen (see the Doxyfile for config)
+    - doxygen
+    - mkdir -p public/docs/
+    - cp -r doc/html/. public/docs/
+    # Add the code coverage web summary as well
+    - mkdir -p public/covergae
+    - cp -r report/html/. public/coverage/
+  artifacts:
+    paths:
+      - public
 
