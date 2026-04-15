@@ -45,9 +45,9 @@ test-job:   # This job runs in the test stage.
     # The generated Cobertura.xml file contains the overall code coverage in a format like this:
     # <coverage line-rate="..." ...>
     # Let's get that with the powers of sed :)
-    - $line_rate="$(select -first 3 ./report/Cobertura.xml | %{ $_ -replace 'N;N;s/.*line-rate="\([^" ]*\).*/\1/g'})"
-    - $coverage=$line_rate * 100
-    - 'printf "TOTAL_COVERAGE=%2.2f\n" "$coverage"'
+   # - $line_rate="$(select -first 3 ./report/Cobertura.xml | %{ $_ -replace 'N;N;s/.*line-rate="\([^" ]*\).*/\1/g'})"
+   # - $coverage=$line_rate * 100
+  #  - 'printf "TOTAL_COVERAGE=%2.2f\n" "$coverage"'
 
 
     
