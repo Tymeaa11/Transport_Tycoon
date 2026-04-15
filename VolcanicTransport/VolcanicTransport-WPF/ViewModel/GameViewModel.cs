@@ -619,6 +619,30 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsTimeScale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 1;
         public bool IsTimeScale2 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 2;
         public bool IsTimeScale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 4;
+
+        private void OnSetTimescale0X()
+        {
+            CurrentTimeScale = 0;
+            GameModelInstance.Pause();
+        }
+        private void OnSetTimescale1X()
+        {
+            CurrentTimeScale = 1;
+            GameModelInstance.UnPause();
+            GameModelInstance.ChangeTimeSpeed1X();
+        }
+        private void OnSetTimescale2X()
+        {
+            CurrentTimeScale = 2;
+            GameModelInstance.UnPause();
+            GameModelInstance.ChangeTimeSpeed2X();
+        }
+        private void OnSetTimescale4X()
+        {
+            CurrentTimeScale = 4;
+            GameModelInstance.UnPause();
+            GameModelInstance.ChangeTimeSpeed4X();
+        }
         #endregion
 
         #region GameLoop
@@ -669,33 +693,6 @@ namespace VolcanicTransport_WPF.ViewModel
         #endregion
         
 
-        private void OnSetTimescale0X()
-        {
-            CurrentTimeScale = 0;
-            GameModelInstance.Pause();
-
-        }
-
-        private void OnSetTimescale1X()
-        {
-            CurrentTimeScale = 1;
-            GameModelInstance.UnPause();
-            GameModelInstance.ChangeTimeSpeed1X();
-        }
-
-        private void OnSetTimescale2X()
-        {
-            CurrentTimeScale = 2;
-            GameModelInstance.UnPause();
-            GameModelInstance.ChangeTimeSpeed2X();
-        }
-
-        private void OnSetTimescale4X()
-        {
-            CurrentTimeScale = 4;
-            GameModelInstance.UnPause();
-            GameModelInstance.ChangeTimeSpeed4X();
-        }
 
 
 
