@@ -30,10 +30,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             return _stops[(index + 1) % _stops.Count];
         }
 
-        public List<Road> GetRoadsToNextStation()
-        {
-            // TODO
-            return _roadToNextStation; //javítandó
-        }
+        // TODO Kell ez még??
+        public List<Road> RoadsToNextStation => _roadToNextStation;
+
     }
 }

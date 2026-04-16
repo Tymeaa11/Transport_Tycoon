@@ -2,9 +2,9 @@ using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World
 {
-    public class Mushroom( Coordinate coordinate, MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT) : KnowsNeighbour(coordinate)
+    public class Mushroom(Coordinate coordinate, MushroomGrowthStage growthStage = MushroomGrowthStage.SPROUT) : KnowsNeighbour(coordinate)
     {
-        public Coordinate GetCoordinate => this.Coordinate;
+        public Coordinate GetCoordinate => Coordinate;
 
         public MushroomGrowthStage GrowthStage { get; private set; } = growthStage; // 1 - 4
 
@@ -20,11 +20,11 @@ namespace VolcanicTransport.Model.World
             Random rand = World.Instance.SharedRandom;
             bool hasChanged = false;
 
-            if (rand.NextDouble() < GameSettings.GrowthBaseChance) 
+            if (rand.NextDouble() < GameSettings.GrowthBaseChance)
             {
-                int oldStage = (int)GrowthStage;
+                var oldStage = GrowthStage;
                 Grow();
-                if ((int)GrowthStage != oldStage)
+                if (GrowthStage != oldStage)
                 {
                     hasChanged = true;
                     return (myCoord, hasChanged);
@@ -33,15 +33,8 @@ namespace VolcanicTransport.Model.World
 
             if (IsAbleToSpread() && rand.NextDouble() < GameSettings.SpreadBaseChance)
             {
-                Coordinate dir = rand.Next(4) switch
-                {
-                    0 => new Coordinate(0, -1), 
-                    1 => new Coordinate(0, 1),  
-                    2 => new Coordinate(1, 0),
-                    _ => new Coordinate(-1, 0)
-                };
-
-                Coordinate targetCoord = myCoord + dir;
+                Coordinate targetCoord = myCoord + Direction.GetRandomDirection();
+                ;
                 Field? targetField = World.Instance.GetField(targetCoord);
 
                 if (targetField != null && (targetField.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS)) return (null, hasChanged);

@@ -54,8 +54,8 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                         return false;
 
             // Távolság ellenőrzése a már meglévő városoktól/gyáraktól
-            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance))
-                   && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistance));
+            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistanceInFields))
+                   && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistanceInFields));
         }
 
         private static void CreateCity(Coordinate center)
@@ -102,11 +102,22 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             World.World.Instance.Cities.Add(newCity);
         }
 
-        private static void CreateFactory(Coordinate origin)
+        private readonly List<int> _factoryTypesToGenerate = [];
+
+        private void FillFactoriesToGenerate()
         {
+            _factoryTypesToGenerate.Clear();
+            _factoryTypesToGenerate.AddRange([.. Enumerable.Range(0, 7)]);
+        }
+
+        private void CreateFactory(Coordinate origin)
+        {
+            if (_factoryTypesToGenerate.Count == 0) 
+                FillFactoriesToGenerate();
+
             var name = "Factory" + World.World.Instance.SharedRandom.Next() + "_" + World.World.Instance.SharedRandom.Next();
-            var factoryType = World.World.Instance.SharedRandom.Next(0, 7);
-            Factory newFactory = factoryType switch
+            var factoryType = World.World.Instance.SharedRandom.Next(0, _factoryTypesToGenerate.Count);
+            Factory newFactory = _factoryTypesToGenerate[factoryType] switch
             {
                 0 => new CondensatorFactory(name, origin),
                 1 => new ConcreteFactory(name, origin),
@@ -117,6 +128,10 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 6 => new SteamProducer(name, origin),
                 _ => new MushroomProducer(name, origin)
             };
+
+            _factoryTypesToGenerate.RemoveAt(factoryType);
+
+            //Debug.WriteLine(newFactory);
 
             var reference = GetField(origin);
 

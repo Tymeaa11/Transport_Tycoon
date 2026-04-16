@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
@@ -31,8 +33,10 @@ namespace VolcanicTransport.Model.World
         public List<Station> Stations { get; } = [];
         public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
-        public GameWorldGenerator? GameWorldGenerator { get; set; }
+        public IWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
+
+        public event EventHandler<ChunkUpdatedEventArgs>? ChunkChanged;
 
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
@@ -101,9 +105,11 @@ namespace VolcanicTransport.Model.World
             if (GameWorldGenerator == null) throw new NoWorldGeneratorProvidedException();
             ChunkMatrix.ReadEach(
                 (cx, cy, c) => c.FieldMatrix.ReadEach(
-                    (x, y, f) => GameWorldGenerator.GenerateField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
+                    (x, y, f) => GameWorldGenerator.ModifyField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
 
             GameWorldGenerator.GenerateCitiesAndFactories();
+
+            Debug.WriteLine($"Generated {Cities.Count} cities and {Factories.Count} factories");
         }
 
         public void Generate(int seed)
@@ -113,6 +119,8 @@ namespace VolcanicTransport.Model.World
             Generate();
         }
 
+        public void UpdateChunk(Coordinate chunkCoordinate)
+            => ChunkChanged?.Invoke(this, new(chunkCoordinate));
 
 
         public void AddVehicle(Vehicle v) => Vehicles.Add(v);
@@ -145,9 +153,7 @@ namespace VolcanicTransport.Model.World
             }
 
             foreach (var chunk in chunksToRender)
-            {
-                chunk.TriggerRerender();
-            }
+                UpdateChunk(chunk.Coordinate);
         }
 
         #endregion
