@@ -132,78 +132,84 @@
                 </Rectangle.Style>
             </Rectangle>
         </Canvas>
-           
-        <!--minimap-->
 
-        <Border VerticalAlignment="Top" HorizontalAlignment="Right"
-                Width="{Binding MinimapSize}" Height="{Binding MinimapSize}" Margin="8" Padding="0"
-                BorderBrush="Black" Background="White" BorderThickness="10" CornerRadius="5">
-            <Canvas>
 
-                <ItemsControl ItemsSource="{Binding LoadedChunks}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <Canvas x:Name="WorldContainer" 
-                    SnapsToDevicePixels="true"
-                    RenderOptions.EdgeMode="Aliased">
-                            </Canvas>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
+        <StackPanel HorizontalAlignment="Right" >
+            <!--minimap-->
+            <Border VerticalAlignment="Top" HorizontalAlignment="Right"
+                    Width="{Binding MinimapSize}" Height="{Binding MinimapSize}" Margin="8" Padding="0"
+                    BorderBrush="Black" Background="White" BorderThickness="10" CornerRadius="5">
+                <Canvas>
 
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <view:MiniVisualChunk />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
+                    <ItemsControl ItemsSource="{Binding LoadedChunks}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas x:Name="WorldContainer"
+                                        SnapsToDevicePixels="true"
+                                        RenderOptions.EdgeMode="Aliased">
+                                </Canvas>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
 
-                    <ItemsControl.ItemContainerStyle>
-                        <Style TargetType="ContentPresenter">
-                            <Setter Property="Canvas.Left" Value="{Binding Path=Chunk.Coordinate.X, Converter={StaticResource MiniChunkToPixelConverter}}" />
-                            <Setter Property="Canvas.Top" Value="{Binding Path=Chunk.Coordinate.Y, Converter={StaticResource MiniChunkToPixelConverter}}" />
-                        </Style>
-                    </ItemsControl.ItemContainerStyle>
-                </ItemsControl>
-            </Canvas>
-        </Border>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <view:MiniVisualChunk />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
 
-        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
-        Width="180" Margin="0,0,20,0" Padding="15"
-        Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5"
-        Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <StackPanel>
-                <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Canvas.Left" Value="{Binding Path=Chunk.Coordinate.X, Converter={StaticResource MiniChunkToPixelConverter}}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Path=Chunk.Coordinate.Y, Converter={StaticResource MiniChunkToPixelConverter}}" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+                </Canvas>
+            </Border>
 
-                <ComboBox ItemsSource="{Binding VehicleViewModels}" 
-              SelectedItem="{Binding SelectedVehicle}" 
-              DisplayMemberPath="GetName" 
-              Margin="0,0,0,10" Padding="5"/>
 
-                <Separator Margin="0,0,0,10"/>
+            <Border VerticalAlignment="Stretch" HorizontalAlignment="Right"
+                    Width="180" Margin="0,0,20,0" Padding="15"
+                    Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5"
+                    Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
 
-                <StackPanel TextBlock.FontSize="13">
-                    <TextBlock Text="{Binding SelectedVehicle.StateDisplay, StringFormat='State: {0}'}" Foreground="DarkBlue" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.Type, StringFormat='Type: {0}'}" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.SpeedDisplay, StringFormat='Speed: {0}'}" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.GetCurrentCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                    <ComboBox ItemsSource="{Binding VehicleViewModels}" 
+                              SelectedItem="{Binding SelectedVehicle}" 
+                              DisplayMemberPath="GetName" 
+                              Margin="0,0,0,10" Padding="5"/>
+
+                    <Separator Margin="0,0,0,10"/>
+
+                    <StackPanel TextBlock.FontSize="13">
+                        <TextBlock Text="{Binding SelectedVehicle.StateDisplay, StringFormat='State: {0}'}" Foreground="DarkBlue" Margin="0,3"/>
+                        <TextBlock Text="{Binding SelectedVehicle.Type, StringFormat='Type: {0}'}" Margin="0,3"/>
+                        <TextBlock Text="{Binding SelectedVehicle.SpeedDisplay, StringFormat='Speed: {0}'}" Margin="0,3"/>
+                        <TextBlock Text="{Binding SelectedVehicle.GetCurrentCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Timetable:" FontWeight="Bold" Margin="0,15,0,5"/>
+                    <ListBox ItemsSource="{Binding SelectedVehicle.ScheduleList}" 
+                             Background="#F0F0F0" BorderBrush="#CCCCCC"
+                             MinHeight="60" MaxHeight="100" Margin="0,0,0,10"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+
+                    <UniformGrid Columns="1" Margin="0,5,0,0">
+                        <Button Content="New timetable" 
+                                Command="{Binding ClearRouteCommand}" 
+                                Margin="0,2" Padding="5"/>
+
+                        <Button Content="Add new stop" 
+                                Command="{Binding AddStopCommand}"         
+                                Margin="0,2" Padding="5"/>
+                    </UniformGrid>
                 </StackPanel>
+            </Border>
+        </StackPanel>
+        
 
-                <TextBlock Text="Timetable:" FontWeight="Bold" Margin="0,15,0,5"/>
-                <ListBox ItemsSource="{Binding SelectedVehicle.ScheduleList}" 
-             Background="#F0F0F0" BorderBrush="#CCCCCC"
-             MinHeight="60" MaxHeight="100" Margin="0,0,0,10"
-             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-
-                <UniformGrid Columns="1" Margin="0,5,0,0">
-                    <Button Content="New timetable" 
-                Command="{Binding ClearRouteCommand}" 
-                Margin="0,2" Padding="5"/>
-
-                    <Button Content="Add new stop" 
-                Command="{Binding AddStopCommand}" 
-                Margin="0,2" Padding="5"/>
-                </UniformGrid>
-            </StackPanel>
-        </Border>
+        
 
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
             <StackPanel Orientation="Horizontal">
