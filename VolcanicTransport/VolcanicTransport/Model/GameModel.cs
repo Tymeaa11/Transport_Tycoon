@@ -302,6 +302,8 @@ namespace VolcanicTransport.Model
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
+            if (WorldInstance.Stations.Any(s => s.Coordinate.Distance(coord) <= 3)) return false;
+
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;
@@ -411,6 +413,7 @@ namespace VolcanicTransport.Model
         {
             int samplesCount = (int)(GameSettings.SamplesCount * deltaTime);
             HashSet<Chunk> chunksToRedraw = [];
+            Random rand = WorldInstance.SharedRandom;
 
             for (int i = 0; i < samplesCount; i++)
             {
@@ -424,7 +427,11 @@ namespace VolcanicTransport.Model
 
                 if (field.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS) continue;
 
-                if (field.Surface is Mushroom mushroom)
+                if (field.Surface is null && rand.NextDouble() < GameSettings.NewSpreadChance)
+                {
+                    field.Surface = new Mushroom(randomCoord, MushroomGrowthStage.SPROUT);
+                }
+                else if (field.Surface is Mushroom mushroom)
                 {
                     (Coordinate? target, bool spread) = mushroom.UpdateMushroom(randomCoord);
                     if (spread)

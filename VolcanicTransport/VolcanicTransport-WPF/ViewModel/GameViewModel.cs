@@ -135,6 +135,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnFieldClicked(Coordinate coord)
         {
+            if (IsPausedView) return;
             Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
 
             //Camera.PrintDebug();
@@ -182,6 +183,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnBuildModeSelectStation(Field field)
         {
+            if (IsPausedView) return;
             Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {field.Surface?.GetType().Name}");
             if (field.Surface is Station clickedStation)
             {
@@ -200,6 +202,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnBuildModeBuyVehicle(Field field)
         {
+            if (IsPausedView) return;
             if (field.Surface is Station clickedStation)
             {
                 if (_firstSelectedStation == null)
@@ -343,6 +346,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
+            if (IsPausedView) return;
             IsHoveredFieldBuildable = CurrentBuildMode switch
             {
                 BuildMode.HEIGHTEN => GameModelInstance.IsHeightenable(HoveredCoordinate),
@@ -354,6 +358,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void UpdateHoveredCoordinateAndTooltips(Vector mouseXY)
         {
+            if (IsPausedView) return;
             _lastMousePosition = mouseXY;
             Camera.CurrentMousePosition = mouseXY;
 
@@ -414,7 +419,14 @@ namespace VolcanicTransport_WPF.ViewModel
         private double _accumulator = 0;
         private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
 
-        public bool IsVehiclePanelVisible => SelectedVehicle != null;
+        private bool _isVehiclePanelVisible = false;
+        public bool IsVehiclePanelVisible
+        {
+            get => _isVehiclePanelVisible;
+            set { _isVehiclePanelVisible = value; OnPropertyChanged(); }
+        }
+
+        public DelegateCommand ToggleVehiclePanelCommand { get; private set; }
 
         #endregion
 
@@ -435,7 +447,8 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (param is Coordinate coord)
                     OnFieldClicked(coord);
             });
-            SetBuildModeRoadCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.ROAD));
+            SetBuildModeRoadCommand = new DelegateCommand(
+                _ => OnSetBuildMode(BuildMode.ROAD));
             SetBuildModeStationCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.STATION));
             SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
             SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
@@ -451,6 +464,10 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnSetBuildMode(BuildMode.BUY_VEHICLE);
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
+            ToggleVehiclePanelCommand = new DelegateCommand(_ =>
+            {
+                IsVehiclePanelVisible = !IsVehiclePanelVisible;
+            });
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
             QuitToMainMenuCommand = new DelegateCommand(_ =>
             {
@@ -458,6 +475,7 @@ namespace VolcanicTransport_WPF.ViewModel
             });
             AddStopCommand = new DelegateCommand(_ =>
             {
+                if (IsPausedView) return;
                 if (SelectedVehicle != null)
                 {
                     CurrentBuildMode = BuildMode.SELECT_STATION;
@@ -536,6 +554,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         VehicleViewModels.Add(vvm);
                         SelectedVehicle = vvm;
                         Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
+                        IsVehiclePanelVisible = true;
                     }
                 });
             };

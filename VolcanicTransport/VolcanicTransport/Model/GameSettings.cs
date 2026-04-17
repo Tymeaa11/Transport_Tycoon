@@ -56,8 +56,9 @@ public static class GameSettings
 
     public const int SpreadChance = 50;
     public const double GrowthBaseChance = 0.2;
-    public const double SpreadBaseChance = 0.1;
-    public const int SamplesCount = 100;
+    public const double SpreadBaseChance = 0.2;
+    public const double NewSpreadChance = 0.01;
+    public const int SamplesCount = 250;
 
     #region MushroomGeneration 
     public const float MushroomPerlinFrequency = 0.07f;
