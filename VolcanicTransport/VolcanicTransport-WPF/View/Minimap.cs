@@ -1,26 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.World;
+using VolcanicTransport.Model.World.Economy;
+using VolcanicTransport_WPF.ViewModel;
 
 namespace VolcanicTransport_WPF.View
 {
     public class Minimap : FrameworkElement
     {
+        private const int Dpi = 16;
 
-        private static readonly int Dpi = 16;
-        private static readonly int FieldSize = GameSettings.FieldSize / 4;
-        private static readonly int HalfFieldSize = FieldSize / 2;
-        private static readonly int ChunkSizeInFields = GameSettings.ChunkSize * FieldSize;
+        #region Fields
+        private static readonly Rect ChunkBoundries = new(0, 0, GameSettings.ChunkSizeInPixels, GameSettings.ChunkSizeInPixels);
+        protected override int VisualChildrenCount => 1;
+        protected override Visual GetVisualChild(int index) => _visual;
 
         private readonly DrawingVisual _visual;
+        #endregion
 
+        #region Constructor
         public Minimap()
         {
             _visual = new DrawingVisual();
@@ -31,36 +31,62 @@ namespace VolcanicTransport_WPF.View
 
             DataContextChanged += (s, e) =>
             {
-                if (e.OldValue is Chunk oldChunk)
+                if (e.OldValue is ChunkViewModel oldCvm)
                 {
-                    oldChunk.Changed -= OnChunkDataChanged;
+                    oldCvm.Rerender -= OnChunkDataChanged;
+                    oldCvm.PropertyChanged -= OnViewModelPropertyChanged;
                 }
 
-                if (e.NewValue is Chunk newChunk)
+                if (e.NewValue is ChunkViewModel cvm)
                 {
-                    newChunk.Changed += OnChunkDataChanged;
-                    Dispatcher.InvokeAsync(() => PreRender(newChunk));
+                    cvm.Rerender += OnChunkDataChanged;
+                    cvm.PropertyChanged += OnViewModelPropertyChanged;
+
+                    SetVisibility(cvm.IsVisible);
+                    PreRender(cvm.Chunk);
                 }
             };
         }
+        #endregion
 
+        #region Events
         private void OnChunkDataChanged(object? sender, EventArgs e)
         {
-            Dispatcher.Invoke(() =>
-            {
-                if (DataContext is Chunk chunkData)
-                {
-
-                    PreRender(chunkData);
-                }
-            });
+            if (Dispatcher.CheckAccess())
+                ExecuteRerender();
+            else
+                Dispatcher.BeginInvoke(ExecuteRerender);
         }
 
-        public void PreRender()
+        private void ExecuteRerender()
+        {
+            if (DataContext is ChunkViewModel cvm)
+            {
+                SetVisibility(cvm.IsVisible);
+                PreRender(cvm.Chunk);
+            }
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ChunkViewModel.IsVisible) && DataContext is ChunkViewModel cvm)
+                SetVisibility(cvm.IsVisible);
+        }
+        #endregion
+
+        #region Methods
+
+        private void SetVisibility(bool b)
+            => Visibility = b ? Visibility.Visible : Visibility.Collapsed;
+
+        private void PreRender(Chunk chunkData)
         {
 
+            System.Diagnostics.Debug.WriteLine($"Generating prerender for {chunkData.Coordinate}");
+
+
             RenderTargetBitmap bakedMap = new(
-                ChunkSizeInFields, ChunkSizeInFields, Dpi, Dpi, PixelFormats.Pbgra32
+                GameSettings.ChunkSizeInPixels, GameSettings.ChunkSizeInPixels, Dpi, Dpi, PixelFormats.Pbgra32
             );
 
             DrawingVisual dv = new();
@@ -70,12 +96,25 @@ namespace VolcanicTransport_WPF.View
                 {
                     // Draw the tile based on FieldType
                     Brush brush = FieldBrushProvider.GetBrush(f.Type);
-                    double fieldX = x * FieldSize;
-                    double fieldY = y * FieldSize;
+                    double fieldX = x * GameSettings.FieldSize;
+                    double fieldY = y * GameSettings.FieldSize;
 
-                    Rect rectangle = new(fieldX, fieldY, FieldSize, FieldSize);
+                    Rect rectangle = new(fieldX, fieldY, GameSettings.FieldSize, GameSettings.FieldSize);
 
                     dc.DrawRectangle(brush, null, rectangle);
+
+                    // Draw Surface
+                    if (f.Surface != null)
+                    {
+                        // TODO:different color for surface
+
+                        double centerX = fieldX + GameSettings.FieldSizeP2;
+                        double centerY = fieldY + GameSettings.FieldSizeP2;
+
+                        dc.PushTransform(new RotateTransform(imageWithRotation.AngleDegrees, centerX, centerY));
+                        dc.DrawImage(imageWithRotation.ImageSource, rectangle);
+                        dc.Pop();
+                    }
                 });
             }
 
@@ -84,10 +123,8 @@ namespace VolcanicTransport_WPF.View
 
             // Draw the baked chunk to _visual
             using DrawingContext dc2 = _visual.RenderOpen();
-           // dc2.DrawImage(bakedMap, );
+            dc2.DrawImage(bakedMap, ChunkBoundries);
         }
 
-        protected override int VisualChildrenCount => 1;
-        protected override Visual GetVisualChild(int index) => _visual;
     }
 }
