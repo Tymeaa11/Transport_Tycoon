@@ -17,6 +17,7 @@
 
     <Window.Resources>
         <view:ChunkToPixelConverter x:Key="ChunkToPixelConverter" />
+        <view:MiniChunkToPixelConverter x:Key="MiniChunkToPixelConverter" />
         <view:FieldToPixelConverter x:Key="FieldToPixelConverter" />
         <view:BuildabilityToColorConverter x:Key="BuildabilityToColorConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -83,6 +84,7 @@
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
+                    <!-- magic suspected here -->
                     <Rectangle Width="24" Height="12" Fill="Red" Stroke="White" StrokeThickness="1" 
            RadiusX="2" RadiusY="2">
                         <Rectangle.RenderTransform>
@@ -130,36 +132,38 @@
                 </Rectangle.Style>
             </Rectangle>
         </Canvas>
+           
+        <!--minimap-->
 
-        <Border HorizontalAlignment="Right" VerticalAlignment="Top"
-        Width="240" Height="240" Margin="15" Padding="0" BorderBrush="#FFFF0FF0" Background="#FF00FF00" BorderThickness="5" CornerRadius="5">
-            <ItemsControl ItemsSource="{Binding LoadedChunks}" ClipToBounds="True">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas x:Name="MinimapContainer" 
+        <Border VerticalAlignment="Top" HorizontalAlignment="Right"
+                Width="{Binding MinimapSize}" Height="{Binding MinimapSize}" Margin="8" Padding="0"
+                BorderBrush="Black" Background="White" BorderThickness="10" CornerRadius="5">
+            <Canvas>
+
+                <ItemsControl ItemsSource="{Binding LoadedChunks}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas x:Name="WorldContainer" 
                     SnapsToDevicePixels="true"
                     RenderOptions.EdgeMode="Aliased">
-                            <Canvas.RenderTransform>
-                                <MatrixTransform Matrix="{Binding DataContext.Camera.ProjectionMatrix,
-                                     Source={x:Reference RootWindow}}" />
-                            </Canvas.RenderTransform>
-                        </Canvas>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+                            </Canvas>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <view:VisualChunk />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <view:MiniVisualChunk />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
 
-                <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="ContentPresenter">
-                        <Setter Property="Canvas.Left" Value="{Binding Path=Coordinate.X, Converter={StaticResource ChunkToPixelConverter}}" />
-                        <Setter Property="Canvas.Top" Value="{Binding Path=Coordinate.Y, Converter={StaticResource ChunkToPixelConverter}}" />
-                    </Style>
-                </ItemsControl.ItemContainerStyle>
-            </ItemsControl>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="Canvas.Left" Value="{Binding Path=Chunk.Coordinate.X, Converter={StaticResource MiniChunkToPixelConverter}}" />
+                            <Setter Property="Canvas.Top" Value="{Binding Path=Chunk.Coordinate.Y, Converter={StaticResource MiniChunkToPixelConverter}}" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </Canvas>
         </Border>
 
         <Border HorizontalAlignment="Right" VerticalAlignment="Center"

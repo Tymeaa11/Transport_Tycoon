@@ -19,6 +19,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public static GameModel GameModelInstance { get => GameModel.Instance; }
         public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
+        public int MinimapSize => GameSettings.MinimapSize; //used to size minimap
         public Camera Camera { get; }
         public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
 
