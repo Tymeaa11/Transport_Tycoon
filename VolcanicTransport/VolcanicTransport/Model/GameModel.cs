@@ -302,6 +302,8 @@ namespace VolcanicTransport.Model
 
             if (!IsBuildable(coord) || PlayerMoney < stationCost) return false;
 
+            if (WorldInstance.Stations.Any(s => s.Coordinate.Distance(coord) <= 3)) return false;
+
             var field = WorldInstance.GetField(coord);
 
             if (field == null) return false;

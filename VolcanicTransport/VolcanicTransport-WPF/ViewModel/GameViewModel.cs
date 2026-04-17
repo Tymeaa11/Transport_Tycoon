@@ -419,7 +419,14 @@ namespace VolcanicTransport_WPF.ViewModel
         private double _accumulator = 0;
         private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
 
-        public bool IsVehiclePanelVisible => SelectedVehicle != null;
+        private bool _isVehiclePanelVisible = false;
+        public bool IsVehiclePanelVisible
+        {
+            get => _isVehiclePanelVisible;
+            set { _isVehiclePanelVisible = value; OnPropertyChanged(); }
+        }
+
+        public DelegateCommand ToggleVehiclePanelCommand { get; private set; }
 
         #endregion
 
@@ -457,6 +464,10 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnSetBuildMode(BuildMode.BUY_VEHICLE);
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
+            ToggleVehiclePanelCommand = new DelegateCommand(_ =>
+            {
+                IsVehiclePanelVisible = !IsVehiclePanelVisible;
+            });
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
             QuitToMainMenuCommand = new DelegateCommand(_ =>
             {
@@ -543,6 +554,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         VehicleViewModels.Add(vvm);
                         SelectedVehicle = vvm;
                         Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
+                        IsVehiclePanelVisible = true;
                     }
                 });
             };

@@ -209,7 +209,10 @@
                       Command="{Binding SetBuildModeHeightenCommand}" 
                       IsChecked="{Binding IsBuildModeHeighten, Mode=OneWay}">
                 </ToggleButton>
-            </StackPanel>
+                <ToggleButton Content="Vehicles" 
+                      Command="{Binding ToggleVehiclePanelCommand}" 
+                      IsChecked="{Binding IsVehiclePanelVisible, Mode=OneWay}" />
+                </StackPanel>
         </Border>
 
 
