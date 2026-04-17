@@ -135,6 +135,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnFieldClicked(Coordinate coord)
         {
+            if (IsPausedView) return;
             Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
 
             //Camera.PrintDebug();
@@ -182,6 +183,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnBuildModeSelectStation(Field field)
         {
+            if (IsPausedView) return;
             Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {field.Surface?.GetType().Name}");
             if (field.Surface is Station clickedStation)
             {
@@ -200,6 +202,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnBuildModeBuyVehicle(Field field)
         {
+            if (IsPausedView) return;
             if (field.Surface is Station clickedStation)
             {
                 if (_firstSelectedStation == null)
@@ -343,6 +346,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
+            if (IsPausedView) return;
             IsHoveredFieldBuildable = CurrentBuildMode switch
             {
                 BuildMode.HEIGHTEN => GameModelInstance.IsHeightenable(HoveredCoordinate),
@@ -354,6 +358,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void UpdateHoveredCoordinateAndTooltips(Vector mouseXY)
         {
+            if (IsPausedView) return;
             _lastMousePosition = mouseXY;
             Camera.CurrentMousePosition = mouseXY;
 
@@ -435,7 +440,8 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (param is Coordinate coord)
                     OnFieldClicked(coord);
             });
-            SetBuildModeRoadCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.ROAD));
+            SetBuildModeRoadCommand = new DelegateCommand(
+                _ => OnSetBuildMode(BuildMode.ROAD));
             SetBuildModeStationCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.STATION));
             SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
             SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
@@ -458,6 +464,7 @@ namespace VolcanicTransport_WPF.ViewModel
             });
             AddStopCommand = new DelegateCommand(_ =>
             {
+                if (IsPausedView) return;
                 if (SelectedVehicle != null)
                 {
                     CurrentBuildMode = BuildMode.SELECT_STATION;
