@@ -243,6 +243,17 @@ namespace VolcanicTransport.Model
             if (!field.IsBuildable())
                 return null;
 
+            foreach (var dir in Direction.Directions)
+            {
+                Field? adjField = WorldInstance.GetField(coord + dir);
+
+                if (adjField?.Surface is Bridge)
+                {
+                    System.Diagnostics.Debug.WriteLine("Építés megtagadva: Híd mellé nem kerülhet út!");
+                    return null;
+                }
+            }
+
             //creating a temporal to see if a road can be place here
             Road tempRoad = new(coord);
 
@@ -351,7 +362,27 @@ namespace VolcanicTransport.Model
 
                 if (i > 0 && i < length - 1)
                 {
-                    if (f == null || f.Type >= startField.Type || f.Surface is Bridge)
+                    if (f == null || f.Type >= startField.Type || f.Surface is Road)
+                    {
+                        startField.Surface = originalStartSurface;
+                        endField.Surface = originalEndSurface;
+                        tempStartRoad.UpdateNeighbours();
+                        tempEndRoad.UpdateNeighbours();
+                        return false;
+                    }
+                }
+            }
+
+            for (int i = 1; i < length - 1; i++)
+            {
+                Coordinate c = bridgeCoords[i];
+                foreach (var dir in Direction.Directions)
+                {
+                    Coordinate adjCoord = c + dir;
+                    if (bridgeCoords.Contains(adjCoord)) continue;
+                    Field? adjField = WorldInstance.GetField(adjCoord);
+
+                    if (adjField != null && adjField.Surface is Road)
                     {
                         startField.Surface = originalStartSurface;
                         endField.Surface = originalEndSurface;
@@ -384,7 +415,7 @@ namespace VolcanicTransport.Model
                 }
                 else
                 {
-                    field.Surface = new Bridge(c, bridgeDir, bridgeType.MaxSpeed);
+                    field.Surface = new Bridge(c, bridgeDir, bridgeType.MaxSpeed, startField.Type);
                 }
             }
 

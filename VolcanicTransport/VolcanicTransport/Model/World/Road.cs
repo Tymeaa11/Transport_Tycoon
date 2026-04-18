@@ -22,20 +22,34 @@ namespace VolcanicTransport.Model.World
         {
             RoadLayoutChanged?.Invoke(this, new FieldEventArgs(coord));
         }
+
+        private (bool hasRoad, int diff) GetNeighborInfo(Field? neighborField, RoadType expectedBridgeDir)
+        {
+            if (neighborField?.Surface is Road r)
+            {
+                if (r is Bridge b)
+                {
+                    var thisField = World.Instance.GetField(Coordinate);
+                    if (thisField != null && thisField.Type == b.Elevation && (b.RoadType & expectedBridgeDir) != 0)
+                    {
+                        return (true, 0);
+                    }
+                    return (false, 0);
+                }
+
+                return (true, World.Instance.GetField(Coordinate)?.GetHeightDifference(neighborField) ?? 0);
+            }
+            return (false, 0);
+        }
         public virtual void Update()
         {
             var thisField = World.Instance.GetField(Coordinate);
             if (thisField == null) return;
 
-            var roadNorth = North?.Surface is Road;
-            var roadSouth = South?.Surface is Road;
-            var roadEast = East?.Surface is Road;
-            var roadWest = West?.Surface is Road;
-
-            int diffN = roadNorth ? thisField.GetHeightDifference(North) : 0;
-            int diffS = roadSouth ? thisField.GetHeightDifference(South) : 0;
-            int diffE = roadEast ? thisField.GetHeightDifference(East) : 0;
-            int diffW = roadWest ? thisField.GetHeightDifference(West) : 0;
+            var (roadNorth, diffN) = GetNeighborInfo(North, RoadType.SOUTH);
+            var (roadSouth, diffS) = GetNeighborInfo(South, RoadType.NORTH);
+            var (roadEast, diffE) = GetNeighborInfo(East, RoadType.WEST);
+            var (roadWest, diffW) = GetNeighborInfo(West, RoadType.EAST);
 
             if (Math.Abs(diffN) > 1 || Math.Abs(diffS) > 1 || Math.Abs(diffE) > 1 || Math.Abs(diffW) > 1)
             {
@@ -76,7 +90,7 @@ namespace VolcanicTransport.Model.World
                     }
                     else
                     {
-                        if (higherCount == 1)
+                        if (higherCount >= 1)
                             RoadType = RoadType.INVALID;
                         else
                             RoadType = baseType | RoadType.CURVED;
@@ -86,7 +100,7 @@ namespace VolcanicTransport.Model.World
                 // Junction
                 case 3:
                 case 4:
-                    if (higherCount == 1)
+                    if (higherCount >= 1)
                         RoadType = RoadType.INVALID;
                     else
                         RoadType = baseType | RoadType.JUNCTION; 

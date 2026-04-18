@@ -6,10 +6,13 @@ namespace VolcanicTransport.Model.World
     {
         public float SpeedLimit { get; }
 
-        public Bridge(Coordinate coord, RoadType fixedType, float speedLimit) : base(coord)
+        public FieldType Elevation { get; }
+
+        public Bridge(Coordinate coord, RoadType fixedType, float speedLimit, FieldType elevation) : base(coord)
         {
             RoadType = fixedType;
             SpeedLimit = speedLimit;
+            Elevation = elevation;
         }
 
         public override void Update()
