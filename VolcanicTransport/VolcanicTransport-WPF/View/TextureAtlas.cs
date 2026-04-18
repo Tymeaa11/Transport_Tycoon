@@ -66,6 +66,12 @@ namespace VolcanicTransport_WPF.View
             RoadTextures[RoadType.STRAIGHT_NS] = new ImageWithRotation(straight, 0);
             RoadTextures[RoadType.STRAIGHT_EW] = new ImageWithRotation(straight, 90);
 
+            RoadTextures[RoadType.SLOPE_N] = new ImageWithRotation(end, 180);
+            RoadTextures[RoadType.SLOPE_W] = new ImageWithRotation(end, 90);
+            RoadTextures[RoadType.SLOPE_S] = new ImageWithRotation(end, 0);
+            RoadTextures[RoadType.SLOPE_E] = new ImageWithRotation(end, 270);
+
+
             RoadTextures[RoadType.SLOPE_NS] = new ImageWithRotation(straight, 0);
             RoadTextures[RoadType.SLOPE_EW] = new ImageWithRotation(straight, 90);
 

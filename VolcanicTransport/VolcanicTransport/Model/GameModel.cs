@@ -243,6 +243,17 @@ namespace VolcanicTransport.Model
             if (!field.IsBuildable())
                 return null;
 
+            foreach (var dir in Direction.Directions)
+            {
+                Field? adjField = WorldInstance.GetField(coord + dir);
+
+                if (adjField?.Surface is Bridge)
+                {
+                    System.Diagnostics.Debug.WriteLine("Építés megtagadva: Híd mellé nem kerülhet út!");
+                    return null;
+                }
+            }
+
             //creating a temporal to see if a road can be place here
             Road tempRoad = new(coord);
 
@@ -294,6 +305,132 @@ namespace VolcanicTransport.Model
             }
             RoadBought?.Invoke(this, EventArgs.Empty);
             WorldInstance.UpdateRoadNetworkAround(coord);
+        }
+
+        public bool PlaceBridge(Coordinate start, Coordinate end, GameSettings.BridgeData bridgeType)
+        {
+            if (start.X != end.X && start.Y != end.Y) return false;
+
+            int dx = Math.Abs(start.X - end.X);
+            int dy = Math.Abs(start.Y - end.Y);
+            int length = Math.Max(dx, dy) + 1;
+
+            if (length < 3 || length > bridgeType.Length) return false;
+
+            Field? startField = WorldInstance.GetField(start);
+            Field? endField = WorldInstance.GetField(end);
+
+            if (startField == null || endField == null) return false;
+            if (startField.Type != endField.Type) return false;
+
+            Road tempStartRoad = new Road(start);
+            Road tempEndRoad = new Road(end);
+
+            var originalStartSurface = startField.Surface;
+            var originalEndSurface = endField.Surface;
+
+            startField.Surface = tempStartRoad;
+            endField.Surface = tempEndRoad;
+
+            tempStartRoad.Update();
+            tempEndRoad.Update();
+
+            bool bridgeHeadsValid = tempStartRoad.RoadType != RoadType.INVALID &&
+                                   tempEndRoad.RoadType != RoadType.INVALID &&
+                                   tempStartRoad.TryUpdateNeighbours() &&
+                                   tempEndRoad.TryUpdateNeighbours();
+
+            if (!bridgeHeadsValid)
+            {
+                startField.Surface = originalStartSurface;
+                endField.Surface = originalEndSurface;
+                tempStartRoad.UpdateNeighbours();
+                tempEndRoad.UpdateNeighbours();
+                return false;
+            }
+
+            int stepX = start.X == end.X ? 0 : (end.X > start.X ? 1 : -1);
+            int stepY = start.Y == end.Y ? 0 : (end.Y > start.Y ? 1 : -1);
+            RoadType bridgeDir = stepX == 0 ? RoadType.STRAIGHT_NS : RoadType.STRAIGHT_EW;
+
+            List<Coordinate> bridgeCoords = new();
+            for (int i = 0; i < length; i++)
+            {
+                Coordinate c = new Coordinate(start.X + i * stepX, start.Y + i * stepY);
+                bridgeCoords.Add(c);
+                Field? f = WorldInstance.GetField(c);
+
+                if (i > 0 && i < length - 1)
+                {
+                    if (f == null || f.Type >= startField.Type || f.Surface is Road)
+                    {
+                        startField.Surface = originalStartSurface;
+                        endField.Surface = originalEndSurface;
+                        tempStartRoad.UpdateNeighbours();
+                        tempEndRoad.UpdateNeighbours();
+                        return false;
+                    }
+                }
+            }
+
+            for (int i = 1; i < length - 1; i++)
+            {
+                Coordinate c = bridgeCoords[i];
+                foreach (var dir in Direction.Directions)
+                {
+                    Coordinate adjCoord = c + dir;
+                    if (bridgeCoords.Contains(adjCoord)) continue;
+                    Field? adjField = WorldInstance.GetField(adjCoord);
+
+                    if (adjField != null && adjField.Surface is Road)
+                    {
+                        startField.Surface = originalStartSurface;
+                        endField.Surface = originalEndSurface;
+                        tempStartRoad.UpdateNeighbours();
+                        tempEndRoad.UpdateNeighbours();
+                        return false;
+                    }
+                }
+            }
+
+            double actualPrice = (bridgeType.Price / bridgeType.Length) * length;
+            if (!TryPurchase(actualPrice))
+            {
+                startField.Surface = originalStartSurface;
+                endField.Surface = originalEndSurface;
+                tempStartRoad.UpdateNeighbours();
+                tempEndRoad.UpdateNeighbours();
+                return false;
+            }
+
+            for (int i = 0; i < length; i++)
+            {
+                Coordinate c = bridgeCoords[i];
+                Field field = WorldInstance.GetField(c)!;
+
+                if (i == 0 || i == length - 1)
+                {
+                    PlaceRoad(c);
+
+                }
+                else
+                {
+                    field.Surface = new Bridge(c, bridgeDir, bridgeType.MaxSpeed, startField.Type);
+                }
+            }
+
+            foreach (var c in bridgeCoords)
+            {
+                if (WorldInstance.GetField(c)?.Surface is Road r) r.Update();
+
+                WorldInstance.UpdateRoadNetworkAround(c);
+
+            }
+
+            WorldInstance.Roadnetwork.RebuildEdges();
+            RoadBought?.Invoke(this, EventArgs.Empty);
+
+            return true;
         }
 
         public bool PlaceStation(Coordinate coord)

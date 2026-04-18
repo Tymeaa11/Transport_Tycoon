@@ -206,6 +206,16 @@ public static class GameSettings
 
     #endregion
 
+    #region Bridges
+    public readonly record struct BridgeData(int Length, float MaxSpeed, double Price, string Name);
+
+    public static readonly BridgeData[] BridgeTypes = [
+        new BridgeData(5, 40.0f, 100, "Csonthíd (5 mező) - 40 km/h"),
+        new BridgeData(9, 60.0f, 200, "Kőhíd (9 mező) - 60 km/h"),
+        new BridgeData(13, 80.0f, 300, "Acélhíd (13 mező) - 80 km/h")
+    ];
+#endregion
+
     static GameSettings()
     {
 
