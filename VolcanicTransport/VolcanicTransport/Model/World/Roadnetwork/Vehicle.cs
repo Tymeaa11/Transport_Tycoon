@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Numerics;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -8,7 +7,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     {
 
         public Vehicle(string name, GameSettings.VehicleData vehicleData)
-        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.productTypes) { }
+        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.ProductTypes) { }
 
         public string Name { get; } = name;
         public List<ProductType> AllType { get { return allType; } }
@@ -26,6 +25,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public Route? PendingRoute { get; set; } = null;
 
         protected float currentSpeed = 0;
+        public float CurrentSpeed => currentSpeed;
+
         protected float maxSpeed = maxSpeed;
         protected int capacity = capacity;
 
@@ -68,6 +69,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             CurrentRoad = currentPath[0];
 
             currentSpeed = maxSpeed;
+            StateUpdated?.Invoke(this, EventArgs.Empty);
 
             LoadWaypointsForField();
 
@@ -85,7 +87,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {Position} pixelre.");
                 }
             }
-            else if (currentStation != null) {
+            else if (currentStation != null)
+            {
 
                 float stationCenterX = (currentStation.Coordinate.X * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
                 float stationCenterY = (currentStation.Coordinate.Y * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
@@ -105,6 +108,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (State == VehicleState.Loading)
             {
                 currentSpeed = 0;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
                 waitTimer += deltaTime;
                 if (waitTimer >= LOAD_TIME)
                 {
@@ -113,13 +117,19 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     {
                         State = VehicleState.Moving;
                         currentSpeed = maxSpeed;
+                        StateUpdated?.Invoke(this, EventArgs.Empty);
                     }
                     else HandleRouteCycle();
                 }
                 return;
             }
 
-            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
+            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0)
+            {
+                State = VehicleState.Waiting;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
+                return;
+            }
 
             currentSpeed = maxSpeed;
 
@@ -128,6 +138,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 currentSpeed = Math.Min(maxSpeed, bridge.SpeedLimit);
             }
 
+            StateUpdated?.Invoke(this, EventArgs.Empty);
             float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
 
             int safetyCounter = 0;
@@ -182,12 +193,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 PendingRoute = null;
                 CurrentStopIndex = 0;
                 System.Diagnostics.Debug.WriteLine($"{Name} elolvasta az új menetrendet! Váltás a {Route.Stops[0].Coordinate} állomásra.");
+                State = VehicleState.Moving;
             }
             else
             {
                 if (Route == null || Route.Stops.Count < 2)
                 {
                     State = VehicleState.Waiting;
+                    StateUpdated?.Invoke(this, EventArgs.Empty);
                     System.Diagnostics.Debug.WriteLine($"{Name} várakozik további megállókra...");
                     return;
                 }
@@ -209,7 +222,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     .FirstOrDefault();
             }
 
-    
+
 
             if (startNode != null && targetNode != null)
             {
@@ -231,6 +244,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 State = VehicleState.Waiting;
                 System.Diagnostics.Debug.WriteLine($"[HIBA] A gráf nem találja a megállót vagy a busz jelenlegi helyét!");
             }
+            StateUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void TryStartNextRoute()
@@ -246,6 +260,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (currentPathIndex + 1 >= currentPath.Count)
             {
                 State = VehicleState.Loading;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
                 waitTimer = 0;
                 if (CurrentRoad != null)
                     ReleaseJunctionLock(CurrentRoad);
@@ -357,6 +372,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (currentType == ProductType.NONE)
             {
                 currentType = type;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
             }
             return taken;
         }
@@ -368,6 +384,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (CurrentLoad == 0)
             {
                 currentType = ProductType.NONE;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
             }
             return provided;
         }
@@ -403,16 +420,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             RouteChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public class VehicleArrivedEventArgs : EventArgs
+        public class VehicleArrivedEventArgs(Vehicle vehicle, Station station) : EventArgs
         {
-            public Vehicle Vehicle { get; }
-            public Station Station { get; }
-
-            public VehicleArrivedEventArgs(Vehicle vehicle, Station station)
-            {
-                Vehicle = vehicle;
-                Station = station;
-            }
+            public Vehicle Vehicle { get; } = vehicle;
+            public Station Station { get; } = station;
         }
     }
 }

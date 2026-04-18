@@ -7,10 +7,10 @@ namespace VolcanicTransport.Model.TerrainGeneration
         TerrainHeightGenerator terrainHeightGenerator,
         MushroomGenerator mushroomGenerator,
         FactoryAndCityGenerator factoryAndCityGenerator
-        ) : ISeedable
+        ) : IWorldGenerator
     {
 
-        public void GenerateField(Field field, int x, int y)
+        public void ModifyField(Field field, int x, int y)
         {
             terrainHeightGenerator.ModifyField(field, x, y);
             mushroomGenerator.ModifyField(field, x, y);

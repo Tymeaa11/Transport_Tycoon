@@ -1,16 +1,22 @@
+using System.Text;
+
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class CityBuilding : ISurface
+    public class CityBuilding(City city) : ISurface, IInspectable
     {
-        private City city;
-
         public string Name => city.Name;
-
         public List<ProductType> ProductTypes => city.ProductTypes;
 
-        public CityBuilding(City city)
+        public string Inspect()
         {
-            this.city = city;
+            var info = new StringBuilder();
+            info.AppendLine($"City: {Name}");
+            info.AppendLine("Product needs:");
+
+            foreach (ProductType pt in ProductTypes)
+                info.AppendLine($"  - {pt}");
+
+            return info.ToString();
         }
     }
 }

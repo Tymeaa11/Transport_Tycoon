@@ -106,7 +106,7 @@ namespace VolcanicTransport.Model.World
         public bool IsJunction() => (RoadType & RoadType.JUNCTION) != 0;
         public bool IsSlope() => (RoadType & RoadType.SLOPE) != 0;
 
-        public event EventHandler? OnPlacementFailed;
+        //public event EventHandler? OnPlacementFailed;
 
         public bool TryUpdateNeighbours()
         {

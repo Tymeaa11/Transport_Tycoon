@@ -10,12 +10,16 @@ public static class GameSettings
     public const string GameVersion = "0.1.0";
 
     #region World & WorldGeneration
-    public const int FieldSize = 64; // should be divisible by 8
+    public const int FieldSize = 32; // should be divisible by 8
     public const int ChunkSize = 32; // should be even
+
+    public const int DefaultWorldSize = 8;
 
     public const int FieldSizeP2 = FieldSize / 2;
     public const int FieldSizeP4 = FieldSize / 4;
     public const int FieldSizeP8 = FieldSize / 8;
+
+    public const int ChunkSizeInPixels = ChunkSize * FieldSize;
 
     private static readonly Dictionary<FieldType, float> FieldTypeThickness = new()
     {
@@ -35,26 +39,34 @@ public static class GameSettings
 
     #region FactoryAndCityGeneration
     // Városok és gyárak közötti minimális távolság mezőkben
-    public const double MinimumDistance = 15.0;
+    public const double MinimumDistanceInFields = 15.0;
 
     // Keresési próbálkozások száma
-    public const int MaxAttempts = 100;
+    public const int MaxAttempts = 500;
 
     // Minimum távolság a világ szélétől
     public const int WorldEdgeBufferZone = 2;
+
+    public const int CityCount = 10;
+    public const int FactoryCount = 20;
+
     #endregion
 
     #region Mushrooms
 
     public const int SpreadChance = 50;
     public const double GrowthBaseChance = 0.2;
-    public const double SpreadBaseChance = 0.1;
-    public const int SamplesCount = 100;
+    public const double SpreadBaseChance = 0.2;
+    public const double NewSpreadChance = 0.01;
+    public const int SamplesCount = 250;
 
-    #region MushroomGeneration
-    public const float Stage0MinHeight = 0.5f;
-    public const float Stage1MinHeight = 0.55f;
-    public const float Stage2MinHeight = 0.6f;
+    #region MushroomGeneration 
+    public const float MushroomPerlinFrequency = 0.07f;
+
+    // Must be in increasing order
+    public const float Stage0MinHeight = 0.615f;
+    public const float Stage1MinHeight = 0.62f;
+    public const float Stage2MinHeight = 0.63f;
     public const float Stage3MinHeight = 0.65f;
     #endregion
 
@@ -76,13 +88,11 @@ public static class GameSettings
         { ProductType.NONE, 0.0 }
     };
 
-    public static double GetPrice(ProductType type)
-    {
-        return productPrices.TryGetValue(type, out double price) ? price : 0.0;
-    }
+    public static double GetPrice(ProductType type) => productPrices.GetValueOrDefault(type, 0.0);
 
     public const double BaseProductionRate = 0.2;
     public const double PeopleGrowthRate = 0.01;
+    public const double ChanceToUnboard = 0.2;
 
     #region FactoryData
     public readonly record struct FactoryData(
@@ -145,35 +155,35 @@ public static class GameSettings
 
     #region Vehicles
     public readonly record struct VehicleData(
-        List<ProductType> productTypes,
+        List<ProductType> ProductTypes,
         float MaxSpeed,
         int Capacity,
         int Price)
     { }
 
     public static readonly VehicleData BusData = new(
-        productTypes: new List<ProductType> { ProductType.HUMAN },
+        ProductTypes: [ProductType.HUMAN],
         MaxSpeed: 60.0f,
         Capacity: 50,
          Price: 4000
     );
 
     public static readonly VehicleData MiniBusData = new(
-        new List<ProductType> { ProductType.HUMAN },
+        ProductTypes: [ProductType.HUMAN],
         MaxSpeed: 60.0f,
         Capacity: 15,
         Price: 6000
     );
 
     public static readonly VehicleData TankerTruckData = new(
-        new List<ProductType> { ProductType.STEAM, ProductType.WATER, ProductType.CONCRETE },
+        ProductTypes: [ProductType.STEAM, ProductType.WATER, ProductType.CONCRETE],
         MaxSpeed: 60.0f,
         Capacity: 800,
         Price: 10000
     );
 
     public static readonly VehicleData CargoTruckData = new(
-        new List<ProductType> { ProductType.ASH, ProductType.SULFUR, ProductType.MUSHROOM, ProductType.BONE },
+        ProductTypes: [ProductType.ASH, ProductType.SULFUR, ProductType.MUSHROOM, ProductType.BONE],
         MaxSpeed: 70.0f,
         Capacity: 900,
         Price: 11000
@@ -189,7 +199,7 @@ public static class GameSettings
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;
-    
+
     public const double MushroomPricePerUnit = 200;
 
 

@@ -1,16 +1,25 @@
+using System.Text;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class FactoryStation(Coordinate coor, string name, Factory factory) : Station(coor, name, new ProductBuffer(ProductType.HUMAN, 50), new Product(ProductType.HUMAN, 0, 50, 5))
+    public class FactoryStation(Coordinate coor, string name, Factory factory) : 
+        Station(
+            coor, 
+            name, 
+            new ProductBuffer(ProductType.HUMAN, 50), 
+            new Product(ProductType.HUMAN, 0, 50, 5)
+        )
+        , IInspectable
     {
         private readonly Factory _factory = factory;
 
         public ProductType GetFactoryNeeds => _factory.BaseProduct;
         public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
         public int GetFactoryFinishedProductAmount => _factory.FinalProductBuffer.CurrentLoad;
-        public int GetFactoryNeedsAmount => _factory.FinalProductBuffer.CurrentLoad;
+        public int GetFactoryBaseProductAmount => _factory.BaseProductBuffer.CurrentLoad;
+        public int GetFactoryNeedsAmount => _factory.BaseProductBuffer.MaxCapacity;
         public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time); // 0-1
         public double PricePerBaseProduct => GameSettings.GetPrice(_factory.BaseProduct);
         public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
@@ -40,6 +49,23 @@ namespace VolcanicTransport.Model.World.Economy
             int provided = _factory.BaseProductBuffer.ReciveProduct(vehicle, amountNeededForFactory);
 
             return provided;
+        }
+
+        
+        public string Inspect()
+        {
+            var info = new StringBuilder();
+
+            info.AppendLine($"Factory Station: {Name}");
+
+            if (GetFactoryNeeds != ProductType.NONE)
+                info.AppendLine($"Base product need / amount: {GetFactoryNeeds} {GetFactoryBaseProductAmount}/{GetFactoryNeedsAmount}");
+
+            info.AppendLine($"Finished product / amount: {GetFactoryFinishedProduct} {GetFactoryFinishedProductAmount}");
+
+            info.AppendLine($"People waiting: {WaitingPassengers}");
+
+            return info.ToString();
         }
     }
 }

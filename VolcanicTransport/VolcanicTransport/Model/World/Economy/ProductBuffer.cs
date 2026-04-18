@@ -20,14 +20,26 @@ namespace VolcanicTransport.Model.World.Economy
             int capacity = MaxCapacity - CurrentLoad;
             if (capacity < amount)
             {
-                int plus = amount - capacity;
                 CurrentLoad += capacity;
                 return capacity;
             }
             CurrentLoad += amount;
             return amount;
-                
+
         }
+
+        public void DeductAmount(int amount)
+        {
+            if (amount > CurrentLoad)
+            {
+                CurrentLoad = 0;
+            }
+            else
+            {
+                CurrentLoad -= amount;
+            }
+        }
+
         public int ReciveProduct(Vehicle vehicle, int amount) //visszatérési érték: amennyit átvett 
         {
             if (vehicle.CurrentType != ProductType) return 0;
@@ -40,7 +52,8 @@ namespace VolcanicTransport.Model.World.Economy
                 vehicle.Load(plus, ProductType);
                 CurrentLoad += capacity;
                 return capacity;
-            } else
+            }
+            else
             {
                 CurrentLoad += provided;
                 return provided;

@@ -2,88 +2,176 @@
 using System.Windows.Media;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
+using Vector = System.Windows.Vector;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
     public class Camera : ViewModelBase
     {
-        private static readonly bool EnableDevMode = true;
+        #region Fields
+        public Vector Position { get; set; }
+        private Vector _velocity;
 
-        private const double PanSpeed = 10.0;
+        private double _zoom;
+        private double _zoomSpeed;
 
-        private Matrix _projectionMatrix;
+        private double _scale;
+        private double _previousScale;
+        public bool IsMovingUp { get; set; }
+        public bool IsMovingDown { get; set; }
+        public bool IsMovingLeft { get; set; }
+        public bool IsMovingRight { get; set; }
+
+        #region Camera Config
+        private const double CameraMovementSpeed = 8000;
+        private const double MovementDrag = 0.005;
+        private const double CameraZoomSpeed = 6;
+        private const double ZoomDrag = 0.01;
+        private const double MinimumScale = 0.2;
+        private const double MaximumScale = 3;
+        private const double ScaleCoefficient = 0.005;
+        #endregion
+        public Vector HalfScreenDimensions { private get; set; }
+
+        private Vector _currentMousePosition;
+        public Vector CurrentMousePosition
+        {
+            get => _currentMousePosition;
+            set { _currentMousePosition = value; OnPropertyChanged(); }
+        }
 
         public event EventHandler? CameraChanged;
 
         public Matrix ProjectionMatrix
         {
-            get => _projectionMatrix;
-            private set
+            get
             {
-                _projectionMatrix = value;
-                OnPropertyChanged();
-                CameraChanged?.Invoke(this, EventArgs.Empty);
+                Matrix matrix = Matrix.Identity;
+
+                matrix.Scale(_scale, _scale);
+
+                Vector t = Position + HalfScreenDimensions;
+                matrix.Translate(t.X, t.Y);
+
+                return matrix;
             }
         }
 
-        public DelegateCommand MoveUp { get; }
-        public DelegateCommand MoveDown { get; }
-        public DelegateCommand MoveLeft { get; }
-        public DelegateCommand MoveRight { get; }
+        #endregion
 
-        public Camera(Matrix initialMatrix)
+        #region Constructor
+        public Camera()
         {
-            ProjectionMatrix = initialMatrix;
+            Position = new Vector(0, 0);
+            _velocity = new Vector(0, 0);
 
-            MoveUp = new DelegateCommand(_ => Pan(0, PanSpeed));
-            MoveDown = new DelegateCommand(_ => Pan(0, -PanSpeed));
-            MoveLeft = new DelegateCommand(_ => Pan(PanSpeed, 0));
-            MoveRight = new DelegateCommand(_ => Pan(-PanSpeed, 0));
+            _scale = 1;
+            CalculateZoomFromScale();
+            _previousScale = _scale;
+
+        }
+        #endregion
+
+        #region Methods
+
+        public void Reset()
+        {
+            var halfWorldSizeInPixels = GameModel.WorldInstance.SizeInFields * -GameSettings.FieldSizeP2;
+            Position = new Vector(halfWorldSizeInPixels.X, halfWorldSizeInPixels.Y);
+            _velocity = new Vector(0, 0);
+
+            _scale = 1;
+            CalculateZoomFromScale();
+            _previousScale = _scale;
         }
 
-        public void Zoom(double delta, Point screenCenter)
+        public void Update(double deltaTime)
         {
-            if (!EnableDevMode) return;
+            if (IsMovingUp) _velocity.Y += CameraMovementSpeed * deltaTime;
+            if (IsMovingDown) _velocity.Y -= CameraMovementSpeed * deltaTime;
+            if (IsMovingLeft) _velocity.X += CameraMovementSpeed * deltaTime;
+            if (IsMovingRight) _velocity.X -= CameraMovementSpeed * deltaTime;
 
-            bool zoomIn = delta > 0;
+            Position += _velocity * deltaTime;
+            _velocity *= Math.Pow(MovementDrag, deltaTime);
 
-            double zoomFactor = zoomIn ? 1.1 : 0.9;
-            Point worldCenter = ScreenToWorld(screenCenter);
-            Matrix m = ProjectionMatrix;
+            _zoom += _zoomSpeed * deltaTime;
+            if (_zoom < 0) _zoom = 0;
+            _zoomSpeed *= Math.Pow(ZoomDrag, deltaTime);
 
-            // ScaleAtPrepend applies the scaling relative to the specified center point
-            m.ScaleAtPrepend(zoomFactor, zoomFactor, worldCenter.X, worldCenter.Y);
+            CalculateScale();
 
-            ProjectionMatrix = m;
+            if (Math.Abs(_scale - _previousScale) > 0.000001)
+            {
+                Vector mouse = CurrentMousePosition - HalfScreenDimensions;
+
+                Position -= mouse;
+                Position *= _scale;
+                Position /= _previousScale;
+                Position += mouse;
+
+                _previousScale = _scale;
+            }
+
+            OnPropertyChanged(nameof(ProjectionMatrix));
+            CameraChanged?.Invoke(this, EventArgs.Empty);
+
         }
 
-        private void Pan(double dx, double dy)
+
+
+        private void CalculateScale()
         {
-            Matrix m = ProjectionMatrix;
-            m.Translate(dx, dy);
-            ProjectionMatrix = m;
-        }
-        public Point ScreenToWorld(Point screenPoint)
-        {
-            Matrix inverted = ProjectionMatrix;
-            inverted.Invert();
-            return inverted.Transform(screenPoint);
+            _scale = ScaleCoefficient * _zoom * _zoom + MinimumScale;
+
+            if (_scale > MaximumScale)
+            {
+                _scale = MaximumScale;
+                CalculateZoomFromScale();
+            }
         }
 
-        public Coordinate WorldToField(Point worldPoint)
+        private void CalculateZoomFromScale()
+            => _zoom = Math.Sqrt((_scale - MinimumScale) / ScaleCoefficient);
+
+        public void Zoom(double delta)
+        {
+            if (delta > 0)
+                _zoomSpeed += CameraZoomSpeed;
+            else
+                _zoomSpeed -= CameraZoomSpeed;
+        }
+
+        public Vector ScreenToWorld(Vector screenPoint)
+        {
+            Vector output = new(screenPoint.X, screenPoint.Y);
+
+            output -= Position + HalfScreenDimensions;
+            output /= _scale;
+
+            return output;
+        }
+
+        public Coordinate WorldToField(Vector worldPoint)
             => new(
                 (int)Math.Floor(worldPoint.X / GameSettings.FieldSize),
                 (int)Math.Floor(worldPoint.Y / GameSettings.FieldSize)
             );
-        public Coordinate ScreenToField(Point screenPoint) => WorldToField(ScreenToWorld(screenPoint));
+        public Coordinate ScreenToField(Vector screenPoint) => WorldToField(ScreenToWorld(screenPoint));
 
-        public Rect GetVisibleWorldBounds(double screenWidth, double screenHeight)
+        public Rect GetVisibleWorldBounds()
         {
             // Transform the four corners of the screen into world coordinates
-            Point topLeft = ScreenToWorld(new Point(0, 0));
-            Point bottomRight = ScreenToWorld(new Point(screenWidth, screenHeight));
+            Vector topLeft = ScreenToWorld(new Vector(0, 0));
+            Vector bottomRight = ScreenToWorld(HalfScreenDimensions * 2);
 
-            return new Rect(topLeft, bottomRight);
+            return new Rect((Point)topLeft, (Point)bottomRight);
         }
+        public void PrintDebug()
+        {
+            System.Diagnostics.Debug.WriteLine($"p:{Position}, v:{_velocity}, s:{_scale}");
+        }
+        #endregion
+
     }
 }

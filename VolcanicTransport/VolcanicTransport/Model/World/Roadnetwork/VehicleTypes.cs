@@ -1,5 +1,3 @@
-using VolcanicTransport.Model.World.Economy;
-
 namespace VolcanicTransport.Model.World.Roadnetwork;
 
 public class Bus(string name) : Vehicle(name, GameSettings.BusData) { }
