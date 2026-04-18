@@ -6,7 +6,7 @@ namespace VolcanicTransport.Model.World
     {
         #region Fields
         public bool IsReserved { get; set; } = false;
-        public RoadType RoadType { get; private set; }
+        public RoadType RoadType { get; protected set; }
         #endregion
 
         #region Methods
@@ -22,7 +22,7 @@ namespace VolcanicTransport.Model.World
         {
             RoadLayoutChanged?.Invoke(this, new FieldEventArgs(coord));
         } //TODO feliratkozni az eseményre
-        public void Update()
+        public virtual void Update()
         {
             var heightDiffNorth = 0;
             var heightDiffSouth = 0;

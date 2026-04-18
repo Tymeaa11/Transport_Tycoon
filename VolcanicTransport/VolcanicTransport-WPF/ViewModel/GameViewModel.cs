@@ -125,6 +125,23 @@ namespace VolcanicTransport_WPF.ViewModel
             Field? f = GameModel.WorldInstance.GetField(coord);
             if (f == null) return;
 
+            if (CurrentBuildMode == BuildMode.BRIDGE)
+            {
+                if (_bridgeStartCoord == null)
+                {
+                    _bridgeStartCoord = coord;
+                    System.Diagnostics.Debug.WriteLine($"Híd 1. pontja lerakva: {coord}. Kattints legfeljebb {SelectedBridgeType.Length} mezővel arrébb a túlpartra!");
+                }
+                else
+                {
+                    bool success = GameModelInstance.PlaceBridge(_bridgeStartCoord.Value, coord, SelectedBridgeType);
+                    System.Diagnostics.Debug.WriteLine(success ? "Híd felépítve!" : "Hibás hídelhelyezés! Ellenőrizd a partot, a magasságot és a hosszt.");
+
+                    _bridgeStartCoord = null;
+                }
+                return;
+            }
+
             if (CurrentBuildMode == BuildMode.SELECT_STATION)
             {
                 System.Diagnostics.Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {f.Surface?.GetType().Name}");
@@ -269,6 +286,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         #region Hovered field & Tooltips
 
+
         private bool _isInspectorVisible;
         public bool IsInspectorVisible
         {
@@ -283,7 +301,7 @@ namespace VolcanicTransport_WPF.ViewModel
             set { _inspectorText = value; OnPropertyChanged(); }
         }
         private Point _lastMousePosition;
-        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
+        /*public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
         {
             _lastMousePosition = mouseXY;
             HoveredCoordinate = Camera.ScreenToField(mouseXY);
@@ -291,7 +309,7 @@ namespace VolcanicTransport_WPF.ViewModel
             _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
             if (_hoveredField?.Surface != null)
             {
-                System.Diagnostics.Debug.WriteLine($"Surface type: {_hoveredField.Surface.GetType().Name}");
+               // System.Diagnostics.Debug.WriteLine($"Surface type: {_hoveredField.Surface.GetType().Name}");
             }
 
             var cornerSb = new StringBuilder();
@@ -333,6 +351,41 @@ namespace VolcanicTransport_WPF.ViewModel
                 IsInspectorVisible = false;
                 InspectorText = "";
             }
+        }*/
+
+        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
+        {
+            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+
+            UpdateBuildability();
+
+            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
+
+            var text = $"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y}  ";
+
+            if (_hoveredField != null)
+            {
+                text += $"{_hoveredField.Type} ({(int)_hoveredField.Type})";
+
+                if (_hoveredField.Surface != null)
+                {
+                    text += " - ";
+
+                    text += _hoveredField.Surface switch
+                    {
+                        Mushroom m => $"M({m.GrowthStage})",
+                        Bridge b => $"B{b.SpeedLimit}",
+                        Road r => $"R({r.RoadType})",
+                        Station _ => $"S",
+                        CityBuilding _ => $"C",
+                        FactoryBuilding _ => $"F",
+                        _ => "Not listed"
+                    };
+                }
+            }
+            else text += "-";
+
+            ToolTipText = text;
         }
         private string GetSimpleFactoryInfo(FactoryBuilding fb)
         {
@@ -411,6 +464,24 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
+        private bool _isBridgeMenuOpen;
+        public bool IsBridgeMenuOpen
+        {
+            get => _isBridgeMenuOpen;
+            set { _isBridgeMenuOpen = value; OnPropertyChanged(); }
+        }
+
+        public GameSettings.BridgeData[] AvailableBridges => GameSettings.BridgeTypes;
+
+        private GameSettings.BridgeData _selectedBridgeType;
+        public GameSettings.BridgeData SelectedBridgeType
+        {
+            get => _selectedBridgeType;
+            set { _selectedBridgeType = value; OnPropertyChanged(); }
+        }
+
+        private Coordinate? _bridgeStartCoord = null;
+
         private string _toolTipText = "";
         public string ToolTipText
         {
@@ -485,7 +556,12 @@ namespace VolcanicTransport_WPF.ViewModel
             });
             SetBuildModeRoadCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.ROAD));
             SetBuildModeStationCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.STATION));
-            SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
+            SetBuildModeBridgeCommand = new DelegateCommand(_ =>
+            {
+                OnSetBuildMode(BuildMode.BRIDGE);
+                IsBridgeMenuOpen = IsBuildModeBridge;
+                _bridgeStartCoord = null;
+            });
             SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
             SetBuildModeHeightenCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.HEIGHTEN));
             SetTimescale0Command = new DelegateCommand(_ => OnSetTimescale0X());
@@ -553,6 +629,8 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             int newSeed = new Random().Next(1, 1000000);
             GameModel.Initialise(8, newSeed);
+
+            SelectedBridgeType = GameSettings.BridgeTypes[0];
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 

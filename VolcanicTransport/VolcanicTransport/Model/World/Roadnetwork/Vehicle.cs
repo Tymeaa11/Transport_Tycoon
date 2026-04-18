@@ -74,6 +74,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (alreadyOnRoad)
             {
 
+
                 if (currentWaypoints.Count > 0)
                 {
                     Position = currentWaypoints[0];
@@ -121,6 +122,12 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
 
             currentSpeed = maxSpeed;
+
+            if (CurrentRoad is Bridge bridge)
+            {
+                currentSpeed = Math.Min(maxSpeed, bridge.SpeedLimit);
+            }
+
             float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
 
             int safetyCounter = 0;
