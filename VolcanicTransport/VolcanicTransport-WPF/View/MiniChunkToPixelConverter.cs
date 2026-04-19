@@ -8,7 +8,7 @@ namespace VolcanicTransport_WPF.View
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             int coord = (int)value;
-            return (double)(coord * GameSettings.MiniChunkSizeInPixels /2); //contains magic
+            return (double)(coord * GameSettings.MiniChunkSizeInPixels /4); //contains magic
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)

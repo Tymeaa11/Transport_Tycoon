@@ -10,7 +10,7 @@ namespace VolcanicTransport_WPF.View
 {
     public class MiniVisualChunk : FrameworkElement
     {
-        private const int Dpi = 48; // contains magic
+        private const int Dpi = 24; // contains magic
 
         #region Fields
         private static readonly Rect MiniChunkBoundries = new(0, 0, GameSettings.MiniChunkSizeInPixels, GameSettings.MiniChunkSizeInPixels);
