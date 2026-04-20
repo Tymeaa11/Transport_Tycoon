@@ -21,6 +21,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
         public int MinimapSize => GameSettings.MinimapSize; //used to size minimap
         public Camera Camera { get; }
+        public CameraToMinimap MinimapSelector { get; }
         public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
 
 
@@ -424,6 +425,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public GameViewModel()
         {
             Camera = new Camera();
+            MinimapSelector = new CameraToMinimap(Camera);
             Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
             CurrentTimeScale = 1;

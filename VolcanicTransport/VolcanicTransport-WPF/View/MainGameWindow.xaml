@@ -164,6 +164,11 @@
                             </Style>
                         </ItemsControl.ItemContainerStyle>
                     </ItemsControl>
+
+                    <Rectangle Canvas.Top="{Binding MinimapSelector.Top}" Canvas.Left="{Binding MinimapSelector.Left}" Width="{Binding MinimapSelector.Width}" Height="{Binding MinimapSelector.Height}"
+                               Stroke="Lime" StrokeThickness="1" Fill="#AAAAAAAA">
+                        
+                    </Rectangle>
                 </Canvas>
             </Border>
 
