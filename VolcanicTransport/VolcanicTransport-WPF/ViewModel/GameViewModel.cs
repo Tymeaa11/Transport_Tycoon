@@ -138,23 +138,6 @@ namespace VolcanicTransport_WPF.ViewModel
             if (IsPausedView) return;
             Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
 
-            if (CurrentBuildMode == BuildMode.BRIDGE)
-            {
-                if (_bridgeStartCoord == null)
-                {
-                    _bridgeStartCoord = coord;
-                    System.Diagnostics.Debug.WriteLine($"Híd 1. pontja lerakva: {coord}. Kattints legfeljebb {SelectedBridgeType.Length} mezővel arrébb a túlpartra!");
-                }
-                else
-                {
-                    bool success = GameModelInstance.PlaceBridge(_bridgeStartCoord.Value, coord, SelectedBridgeType);
-                    System.Diagnostics.Debug.WriteLine(success ? "Híd felépítve!" : "Hibás hídelhelyezés! Ellenőrizd a partot, a magasságot és a hosszt.");
-
-                    _bridgeStartCoord = null;
-                }
-                return;
-            }
-
             //Camera.PrintDebug();
 
             //foreach (var cvm in LoadedChunks)
@@ -192,10 +175,31 @@ namespace VolcanicTransport_WPF.ViewModel
                     GameModelInstance.LowerField(coord);
                     break;
 
+                case BuildMode.BRIDGE:
+                    OnBuildModeBridge(coord);
+                    break;
+
                 default:
                     // Handle BuildMode.NONE or unhandled cases
                     break;
             }
+        }
+
+        private void OnBuildModeBridge(Coordinate coordinate)
+        {
+            if (_bridgeStartCoord == null)
+            {
+                _bridgeStartCoord = coordinate;
+                Debug.WriteLine($"Híd 1. pontja lerakva: {coordinate}. Kattints legfeljebb {SelectedBridgeType.Length} mezővel arrébb a túlpartra!");
+            }
+            else
+            {
+                bool success = GameModelInstance.PlaceBridge(_bridgeStartCoord.Value, coordinate, SelectedBridgeType);
+                Debug.WriteLine(success ? "Híd felépítve!" : "Hibás hídelhelyezés! Ellenőrizd a partot, a magasságot és a hosszt.");
+
+                _bridgeStartCoord = null;
+            }
+            return;
         }
 
         private void OnBuildModeSelectStation(Field field)

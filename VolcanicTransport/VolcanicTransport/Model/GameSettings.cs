@@ -211,28 +211,32 @@ public static class GameSettings
         int Length, 
         float MaxSpeed,
         double Price, 
-        string Name
+        string Name,
+        int Tier
     );
 
     public static readonly BridgeData BoneBridge = new(
         Length: 5,
         MaxSpeed: 40.0f,
         Price: 100,
-        "Csonthíd (5 mező) - 40 km/h"
+        "Csonthíd (5 mező) - 40 km/h",
+        0
     );
 
     public static readonly BridgeData StoneBridge = new(
         Length: 9,
         MaxSpeed: 60.0f,
         Price: 200,
-        "Kőhíd (9 mező) - 60 km/h"
+        "Kőhíd (9 mező) - 60 km/h",
+        1
     );
 
     public static readonly BridgeData SteelBridge = new(
         Length: 13,
         MaxSpeed: 80.0f,
         Price: 300,
-        "Acélhíd (13 mező) - 80 km/h"
+        "Acélhíd (13 mező) - 80 km/h",
+        2
     );
 
     public static readonly BridgeData[] BridgeTypes = [BoneBridge, StoneBridge, SteelBridge];

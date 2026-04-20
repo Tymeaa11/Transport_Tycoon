@@ -323,8 +323,8 @@ namespace VolcanicTransport.Model
             if (startField == null || endField == null) return false;
             if (startField.Type != endField.Type) return false;
 
-            Road tempStartRoad = new Road(start);
-            Road tempEndRoad = new Road(end);
+            var tempStartRoad = new Road(start);
+            var tempEndRoad = new Road(end);
 
             var originalStartSurface = startField.Surface;
             var originalEndSurface = endField.Surface;
@@ -353,10 +353,10 @@ namespace VolcanicTransport.Model
             int stepY = start.Y == end.Y ? 0 : (end.Y > start.Y ? 1 : -1);
             RoadType bridgeDir = stepX == 0 ? RoadType.STRAIGHT_NS : RoadType.STRAIGHT_EW;
 
-            List<Coordinate> bridgeCoords = new();
+            List<Coordinate> bridgeCoords = [];
             for (int i = 0; i < length; i++)
             {
-                Coordinate c = new Coordinate(start.X + i * stepX, start.Y + i * stepY);
+                var c = new Coordinate(start.X + i * stepX, start.Y + i * stepY);
                 bridgeCoords.Add(c);
                 Field? f = WorldInstance.GetField(c);
 
@@ -409,22 +409,22 @@ namespace VolcanicTransport.Model
                 Field field = WorldInstance.GetField(c)!;
 
                 if (i == 0 || i == length - 1)
-                {
                     PlaceRoad(c);
-
-                }
                 else
-                {
-                    field.Surface = new Bridge(c, bridgeDir, bridgeType.MaxSpeed, startField.Type);
-                }
+                    field.Surface = bridgeType.Tier switch
+                    {
+                        0 => new BoneBridge(c, bridgeDir, startField.Type),
+                        1 => new StoneBridge(c, bridgeDir, startField.Type),
+                        2 => new SteelBridge(c, bridgeDir, startField.Type),
+                        _ => throw new NotImplementedException()
+                    };
             }
 
             foreach (var c in bridgeCoords)
             {
-                if (WorldInstance.GetField(c)?.Surface is Road r) r.Update();
-
+                if (WorldInstance.GetField(c)?.Surface is Road r) 
+                    r.Update();
                 WorldInstance.UpdateRoadNetworkAround(c);
-
             }
 
             WorldInstance.Roadnetwork.RebuildEdges();
