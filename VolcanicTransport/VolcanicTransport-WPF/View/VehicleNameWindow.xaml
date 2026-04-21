@@ -17,6 +17,10 @@
             </ComboBox>
             <TextBlock Text="Add meg az új jármű nevét:" Margin="0,0,0,10"/>
             <TextBox x:Name="NameTextBox" Height="25" Padding="2"/>
+
+            <TextBlock Text="Kezdő járat:" Margin="0,0,0,5"/>
+            <ComboBox x:Name="RouteComboBox" Height="25" Margin="0,0,0,15" DisplayMemberPath="Name" />
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
                 <Button Content="Mégse" Width="70" Margin="0,0,10,0" Click="CancelButton_Click"/>
                 <Button Content="Vásárlás" Width="70" Click="OkButton_Click" IsDefault="True"/>

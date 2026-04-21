@@ -1,37 +1,29 @@
+using System.Collections.ObjectModel;
 using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public class Route
     {
-        private readonly List<Station> _stops;
-        public IReadOnlyList<Station> Stops => _stops;
-        private readonly List<Road> _roadToNextStation;
+        public string Name { get; set; } = "Névtelen járat";
+        public ObservableCollection<Station> Stops { get; } = new ObservableCollection<Station>();
+
         //private readonly bool _isLoop;
 
-        public Route()
-        {
-            _stops = [];
-            _roadToNextStation = [];
-            //_isLoop = false;
-        }
         public void AddStop(Station station)
         {
-            if (!_stops.Contains(station)) _stops.Add(station);
+            if (!Stops.Contains(station)) Stops.Add(station);
         }
 
         public Station? GetNextStop(Station current)
         {
-            if (_stops.Count < 2) return null;
-            int index = _stops.IndexOf(current);
-            if (index == -1) return _stops[0];
+            if (Stops.Count < 2) return null;
+            int index = Stops.IndexOf(current);
+            if (index == -1) return Stops[0];
 
-            // Oda-vissza járat vagy körjárat (itt körjáratként kezelem)
-            return _stops[(index + 1) % _stops.Count];
+            return Stops[(index + 1) % Stops.Count];
         }
-
-        // TODO Kell ez még??
-        public List<Road> RoadsToNextStation => _roadToNextStation;
+        public override string ToString() => Name;
 
     }
 }

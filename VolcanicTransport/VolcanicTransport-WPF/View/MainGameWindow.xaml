@@ -60,7 +60,6 @@
         </ItemsControl>
 
         <ItemsControl ItemsSource="{Binding VehicleViewModels}">
-
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Canvas IsHitTestVisible="False">
@@ -97,7 +96,6 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-
         <Canvas IsHitTestVisible="False">
             <Canvas.RenderTransform>
                 <MatrixTransform Matrix="{Binding Camera.ProjectionMatrix}" />
@@ -129,17 +127,11 @@
             </Rectangle>
         </Canvas>
 
-        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
-        Width="180" Margin="0,0,20,0" Padding="15"
-        Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5"
-        Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Border VerticalAlignment="Top" HorizontalAlignment="Right" Width="200" Margin="0,50,20,0" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel>
                 <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
 
-                <ComboBox ItemsSource="{Binding VehicleViewModels}" 
-              SelectedItem="{Binding SelectedVehicle}" 
-              DisplayMemberPath="GetName" 
-              Margin="0,0,0,10" Padding="5"/>
+                <ComboBox ItemsSource="{Binding VehicleViewModels}" SelectedItem="{Binding SelectedVehicle}" DisplayMemberPath="GetName" Margin="0,0,0,10" Padding="5"/>
 
                 <Separator Margin="0,0,0,10"/>
 
@@ -150,23 +142,45 @@
                     <TextBlock Text="{Binding SelectedVehicle.GetCurrentCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
                 </StackPanel>
 
-                <TextBlock Text="Timetable:" FontWeight="Bold" Margin="0,15,0,5"/>
-                <ListBox ItemsSource="{Binding SelectedVehicle.ScheduleList}" 
-             Background="#F0F0F0" BorderBrush="#CCCCCC"
-             MinHeight="60" MaxHeight="100" Margin="0,0,0,10"
-             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                <TextBlock Text="Current Route:" FontWeight="Bold" Margin="0,15,0,5"/>
+                <ListBox ItemsSource="{Binding SelectedVehicle.ScheduleList}" Background="#F0F0F0" BorderBrush="#CCCCCC" MinHeight="60" MaxHeight="100" Margin="0,0,0,10" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
 
-                <UniformGrid Columns="1" Margin="0,5,0,0">
-                    <Button Content="New timetable" 
-                Command="{Binding ClearRouteCommand}" 
-                Margin="0,2" Padding="5"/>
-
-                    <Button Content="Add new stop" 
-                Command="{Binding AddStopCommand}" 
-                Margin="0,2" Padding="5"/>
-                </UniformGrid>
+                <Border Background="#D0D0D0" CornerRadius="5" Padding="10" Margin="0,5,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Assign New Timetable:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding SavedRoutes}" SelectedItem="{Binding SelectedSavedRoute}" DisplayMemberPath="Name" Margin="0,0,0,5" Padding="4"/>
+                        <Button Content="Assign Route" Command="{Binding AssignSavedRouteCommand}" Padding="5" FontWeight="SemiBold" Background="#AEEA00"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </Border>
+
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="220" Margin="0,0,20,80" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsTimetablePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel>
+                <TextBlock Text="Timetables (Lines)" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Create New Line:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding NewRouteName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0" VerticalContentAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Create" Command="{Binding CreateGlobalRouteCommand}" Padding="10,4"/>
+                </Grid>
+
+                <Separator Margin="0,0,0,10"/>
+
+                <TextBlock Text="Select Line to Edit:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <ComboBox ItemsSource="{Binding SavedRoutes}" SelectedItem="{Binding SelectedSavedRoute}" DisplayMemberPath="Name" Margin="0,0,0,10" Padding="4"/>
+
+                <ToggleButton Content="Add Stops (Click on Map)" Command="{Binding EditGlobalRouteCommand}" IsChecked="{Binding IsBuildModeEditGlobalRoute, Mode=OneWay}" Margin="0,0,0,10" Padding="5" Background="#FFD54F"/>
+
+                <TextBlock Text="Stops in selected line:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                <ListBox ItemsSource="{Binding SelectedSavedRoute.Stops}" DisplayMemberPath="Coordinate" Background="#F0F0F0" BorderBrush="#CCCCCC" MinHeight="100" MaxHeight="150" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+            </StackPanel>
+        </Border>
+
 
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
             <StackPanel Orientation="Horizontal">
@@ -182,9 +196,8 @@
                     <Style TargetType="Button" BasedOn="{StaticResource MenuButtonStyle}"/>
                 </StackPanel.Resources>
 
-                <ToggleButton Content="Buy vehicle" 
-                      Command="{Binding BuyVehicleCommand}" 
-                      IsChecked="{Binding IsBuildModeBuyVehicle, Mode=OneWay}" />
+                <Button Content="Buy vehicle" 
+                      Command="{Binding BuyVehicleCommand}" />
                 <ToggleButton Content="Road" 
                       Command="{Binding SetBuildModeRoadCommand}" 
                       IsChecked="{Binding IsBuildModeRoad, Mode=OneWay}">
@@ -222,10 +235,15 @@
                       Command="{Binding SetBuildModeHeightenCommand}" 
                       IsChecked="{Binding IsBuildModeHeighten, Mode=OneWay}">
                 </ToggleButton>
+
                 <ToggleButton Content="Vehicles" 
                       Command="{Binding ToggleVehiclePanelCommand}" 
                       IsChecked="{Binding IsVehiclePanelVisible, Mode=OneWay}" />
-                </StackPanel>
+
+                <ToggleButton Content="Timetables" 
+                      Command="{Binding ToggleTimetablePanelCommand}" 
+                      IsChecked="{Binding IsTimetablePanelVisible, Mode=OneWay}" />
+            </StackPanel>
         </Border>
 
 

@@ -157,7 +157,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 currentSpeed = Math.Min(maxSpeed, bridge.SpeedLimit);
             }
 
-            if (currentPathIndex + 1 < currentPath.Count && null != CurrentRoad)
+            else if (currentPathIndex + 1 < currentPath.Count && null != CurrentRoad)
             {
                 Road nextRoad = currentPath[currentPathIndex + 1];
                 var currentField = World.Instance.GetField(CurrentRoad.Coordinate);
@@ -256,6 +256,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             }
 
             Station targetStation = Route.Stops[CurrentStopIndex];
+
+            if (CurrentRoad != null && CurrentRoad.Coordinate == targetStation.Coordinate)
+            {
+                System.Diagnostics.Debug.WriteLine($"{Name} már a célállomáson van, ugrás a következőre!");
+                CurrentStopIndex = (CurrentStopIndex + 1) % Route.Stops.Count;
+                targetStation = Route.Stops[CurrentStopIndex];
+            }
+
             System.Diagnostics.Debug.WriteLine($"{Name} tervezés a következő pontra: -> {targetStation.Coordinate}");
 
             var graph = World.Instance.Roadnetwork;
