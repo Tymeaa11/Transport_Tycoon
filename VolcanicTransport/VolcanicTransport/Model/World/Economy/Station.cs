@@ -3,14 +3,14 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
+    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : Road(coordinate)
     {
         protected string name = name;
         protected ProductBuffer passangerBuffer = passangerBuffer;
         protected Product PassengerDemand = passengerDemand;
 
         protected bool isOccupied = false;
-        public bool IsOccupied { get { return isOccupied; } }
+        public bool IsOccupied { get; set; } = false;
         public string Name { get { return name; } }
         public int WaitingPassengers => passangerBuffer.CurrentLoad;
 
@@ -73,6 +73,11 @@ namespace VolcanicTransport.Model.World.Economy
             int actualUnloaded = vehicle.Unload(leavingCount);
 
             return actualUnloaded;
+        }
+
+        public override void Update()
+        {
+            base.Update();
         }
     }
 }

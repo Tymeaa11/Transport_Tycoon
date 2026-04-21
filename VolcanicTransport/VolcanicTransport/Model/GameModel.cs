@@ -18,6 +18,7 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
+        public System.Collections.ObjectModel.ObservableCollection<Route> SavedRoutes { get; } = [];
         public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;
@@ -229,10 +230,25 @@ namespace VolcanicTransport.Model
         public bool IsHeightenable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsHeightenable() ?? false;
         public bool IsLowerable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsLowerable() ?? false;
 
-        public static void OnRoadBecameJunction(object? sender, Road.FieldEventArgs e)
+        private void CheckAndRegisterJunctions(Coordinate centerCoord)
         {
-            Debug.WriteLine($"[ESEMÉNY] Új kereszteződés alakult ki itt: {e.Coordinate}");
-            WorldInstance.Roadnetwork.RegisterNodeIfNeeded(e.Coordinate);
+            Coordinate[] coordsToCheck = {
+                centerCoord,
+                new Coordinate(centerCoord.X, centerCoord.Y - 1), // Észak
+                new Coordinate(centerCoord.X, centerCoord.Y + 1), // Dél
+                new Coordinate(centerCoord.X + 1, centerCoord.Y), // Kelet
+                new Coordinate(centerCoord.X - 1, centerCoord.Y)  // Nyugat
+            };
+
+            foreach (var c in coordsToCheck)
+            {
+                var surface = WorldInstance.GetField(c)?.Surface;
+
+                if (surface is Road r && r.RoadType.HasFlag(RoadType.JUNCTION) || surface is Station)
+                {
+                    WorldInstance.Roadnetwork.RegisterNodeIfNeeded(c);
+                }
+            }
         }
 
         private Road? CanPlaceRoadHere(Coordinate coord, Field? field)
@@ -257,7 +273,6 @@ namespace VolcanicTransport.Model
             //creating a temporal to see if a road can be place here
             Road tempRoad = new(coord);
 
-            tempRoad.RoadLayoutChanged += OnRoadBecameJunction;
 
             field.Surface = tempRoad;
             tempRoad.Update();
@@ -266,7 +281,6 @@ namespace VolcanicTransport.Model
             if (tempRoad.RoadType != RoadType.INVALID) return tempRoad;
 
             field.Surface = null;
-            tempRoad.RoadLayoutChanged -= OnRoadBecameJunction;
             OnPlacementFailed?.Invoke(this, EventArgs.Empty);
             return null;
 
@@ -303,8 +317,14 @@ namespace VolcanicTransport.Model
                 OnPlacementFailed?.Invoke(this, EventArgs.Empty);
                 return;
             }
-            RoadBought?.Invoke(this, EventArgs.Empty);
+
+            road.Update();
             WorldInstance.UpdateRoadNetworkAround(coord);
+
+            CheckAndRegisterJunctions(coord);
+            WorldInstance.Roadnetwork.RebuildEdges();
+
+            RoadBought?.Invoke(this, EventArgs.Empty);
         }
 
         public bool PlaceBridge(Coordinate start, Coordinate end, GameSettings.BridgeData bridgeType)
@@ -425,6 +445,8 @@ namespace VolcanicTransport.Model
 
                 WorldInstance.UpdateRoadNetworkAround(c);
 
+                CheckAndRegisterJunctions(c);
+
             }
 
             WorldInstance.Roadnetwork.RebuildEdges();
@@ -442,7 +464,6 @@ namespace VolcanicTransport.Model
             if (WorldInstance.Stations.Any(s => s.Coordinate.Distance(coord) <= 3)) return false;
 
             var field = WorldInstance.GetField(coord);
-
             if (field == null) return false;
 
             var hasValidNearRoad = Direction.Directions.Any(dir =>
@@ -456,22 +477,35 @@ namespace VolcanicTransport.Model
             stationCost += GetMushroomCosts(field);
 
             var city = WorldInstance.Cities.FirstOrDefault(c => c.CenterCoordinate.Distance(coord) <= 4);
-
             var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 4);
 
             Station? newStation = null;
             if (city != null) newStation = new CityStation(city, coord, "CityStation");
-            if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
+            else if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
 
             if (newStation == null || !TryPurchase(stationCost)) return false;
 
-            WorldInstance.GetField(coord)!.Surface = newStation;
+
+            field.Surface = newStation;
+            newStation.Update();
+
+            if (!newStation.TryUpdateNeighbours())
+            {
+                field.Surface = null;
+                newStation.UpdateNeighbours();
+                AddMoney(stationCost);
+                return false;
+            }
+
+
             WorldInstance.Stations.Add(newStation);
 
-            WorldInstance.Roadnetwork.RegisterNodeIfNeeded(coord);
+            WorldInstance.UpdateRoadNetworkAround(coord);
+
+            CheckAndRegisterJunctions(coord);
+            WorldInstance.Roadnetwork.RebuildEdges();
 
             var chunkCoord = WorldInstance.GetChunkCoordinate(coord);
-
             WorldInstance.UpdateChunk(chunkCoord);
 
             return true;

@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport_WPF.View
 {
@@ -10,6 +11,14 @@ namespace VolcanicTransport_WPF.View
     {
         public string VehicleName { get; private set; } = string.Empty;
         public string? SelectedType => (TypeComboBox.SelectedItem as ComboBoxItem)?.Tag.ToString();
+
+        public Route? SelectedRoute => RouteComboBox.SelectedItem as Route;
+
+        public VehicleNameWindow(IEnumerable<Route> savedRoutes)
+        {
+            InitializeComponent();
+            RouteComboBox.ItemsSource = savedRoutes;
+        }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {

@@ -9,6 +9,7 @@
         LOWER,
         HEIGHTEN,
         BUY_VEHICLE,
-        SELECT_STATION
+        SELECT_STATION,
+        EDIT_GLOBAL_ROUTE
     }
 }

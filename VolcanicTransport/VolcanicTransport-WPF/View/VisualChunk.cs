@@ -109,8 +109,8 @@ namespace VolcanicTransport_WPF.View
                         ImageWithRotation imageWithRotation = f.Surface switch
                         {
                             Mushroom m => RenderMushroom(m),
-                            Road r => RenderRoad(r),
                             Station s => RenderStation(),
+                            Road r => RenderRoad(r),
                             FactoryBuilding => RenderFactoryBuilding(),
                             CityBuilding => RenderCityBuilding(),
                             _ => RenderInvalid()

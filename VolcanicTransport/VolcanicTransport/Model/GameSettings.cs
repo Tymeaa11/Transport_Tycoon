@@ -167,7 +167,7 @@ public static class GameSettings
 
     public static readonly VehicleData BusData = new(
         ProductTypes: [ProductType.HUMAN],
-        MaxSpeed: 60.0f,
+        MaxSpeed: 50.0f,
         Capacity: 50,
          Price: 4000
     );
@@ -199,7 +199,7 @@ public static class GameSettings
 
     #region GameplayConstants
 
-    public const int StartingMoney = 80_000;
+    public const int StartingMoney = 80_000_000;
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;
@@ -214,9 +214,9 @@ public static class GameSettings
     public readonly record struct BridgeData(int Length, float MaxSpeed, double Price, string Name);
 
     public static readonly BridgeData[] BridgeTypes = [
-        new BridgeData(5, 40.0f, 100, "Csonthíd (5 mező) - 40 km/h"),
-        new BridgeData(9, 60.0f, 200, "Kőhíd (9 mező) - 60 km/h"),
-        new BridgeData(13, 80.0f, 300, "Acélhíd (13 mező) - 80 km/h")
+        new BridgeData(5, 10.0f, 100, "Csonthíd (5 mező) - 10 km/h"),
+        new BridgeData(9, 15.0f, 200, "Kőhíd (9 mező) - 15 km/h"),
+        new BridgeData(13, 20.0f, 300, "Acélhíd (13 mező) - 20 km/h")
     ];
 #endregion
 
