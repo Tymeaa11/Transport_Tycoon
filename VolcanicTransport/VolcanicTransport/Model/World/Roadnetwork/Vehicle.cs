@@ -157,7 +157,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 currentSpeed = Math.Min(maxSpeed, bridge.SpeedLimit);
             }
 
-            if (currentPathIndex + 1 < currentPath.Count)
+            if (currentPathIndex + 1 < currentPath.Count && null != CurrentRoad)
             {
                 Road nextRoad = currentPath[currentPathIndex + 1];
                 var currentField = World.Instance.GetField(CurrentRoad.Coordinate);
