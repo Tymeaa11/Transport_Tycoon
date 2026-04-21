@@ -19,7 +19,10 @@ namespace VolcanicTransport_WPF.ViewModel
         public static GameModel GameModelInstance { get => GameModel.Instance; }
         public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
+        public int MinimapBorderSize => GameSettings.WorldSizeInFields + 20; //used to size minimap border
+        public int MinimapSize => GameSettings.WorldSizeInFields; //used to size minimap
         public Camera Camera { get; }
+        public CameraToMinimap MinimapSelector { get; }
         public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
 
 
@@ -313,6 +316,15 @@ namespace VolcanicTransport_WPF.ViewModel
 
         #endregion
 
+        #region Minimap
+        public void MinimapTeleport(Vector vector)
+        {
+            Debug.WriteLine($"Minimap clicked at: {vector.X}, {vector.Y}");
+            Camera.Position = -vector * GameSettings.FieldSize * Camera.Scale;
+
+        }
+        #endregion
+
         #region Hovered field & Inspector
 
 
@@ -429,8 +441,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
             IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
         }
-       
-        
+
+
         #endregion
 
         #region Vehicles
@@ -471,6 +483,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public GameViewModel()
         {
             Camera = new Camera();
+            MinimapSelector = new CameraToMinimap(Camera);
             Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
             CurrentTimeScale = 1;

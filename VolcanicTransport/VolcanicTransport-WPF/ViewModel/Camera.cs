@@ -21,6 +21,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsMovingDown { get; set; }
         public bool IsMovingLeft { get; set; }
         public bool IsMovingRight { get; set; }
+        public double Scale => _scale;
 
         #region Camera Config
         private const double CameraMovementSpeed = 8000;

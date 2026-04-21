@@ -17,6 +17,7 @@
 
     <Window.Resources>
         <view:ChunkToPixelConverter x:Key="ChunkToPixelConverter" />
+        <view:MiniChunkToPixelConverter x:Key="MiniChunkToPixelConverter" />
         <view:FieldToPixelConverter x:Key="FieldToPixelConverter" />
         <view:BuildabilityToColorConverter x:Key="BuildabilityToColorConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -81,6 +82,7 @@
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
+                    <!-- magic suspected here -->
                     <Rectangle Width="24" Height="12" Fill="Red" Stroke="White" StrokeThickness="1" 
            RadiusX="2" RadiusY="2">
                         <Rectangle.RenderTransform>
@@ -129,44 +131,91 @@
             </Rectangle>
         </Canvas>
 
-        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
-        Width="180" Margin="0,0,20,0" Padding="15"
-        Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5"
-        Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <StackPanel>
-                <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
 
-                <ComboBox ItemsSource="{Binding VehicleViewModels}" 
-              SelectedItem="{Binding SelectedVehicle}" 
-              DisplayMemberPath="GetName" 
-              Margin="0,0,0,10" Padding="5"/>
+        <StackPanel HorizontalAlignment="Right" >
+            <!--minimap-->
+                <Border VerticalAlignment="Top" HorizontalAlignment="Right" 
+                    Width="{Binding MinimapBorderSize}" Height="{Binding MinimapBorderSize}" Margin="8" Padding="0"
+                    BorderBrush="Black" Background="White" BorderThickness="10" CornerRadius="5">
 
-                <Separator Margin="0,0,0,10"/>
+                <Canvas >
+                    <ItemsControl ItemsSource="{Binding LoadedChunks}"  >
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas 
+                                        SnapsToDevicePixels="true"
+                                        RenderOptions.EdgeMode="Aliased">
+                                </Canvas>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
 
-                <StackPanel TextBlock.FontSize="13">
-                    <TextBlock Text="{Binding SelectedVehicle.StateDisplay, StringFormat='State: {0}'}" Foreground="DarkBlue" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.Type, StringFormat='Type: {0}'}" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.SpeedDisplay, StringFormat='Speed: {0}'}" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.GetCurrentCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <view:MiniVisualChunk />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Canvas.Left" Value="{Binding Path=Chunk.Coordinate.X, Converter={StaticResource MiniChunkToPixelConverter}}" />
+                                <Setter Property="Canvas.Top" Value="{Binding Path=Chunk.Coordinate.Y, Converter={StaticResource MiniChunkToPixelConverter}}" />
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+
+                    <Rectangle Canvas.Top="{Binding MinimapSelector.Top}" Canvas.Left="{Binding MinimapSelector.Left}" Width="{Binding MinimapSelector.Width}" Height="{Binding MinimapSelector.Height}"
+                               Stroke="Lime" StrokeThickness="1" Fill="#AAAAAAAA">
+                    </Rectangle>
+                    <Rectangle Canvas.Top="0" Canvas.Left="0" Width="{Binding MinimapSize}" Height="{Binding MinimapSize}" Cursor="Cross" x:Name="MinimapBounds" Fill="#00000000"></Rectangle>
+                    <!--for finding binding box of minimap-->
+                </Canvas>
+            </Border>
+
+
+
+
+            <Border VerticalAlignment="Stretch" HorizontalAlignment="Right"
+                    Width="180" Margin="0,0,20,0" Padding="15"
+                    Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5"
+                    Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel>
+                    <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+
+                    <ComboBox ItemsSource="{Binding VehicleViewModels}" 
+                              SelectedItem="{Binding SelectedVehicle}" 
+                              DisplayMemberPath="GetName" 
+                              Margin="0,0,0,10" Padding="5"/>
+
+                    <Separator Margin="0,0,0,10"/>
+
+                    <StackPanel TextBlock.FontSize="13">
+                        <TextBlock Text="{Binding SelectedVehicle.StateDisplay, StringFormat='State: {0}'}" Foreground="DarkBlue" Margin="0,3"/>
+                        <TextBlock Text="{Binding SelectedVehicle.Type, StringFormat='Type: {0}'}" Margin="0,3"/>
+                        <TextBlock Text="{Binding SelectedVehicle.SpeedDisplay, StringFormat='Speed: {0}'}" Margin="0,3"/>
+                        <TextBlock Text="{Binding SelectedVehicle.GetCurrentCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Timetable:" FontWeight="Bold" Margin="0,15,0,5"/>
+                    <ListBox ItemsSource="{Binding SelectedVehicle.ScheduleList}" 
+                             Background="#F0F0F0" BorderBrush="#CCCCCC"
+                             MinHeight="60" MaxHeight="100" Margin="0,0,0,10"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+
+                    <UniformGrid Columns="1" Margin="0,5,0,0">
+                        <Button Content="New timetable" 
+                                Command="{Binding ClearRouteCommand}" 
+                                Margin="0,2" Padding="5"/>
+
+                        <Button Content="Add new stop" 
+                                Command="{Binding AddStopCommand}"         
+                                Margin="0,2" Padding="5"/>
+                    </UniformGrid>
                 </StackPanel>
+            </Border>
+        </StackPanel>
+        
 
-                <TextBlock Text="Timetable:" FontWeight="Bold" Margin="0,15,0,5"/>
-                <ListBox ItemsSource="{Binding SelectedVehicle.ScheduleList}" 
-             Background="#F0F0F0" BorderBrush="#CCCCCC"
-             MinHeight="60" MaxHeight="100" Margin="0,0,0,10"
-             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-
-                <UniformGrid Columns="1" Margin="0,5,0,0">
-                    <Button Content="New timetable" 
-                Command="{Binding ClearRouteCommand}" 
-                Margin="0,2" Padding="5"/>
-
-                    <Button Content="Add new stop" 
-                Command="{Binding AddStopCommand}" 
-                Margin="0,2" Padding="5"/>
-                </UniformGrid>
-            </StackPanel>
-        </Border>
+        
 
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Background="#CCAFAFAF" CornerRadius="0" Padding="0">
             <StackPanel Orientation="Horizontal">
