@@ -1,14 +1,19 @@
 using System.Text.Json.Serialization;
-using VolcanicTransport.Model.TerrainGeneration.Layers;
 
 namespace VolcanicTransport.Model.World.Economy
 {
     [method: JsonConstructor]
-    public class Product(ProductType productType, float minvalue, float maxvalue, float variability = 0.05f)
+    public class Product(ProductType productType, float minvalue, float maxvalue, float offset, float variability)
     {
+        private static float GetRandomOffset() => World.Instance.SharedRandom.NextSingle() * 50_000 - 25_000;
+
         #region Fields
+        [JsonInclude]
         public ProductType ProductType { get; } = productType;
-        private readonly Perlin _perlin = new(4, 0.5f);
+
+        [JsonInclude]
+        private readonly float _perlinOffset = offset;
+        private float Noise(float t) => World.Instance.SharedPerlin.Noise(t + _perlinOffset);
 
         [JsonInclude]
         private float MinValue { get; } = minvalue;
@@ -23,20 +28,24 @@ namespace VolcanicTransport.Model.World.Economy
 
         #region Constructors
         public Product(Product other) :
-            this(other.ProductType, other.MinValue, other.MaxValue, other.Variability)
+            this(other.ProductType, other.MinValue, other.MaxValue, other._perlinOffset, other.Variability)
+        { }
+
+        public Product(ProductType productType, float minvalue, float maxvalue, float variability = 0.05f) :
+            this(productType, minvalue, maxvalue, GetRandomOffset(), variability)
         { }
 
         #endregion
 
         #region Methods
         public int GetDemand(float time) // min - max
-            => (int)(Math.Abs(MaxValue - MinValue) * _perlin.Noise(time * Variability) + MinValue);
+            => (int)(Math.Abs(MaxValue - MinValue) * Noise(time * Variability) + MinValue);
 
         public float GetFactoryEfficiency(float time)
-            => _perlin.Noise((time + 1000f) * Variability); // 0 - 1
+            => Noise((time + 1000f) * Variability); // 0 - 1
 
         public float GetPassengerEfficiency(float time)
-            => _perlin.Noise((time + 500f) * Variability);
+            => Noise((time + 500f) * Variability);
 
         #endregion
     }

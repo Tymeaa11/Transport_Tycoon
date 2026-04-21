@@ -3,6 +3,7 @@ using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
@@ -24,6 +25,7 @@ namespace VolcanicTransport.Model.World
             }
         }
         public Random SharedRandom { get; private set; } = new();
+        public Perlin SharedPerlin { get; private set; }
 
         public Coordinate SizeInChunks { get; }
         public Coordinate SizeInFields { get; }
@@ -54,9 +56,12 @@ namespace VolcanicTransport.Model.World
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
             WorldSeed = seed;
 
+            SharedPerlin = new Perlin(4, 0.5f, seed);
+
             InitialiseWorld();
 
             Roadnetwork = new RoadNetworkGraph();
+
         }
 
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();

@@ -31,12 +31,13 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
         #endregion
 
         #region Constructors
-        public Perlin()
+
+        public Perlin(int seed)
         {
             _perlin = new float[4096];
             _octaves = 4;
             _fallOff = 0.5f;
-            _perlinRandom = new Random(World.World.Instance.WorldSeed);
+            _perlinRandom = new Random(seed);
 
             for (var i = 0; i < 4096; ++i)
             {
@@ -44,7 +45,9 @@ namespace VolcanicTransport.Model.TerrainGeneration.Layers
             }
         }
 
-        public Perlin(int lod, float fallOff) : this()
+        public Perlin() : this(World.World.Instance.WorldSeed) { }
+
+        public Perlin(int lod, float fallOff, int seed) : this(seed)
         {
             NoiseDetail(lod, fallOff);
         }
