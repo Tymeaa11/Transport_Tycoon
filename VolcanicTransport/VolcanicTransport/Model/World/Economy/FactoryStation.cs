@@ -6,75 +6,67 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class FactoryStation(Coordinate coor, string name, Factory factory) : 
-        Station(
-            coor, 
-            name, 
-            new ProductBuffer(ProductType.HUMAN, 50), 
-            new Product(ProductType.HUMAN, 0, 50, 5)
-        )
-        , IInspectable
+    public class FactoryStation : Station, IInspectable, IContainsReference
     {
         #region Fields
-        private readonly Factory _factory = factory;
-        public string FactoryName => _factory.Name;
+        public string FactoryName { get; private set; }
 
         [JsonIgnore]
-        public ProductType GetFactoryNeeds => _factory.BaseProduct;
+        private Factory? _factory;
         [JsonIgnore]
-        public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
+        public ProductType GetFactoryNeeds => _factory!.BaseProduct;
         [JsonIgnore]
-        public int GetFactoryFinishedProductAmount => _factory.FinalProductBuffer.CurrentLoad;
+        public ProductType GetFactoryFinishedProduct => _factory!.FinalProduct.ProductType;
         [JsonIgnore]
-        public int GetFactoryBaseProductAmount => _factory.BaseProductBuffer.CurrentLoad;
+        public int GetFactoryFinishedProductAmount => _factory!.FinalProductBuffer.CurrentLoad;
         [JsonIgnore]
-        public int GetFactoryNeedsAmount => _factory.BaseProductBuffer.MaxCapacity;
+        public int GetFactoryBaseProductAmount => _factory!.BaseProductBuffer.CurrentLoad;
+        [JsonIgnore]
+        public int GetFactoryNeedsAmount => _factory!.BaseProductBuffer.MaxCapacity;
+        [JsonIgnore]
+        public double PricePerBaseProduct => GameSettings.GetPrice(_factory!.BaseProduct);
         #endregion
 
         #region Constructors
-        public FactoryStation(City city, Coordinate coordinate, string name) :
-    base(
-        coordinate,
-        name,
-        new ProductBuffer(ProductType.HUMAN, 50),
-        new Product(ProductType.HUMAN, 0, 50, 5)
-    )
+        public FactoryStation(Coordinate coordinate, string stationName, Factory factory) :
+        base (
+            coordinate,
+            stationName,
+            new ProductBuffer(ProductType.HUMAN, 50),
+            new Product(ProductType.HUMAN, 0, 50, 5)
+        )
         {
-            _city = city;
+            _factory = factory;
+            FactoryName = factory.Name;
         }
 
         [JsonConstructor]
-        public FactoryStation(string cityName, Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand)
-            : base(coordinate, name, passangerBuffer, passengerDemand)
+        public FactoryStation(string factoryName, Coordinate coordinate, string stationName, ProductBuffer passangerBuffer, Product passengerDemand)
+            : base(coordinate, stationName, passangerBuffer, passengerDemand)
         {
-            var targets = World.Instance.Cities.Where(c => c.Name == cityName).ToList();
-
-            if (targets.Count != 1)
-                throw new LoadingException();
-
-            _city = targets[0];
+            FactoryName = factoryName;
         }
         #endregion
 
         #region Methods
-        public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time); // 0-1
-        public double PricePerBaseProduct => GameSettings.GetPrice(_factory.BaseProduct);
+        public float GetFactoryEfficiency(float time) 
+            => _factory!.FinalProduct.GetFactoryEfficiency(time); // 0-1
+        
         public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
         {
-            if (vehicle == null || (vehicle.CurrentLoad > 0 && vehicle.CurrentType != _factory.FinalProduct.ProductType))
+            if (vehicle == null || (vehicle.CurrentLoad > 0 && vehicle.CurrentType != _factory!.FinalProduct.ProductType))
             {
                 return 0;
             }
 
-            int amountFilled = _factory.FinalProductBuffer.FillVehicle(vehicle);
+            int amountFilled = _factory!.FinalProductBuffer.FillVehicle(vehicle);
 
             return amountFilled;
         }
 
-
         public override int UnLoadProductFromVehicle(Vehicle vehicle) // kapott-e árut a járműtől
         {
-            if (vehicle == null || vehicle.CurrentType != _factory.BaseProduct)
+            if (vehicle == null || vehicle.CurrentType != _factory!.BaseProduct)
             {
                 return 0;
             }
@@ -93,7 +85,7 @@ namespace VolcanicTransport.Model.World.Economy
         {
             var info = new StringBuilder();
 
-            info.AppendLine($"Factory Station: {Name}");
+            info.AppendLine($"Factory Station: {StationName}");
 
             if (GetFactoryNeeds != ProductType.NONE)
                 info.AppendLine($"Base product need / amount: {GetFactoryNeeds} {GetFactoryBaseProductAmount}/{GetFactoryNeedsAmount}");
@@ -103,6 +95,16 @@ namespace VolcanicTransport.Model.World.Economy
             info.AppendLine($"People waiting: {WaitingPassengers}");
 
             return info.ToString();
+        }
+
+        public void RestoreReference(Coordinate coordinate)
+        {
+            var targets = World.Instance.Factories.Where(c => c.Name == FactoryName).ToList();
+
+            if (targets.Count != 1)
+                throw new LoadingException();
+
+            _factory = targets[0];
         }
         #endregion
     }

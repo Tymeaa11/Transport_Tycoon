@@ -198,7 +198,7 @@ namespace VolcanicTransport.Model
                             surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
                             break;
 
-                        case Mushroom: // stored in binary data
+                        case Mushroom: // stored in binary data, skip
                         case Road:
                             break;
 
@@ -223,12 +223,11 @@ namespace VolcanicTransport.Model
 
                 field.Surface = surface;
 
-                switch (surface)
-                {
-                    case KnowsNeighbour knowsNeighbour:
-                        knowsNeighbour.UpdateNeighbourReferences();
-                        break;
-                }
+                if (surface is KnowsNeighbour knowsNeighbour) 
+                    knowsNeighbour.UpdateNeighbourReferences();
+
+                if (surface is IContainsReference hasReference)
+                    hasReference.RestoreReference(coordinate);
 
             }
         }

@@ -6,47 +6,43 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class CityStation : Station, IInspectable
+    public class CityStation : Station, IInspectable, IContainsReference
     {
         #region Fields
-        public string CityName => _city.Name;
+        public string CityName {get; private set;}
 
         [JsonIgnore]
-        private readonly City _city;
+        private City? _city;
 
         [JsonIgnore]
-        public List<ProductType> GetCityProductNeeds => _city.ProductTypes;
+        public List<ProductType> GetCityProductNeeds => _city!.ProductTypes;
         #endregion
 
         #region Constructors
-        public CityStation(City city, Coordinate coordinate, string name) :
+        public CityStation(City city, Coordinate coordinate, string stationName) :
             base(
                 coordinate,
-                name,
+                stationName,
                 new ProductBuffer(ProductType.HUMAN, 50),
                 new Product(ProductType.HUMAN, 0, 50, 5)
             )
         {
             _city = city;
+            CityName = city.Name;
         }
 
         [JsonConstructor]
-        public CityStation(string cityName, Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand)
-            : base(coordinate, name, passangerBuffer, passengerDemand)
+        public CityStation(string cityName, Coordinate coordinate, string stationName, ProductBuffer passangerBuffer, Product passengerDemand)
+            : base(coordinate, stationName, passangerBuffer, passengerDemand)
         {
-            var targets = World.Instance.Cities.Where(c => c.Name == cityName).ToList();
-
-            if (targets.Count != 1)
-                throw new LoadingException();
-
-            _city = targets[0];
+            CityName = cityName;
         }
         #endregion
 
         #region Methods
         public override int UnLoadProductFromVehicle(Vehicle vehicle)
         {
-            if (vehicle == null || !_city.IsProductNeeded(vehicle.CurrentType))
+            if (vehicle == null || !_city!.IsProductNeeded(vehicle.CurrentType))
             {
                 return 0;
             }
@@ -61,7 +57,7 @@ namespace VolcanicTransport.Model.World.Economy
         {
             var info = new StringBuilder();
 
-            info.AppendLine($"City Station: {Name}");
+            info.AppendLine($"City Station: {StationName}");
             info.AppendLine("Product needs:");
 
             foreach (ProductType pt in GetCityProductNeeds)
@@ -70,6 +66,16 @@ namespace VolcanicTransport.Model.World.Economy
             info.AppendLine($"People waiting: {WaitingPassengers}");
 
             return info.ToString();
+        }
+
+        public void RestoreReference(Coordinate coordinate)
+        {
+            var targets = World.Instance.Cities.Where(c => c.Name == CityName).ToList();
+
+            if (targets.Count != 1)
+                throw new LoadingException();
+
+            _city = targets[0];
         }
         #endregion
     }

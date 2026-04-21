@@ -7,7 +7,7 @@ namespace VolcanicTransport.Model.World.Economy
     public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
     {
         #region Fields
-        public string Name { get; protected set; } = name;
+        public string StationName { get; protected set; } = name;
         [JsonInclude]
         protected ProductBuffer passangerBuffer = passangerBuffer;
         [JsonInclude]

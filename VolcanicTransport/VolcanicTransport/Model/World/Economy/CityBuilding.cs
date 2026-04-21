@@ -1,35 +1,32 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Exceptions;
+using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class CityBuilding : ISurface, IInspectable
+    public class CityBuilding : ISurface, IInspectable, IContainsReference
     {
         #region Fields
-        public string Name => _cityReference.Name;
+        public string CityName { get; private set; }
 
         [JsonIgnore]
-        public List<ProductType> ProductTypes => _cityReference.ProductTypes;
+        public List<ProductType> ProductTypes => _cityReference!.ProductTypes;
         [JsonIgnore]
-        private readonly City _cityReference;
+        private City? _cityReference;
         #endregion
         #region Constructors
 
         public CityBuilding(City city)
         {
             _cityReference = city;
+            CityName = city.Name;
         }
 
         [JsonConstructor]
         public CityBuilding(string cityName)
         {
-            var targets = World.Instance.Cities.Where(c => c.Name == cityName).ToList();
-
-            if (targets.Count != 1) 
-                throw new LoadingException();
-
-            _cityReference = targets[0];
+            CityName = cityName;
         }
         #endregion
         #region Methods
@@ -37,13 +34,26 @@ namespace VolcanicTransport.Model.World.Economy
         public string Inspect()
         {
             var info = new StringBuilder();
-            info.AppendLine($"City: {Name}");
+            info.AppendLine($"City: {CityName}");
             info.AppendLine("Product needs:");
 
             foreach (ProductType pt in ProductTypes)
                 info.AppendLine($"  - {pt}");
 
             return info.ToString();
+        }
+
+        public void RestoreReference(Coordinate coordinate)
+        {
+            var targets = World.Instance.Cities.Where(c => c.Name == CityName).ToList();
+
+            if (targets.Count != 1)
+                throw new LoadingException();
+
+            _cityReference = targets[0];
+
+            var f = World.Instance.GetField(coordinate) ?? throw new LoadingException();
+            targets[0].AddField(f);
         }
         #endregion
     }
