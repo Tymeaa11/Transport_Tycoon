@@ -12,7 +12,8 @@ namespace VolcanicTransport_WPF.View
         {
             Map(typeof(Mushroom), Color.FromRgb(52, 133, 157));
             Map(typeof(Road), Color.FromRgb(64, 64, 64));
-            Map(typeof(Station), Color.FromRgb(247, 255, 43));
+            Map(typeof(FactoryStation), Color.FromRgb(247, 255, 43));
+            Map(typeof(CityStation), Color.FromRgb(247, 255, 43));
             Map(typeof(FactoryBuilding), Color.FromRgb(255, 121, 43));
             Map(typeof(CityBuilding), Color.FromRgb(255, 12, 0));
         }
