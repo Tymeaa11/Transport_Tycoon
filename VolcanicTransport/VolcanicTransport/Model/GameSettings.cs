@@ -24,7 +24,6 @@ public static class GameSettings
     public const int MiniChunkSizeInPixels = ChunkSize * MiniFieldSize;
 
     public const int WorldSizeInFields = DefaultWorldSize * ChunkSize;
-    public const int MinimapSize = WorldSizeInFields + 20; //contains magic
 
     private static readonly Dictionary<FieldType, float> FieldTypeThickness = new()
     {

@@ -10,7 +10,7 @@ namespace VolcanicTransport_WPF.ViewModel
 {
     public class CameraToMinimap : ViewModelBase
     {
-        private Camera camera;
+        private readonly Camera camera;
         public int Top => Cap(camera.WorldToField((Vector)camera.GetVisibleWorldBounds().TopLeft).Y);
         public int Left => Cap(camera.WorldToField((Vector)camera.GetVisibleWorldBounds().TopLeft).X);
         private int Bot => Cap(camera.WorldToField((Vector)camera.GetVisibleWorldBounds().BottomRight).Y);

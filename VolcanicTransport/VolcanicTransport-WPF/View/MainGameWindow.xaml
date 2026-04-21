@@ -136,15 +136,15 @@
 
         <StackPanel HorizontalAlignment="Right" >
             <!--minimap-->
-            <Border VerticalAlignment="Top" HorizontalAlignment="Right"
-                    Width="{Binding MinimapSize}" Height="{Binding MinimapSize}" Margin="8" Padding="0"
+                <Border VerticalAlignment="Top" HorizontalAlignment="Right" 
+                    Width="{Binding MinimapBorderSize}" Height="{Binding MinimapBorderSize}" Margin="8" Padding="0"
                     BorderBrush="Black" Background="White" BorderThickness="10" CornerRadius="5">
-                <Canvas>
 
-                    <ItemsControl ItemsSource="{Binding LoadedChunks}">
+                <Canvas >
+                    <ItemsControl ItemsSource="{Binding LoadedChunks}"  >
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <Canvas x:Name="WorldContainer"
+                                <Canvas 
                                         SnapsToDevicePixels="true"
                                         RenderOptions.EdgeMode="Aliased">
                                 </Canvas>
@@ -167,10 +167,13 @@
 
                     <Rectangle Canvas.Top="{Binding MinimapSelector.Top}" Canvas.Left="{Binding MinimapSelector.Left}" Width="{Binding MinimapSelector.Width}" Height="{Binding MinimapSelector.Height}"
                                Stroke="Lime" StrokeThickness="1" Fill="#AAAAAAAA">
-                        
                     </Rectangle>
+                    <Rectangle Canvas.Top="0" Canvas.Left="0" Width="{Binding MinimapSize}" Height="{Binding MinimapSize}" Cursor="Cross" x:Name="MinimapBounds" Fill="#00000000"></Rectangle>
+                    <!--for finding binding box of minimap-->
                 </Canvas>
             </Border>
+
+
 
 
             <Border VerticalAlignment="Stretch" HorizontalAlignment="Right"
