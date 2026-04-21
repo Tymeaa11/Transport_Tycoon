@@ -288,10 +288,10 @@
                 <Button Content="Resume Game" Command="{Binding ResumeCommand}"
                 Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
 
-                <Button Content="Save Game"
+                <Button Content="Save Game" Command="{Binding SaveGameCommand}"
                 Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
 
-                <Button Content="Load Game"
+                <Button Content="Load Game" Command="{Binding LoadGameCommand}"
                 Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
 
                 <Button Content="Quit to Menu" Command="{Binding QuitToMainMenuCommand}"

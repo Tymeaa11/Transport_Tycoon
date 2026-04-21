@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
@@ -9,7 +10,6 @@ namespace VolcanicTransport.Model
 {
     public class SaveFileManager : ISaveFileManager
     {
-        private class LoadingException : Exception { }
 
         private readonly JsonSerializerOptions _jsonOptions = new()
         {

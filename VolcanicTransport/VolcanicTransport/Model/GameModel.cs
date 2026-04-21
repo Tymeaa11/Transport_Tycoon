@@ -46,19 +46,11 @@ namespace VolcanicTransport.Model
 
         private static GameModel? _instance;
 
-        private GameModel(int worldSize, int seed)
+        private GameModel()
         {
-            World.World.Initialise(worldSize, seed);
             _savefileManager = new SaveFileManager();
 
             _instance = this;
-
-            WorldInstance.GameWorldGenerator = new GameWorldGenerator(
-                new TerrainHeightGenerator(),
-                new MushroomGenerator(),
-                new FactoryAndCityGenerator(GameSettings.CityCount, GameSettings.FactoryCount)
-                );
-            WorldInstance.Generate();
 
             PlayerMoney = GameSettings.StartingMoney;
 
@@ -67,19 +59,44 @@ namespace VolcanicTransport.Model
             {
                 UpdateMushroomsOnTimer();
             };
+        }
+
+        private GameModel(int worldSize, int seed) : this()
+        {
+            World.World.Initialise(worldSize, seed);
+
+            WorldInstance.GameWorldGenerator = new GameWorldGenerator(
+                new TerrainHeightGenerator(),
+                new MushroomGenerator(),
+                new FactoryAndCityGenerator(GameSettings.CityCount, GameSettings.FactoryCount)
+            );
+
+            WorldInstance.Generate();
+            _mushroomGrowthTimer.Start();
+        }
+
+        private GameModel(string fileName) : this()
+        {
+            LoadGame(fileName);
             _mushroomGrowthTimer.Start();
         }
 
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
-        public static void Initialise(int worldSize, int seed)
+        public static void InitialiseNewGame(int worldSize, int seed)
         {
             _instance = new GameModel(worldSize, seed);
         }
+
+        public static void InitialiseLoadedGame(string fileName)
+        {
+            _instance = new GameModel(fileName);
+        }
+
         #endregion
 
         #region SavingAndLoading
-        public void LoadGame(string filename)
+        private void LoadGame(string filename)
         => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename);
 
         public void SaveGame(string filename)
@@ -87,7 +104,7 @@ namespace VolcanicTransport.Model
         #endregion
 
         #region  Methods
-        public void GenerateWorld() => WorldInstance.Generate();
+
 
         private static double GetMushroomCosts(Field field)
         {
@@ -620,7 +637,7 @@ namespace VolcanicTransport.Model
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _mushroomGrowthTimer.Dispose();
         }
     }
 }

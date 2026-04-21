@@ -5,14 +5,15 @@ namespace VolcanicTransport.Model.World.Economy
     [method: JsonConstructor]
     public class Product(ProductType productType, float minvalue, float maxvalue, float offset, float variability)
     {
-        private static float GetRandomOffset() => World.Instance.SharedRandom.NextSingle() * 50_000 - 25_000;
+        public static float GetRandomOffset() => World.Instance.SharedRandom.NextSingle() * 50_000 - 25_000;
+        public float NewRandomOffset() => _perlinOffset = GetRandomOffset();
 
         #region Fields
         [JsonInclude]
         public ProductType ProductType { get; } = productType;
 
         [JsonInclude]
-        private readonly float _perlinOffset = offset;
+        private float _perlinOffset = offset;
         private float Noise(float t) => World.Instance.SharedPerlin.Noise(t + _perlinOffset);
 
         [JsonInclude]

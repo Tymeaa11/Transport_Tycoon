@@ -31,7 +31,9 @@ namespace VolcanicTransport.Model.World.Economy
             new ProductBuffer(factoryData.BaseProduct, factoryData.BaseProductBufferCapacity),
             new ProductBuffer(factoryData.FinalProduct.ProductType, factoryData.FinalProductBufferCapacity), origin
             )
-        { }
+        {
+            FinalProduct.NewRandomOffset();
+        }
 
         public void AddField(Field f)
         {

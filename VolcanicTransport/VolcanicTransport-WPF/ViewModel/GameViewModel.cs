@@ -25,6 +25,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         #region Events
         public event EventHandler? ExitToMenuRequested;
+        public event EventHandler? SaveGameRequested;
+        public event EventHandler? LoadGameRequested;
 
         private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
         {
@@ -126,6 +128,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
         public DelegateCommand BuyVehicleCommand { get; private set; }
         public DelegateCommand AddStopCommand { get; }
+        public DelegateCommand SaveGameCommand {  get; private set; }
+        public DelegateCommand LoadGameCommand {  get; private set; }
         #endregion
 
         #region FieldClicked
@@ -537,7 +541,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 LoadedChunks.Clear();
                 ChunkMap.Clear();
                 
-                Initialise();
+                InitialiseNewGame();
 
                 GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
                 {
@@ -564,12 +568,12 @@ namespace VolcanicTransport_WPF.ViewModel
                 }
             });
 
+            SaveGameCommand = new DelegateCommand(_ => SaveGameRequested?.Invoke(this, EventArgs.Empty));
+            LoadGameCommand = new DelegateCommand(_ => LoadGameRequested?.Invoke(this, EventArgs.Empty));
         }
 
-        public void Initialise()
+        private void InitialiseAfter()
         {
-            GameModel.Initialise(GameSettings.DefaultWorldSize, new Random().Next());
-
             GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
             {
                 ChunkViewModel chunkViewModel = new(c);
@@ -619,6 +623,23 @@ namespace VolcanicTransport_WPF.ViewModel
             };
 
             StartGameLoop();
+        }
+
+        public void InitialiseNewGame()
+        {
+            GameModel.InitialiseNewGame(GameSettings.DefaultWorldSize, new Random().Next());
+            InitialiseAfter();
+        }
+
+        public void InitialiseLodedGame(string fileName)
+        {
+            GameModel.InitialiseLoadedGame(fileName);
+            InitialiseAfter();
+        }
+
+        public void SaveGame(string fileName)
+        {
+            GameModel.Instance.SaveGame(fileName);
         }
 
         #region BuildMode

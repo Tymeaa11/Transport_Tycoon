@@ -11,11 +11,11 @@ internal static class Program
 {
     private static void Main()
     {
-        GameModel.Initialise(8, 0);
+        GameModel.InitialiseNewGame(8, 0);
 
         GameModel.Instance.SaveGame("output.zip");
 
-        GameModel.Instance.LoadGame("output.zip");
+        GameModel.InitialiseLoadedGame("output.zip");
 
         GeneratePreview();
     }
