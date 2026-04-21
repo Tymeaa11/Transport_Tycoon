@@ -98,11 +98,10 @@ namespace VolcanicTransport.Model
             World.World.Instance.SizeInChunks.X * World.World.Instance.SizeInChunks.Y * FieldsPerChunk;
 
         private const byte LowMask = 0x0F;
-        private const byte MushroomStageMask = 0b0000_0011;
         private const byte MushroomId = 0b0000_0100;
+        private const byte MushroomStageMask = 0b0000_0011;
         private const byte RoadId = 0b0000_1000;
         private const byte RoadDataMask = 0b0000_0001;
-        private const byte CityBuildingId = 0b0000_1100;
         private const byte SurfaceTypeMask = 0b0000_1100;
 
         private static void SaveBinaryMap(BinaryWriter writer)
@@ -122,24 +121,10 @@ namespace VolcanicTransport.Model
                             data = (byte)(data | MushroomId | stage);
                             break;
 
-                        case BoneBridge bridge:
-
-                            break;
-
-                        case StoneBridge bridge: 
-                            
-                            break;
-
-                        case SteelBridge bridge: 
-                            
-                            break;
+                        case Bridge: break;
 
                         case Road road:
                             data = (byte)(data | RoadId | (road.IsReserved ? 0b1 : 0b0));
-                            break;
-
-                        case CityBuilding:
-                            data = (byte)(data | CityBuildingId);
                             break;
                     }
 
@@ -188,9 +173,6 @@ namespace VolcanicTransport.Model
                         RoadId
                             => new Road(coordinate) { IsReserved = (low & RoadDataMask) == 1 },
 
-                        //CityBuildingId
-                        //=> new CityBuilding(),
-
                         _ => field.Surface
                     };
                 })
@@ -210,8 +192,20 @@ namespace VolcanicTransport.Model
                     if (field.Surface is null) return;
                     var coordinate = new Coordinate(x * GameSettings.ChunkSize + fx, y * GameSettings.ChunkSize + fy);
 
-                    if (field.Surface is not Mushroom && field.Surface is not Road && field.Surface is not CityBuilding)
-                        surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
+                    switch (field.Surface)
+                    {
+                        case Bridge:
+                            surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
+                            break;
+
+                        case Mushroom: // stored in binary data
+                        case Road:
+                            break;
+
+                        default:
+                            surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
+                            break;
+                    }
                 })
             );
 

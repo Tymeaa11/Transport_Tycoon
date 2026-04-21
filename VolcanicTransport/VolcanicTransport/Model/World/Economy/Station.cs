@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -5,16 +6,21 @@ namespace VolcanicTransport.Model.World.Economy
 {
     public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
     {
-        protected string name = name;
+        #region Fields
+        public string Name { get; protected set; } = name;
+        [JsonInclude]
         protected ProductBuffer passangerBuffer = passangerBuffer;
+        [JsonInclude]
         protected Product PassengerDemand = passengerDemand;
-
-        protected bool isOccupied = false;
-        public bool IsOccupied { get { return isOccupied; } }
-        public string Name { get { return name; } }
+        public bool IsOccupied { get; protected set; }
+        [JsonIgnore]
         public int WaitingPassengers => passangerBuffer.CurrentLoad;
 
+        [JsonInclude]
         private double _passengerAccumulator = 0;
+        #endregion
+
+        #region Methods
         public int GetWaitingPassengers(double deltaTime)
         {
             _passengerAccumulator += deltaTime * GameSettings.PeopleGrowthRate;
@@ -74,5 +80,6 @@ namespace VolcanicTransport.Model.World.Economy
 
             return actualUnloaded;
         }
+        #endregion
     }
 }

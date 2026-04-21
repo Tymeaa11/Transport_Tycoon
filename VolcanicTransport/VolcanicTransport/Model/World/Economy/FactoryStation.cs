@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -13,13 +15,48 @@ namespace VolcanicTransport.Model.World.Economy
         )
         , IInspectable
     {
+        #region Fields
         private readonly Factory _factory = factory;
+        public string FactoryName => _factory.Name;
 
+        [JsonIgnore]
         public ProductType GetFactoryNeeds => _factory.BaseProduct;
+        [JsonIgnore]
         public ProductType GetFactoryFinishedProduct => _factory.FinalProduct.ProductType;
+        [JsonIgnore]
         public int GetFactoryFinishedProductAmount => _factory.FinalProductBuffer.CurrentLoad;
+        [JsonIgnore]
         public int GetFactoryBaseProductAmount => _factory.BaseProductBuffer.CurrentLoad;
+        [JsonIgnore]
         public int GetFactoryNeedsAmount => _factory.BaseProductBuffer.MaxCapacity;
+        #endregion
+
+        #region Constructors
+        public FactoryStation(City city, Coordinate coordinate, string name) :
+    base(
+        coordinate,
+        name,
+        new ProductBuffer(ProductType.HUMAN, 50),
+        new Product(ProductType.HUMAN, 0, 50, 5)
+    )
+        {
+            _city = city;
+        }
+
+        [JsonConstructor]
+        public FactoryStation(string cityName, Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand)
+            : base(coordinate, name, passangerBuffer, passengerDemand)
+        {
+            var targets = World.Instance.Cities.Where(c => c.Name == cityName).ToList();
+
+            if (targets.Count != 1)
+                throw new LoadingException();
+
+            _city = targets[0];
+        }
+        #endregion
+
+        #region Methods
         public float GetFactoryEfficiency(float time) => _factory.FinalProduct.GetFactoryEfficiency(time); // 0-1
         public double PricePerBaseProduct => GameSettings.GetPrice(_factory.BaseProduct);
         public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
@@ -67,5 +104,6 @@ namespace VolcanicTransport.Model.World.Economy
 
             return info.ToString();
         }
+        #endregion
     }
 }

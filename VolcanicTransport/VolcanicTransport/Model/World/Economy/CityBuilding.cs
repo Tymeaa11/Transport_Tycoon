@@ -21,6 +21,7 @@ namespace VolcanicTransport.Model.World.Economy
             _cityReference = city;
         }
 
+        [JsonConstructor]
         public CityBuilding(string cityName)
         {
             var targets = World.Instance.Cities.Where(c => c.Name == cityName).ToList();

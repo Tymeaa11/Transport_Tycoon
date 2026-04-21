@@ -27,6 +27,7 @@ namespace VolcanicTransport.Model.World.Economy
             _factoryReference = factory;
         }
 
+        [JsonConstructor]
         public FactoryBuilding(string factoryName)
         {
             var targets = World.Instance.Factories.Where(c => c.Name == factoryName).ToList();
