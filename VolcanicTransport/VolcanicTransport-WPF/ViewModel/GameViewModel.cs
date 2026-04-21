@@ -259,10 +259,18 @@ namespace VolcanicTransport_WPF.ViewModel
                         }
                         else
                         {
-                            List<Road>? path = Pathfinder.FindPath(startNode, endNode);
+                            List<Road> path = Pathfinder.FindPath(startNode, endNode) ?? new List<Road>();
 
-                            if (path != null && path.Count > 0)
+                            if (path.Count == 0 || path.First().Coordinate != _firstSelectedStation.Coordinate)
                             {
+                                path.Insert(0, _firstSelectedStation);
+                            }
+
+                            if (path.Last().Coordinate != secondSelectedStation.Coordinate)
+                            {
+                                path.Add(secondSelectedStation);
+                            }
+
                                 // TODO : Is this allowed in MVVM?
                                 var nameDialog = new VehicleNameWindow { Owner = Application.Current.MainWindow };
 
@@ -293,11 +301,6 @@ namespace VolcanicTransport_WPF.ViewModel
                                 {
                                     Debug.WriteLine("Vásárlás megszakítva.");
                                 }
-                            }
-                            else
-                            {
-                                Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
-                            }
                         }
 
                         _firstSelectedStation = null;
