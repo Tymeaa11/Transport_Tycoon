@@ -11,7 +11,6 @@ public static class GameSettings
 
     #region World & WorldGeneration
     public const int FieldSize = 32; // should be divisible by 8
-    public const int MiniFieldSize = 4; // used for minimap
     public const int ChunkSize = 32; // should be even
 
     public const int DefaultWorldSize = 8;
@@ -21,9 +20,6 @@ public static class GameSettings
     public const int FieldSizeP8 = FieldSize / 8;
 
     public const int ChunkSizeInPixels = ChunkSize * FieldSize;
-    public const int MiniChunkSizeInPixels = ChunkSize * MiniFieldSize;
-
-    public const int WorldSizeInFields = DefaultWorldSize * ChunkSize;
 
     private static readonly Dictionary<FieldType, float> FieldTypeThickness = new()
     {

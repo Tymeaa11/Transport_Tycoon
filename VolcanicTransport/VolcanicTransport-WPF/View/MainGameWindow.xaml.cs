@@ -68,19 +68,10 @@ namespace VolcanicTransport_WPF.View
         {
             if (DataContext is GameViewModel vm)
             {
-                if (!MinimapBounds.IsMouseOver)
-                {
-                    Coordinate fieldCoord = vm.Camera.ScreenToField((Vector)e.GetPosition(ViewPort));
+                Coordinate fieldCoord = vm.Camera.ScreenToField((Vector)e.GetPosition(ViewPort));
 
-                    if (vm.FieldClickedCommand.CanExecute(fieldCoord))
-                        vm.FieldClickedCommand.Execute(fieldCoord);
-                }
-                else
-                {
-                    vm.MinimapTeleport((Vector)e.GetPosition(MinimapBounds));
-                }
-
-                
+                if (vm.FieldClickedCommand.CanExecute(fieldCoord))
+                    vm.FieldClickedCommand.Execute(fieldCoord);
             }
         }
 
