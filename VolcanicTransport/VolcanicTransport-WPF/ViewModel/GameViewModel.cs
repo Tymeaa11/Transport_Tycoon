@@ -442,7 +442,7 @@ namespace VolcanicTransport_WPF.ViewModel
         #endregion
 
         #region Vehicles
-        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
+        public List<Vehicle> Vehicles => World.Instance.Vehicles;
 
         public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
 

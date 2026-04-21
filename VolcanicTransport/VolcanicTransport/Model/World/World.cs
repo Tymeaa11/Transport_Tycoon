@@ -33,7 +33,7 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; } = [];
         public List<Factory> Factories { get; } = [];
         public List<Station> Stations { get; } = [];
-        public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
+        public List<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
         public IWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }

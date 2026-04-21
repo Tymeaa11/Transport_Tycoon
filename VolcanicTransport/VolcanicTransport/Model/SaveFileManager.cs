@@ -5,6 +5,7 @@ using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model
 {
@@ -28,7 +29,7 @@ namespace VolcanicTransport.Model
             double PlayerMoney,
             List<City> Cities,
             List<Factory> Factories,
-            //List<Vehicle> Vehicles, // TODO Waiting for observable fix
+            List<Vehicle> Vehicles,
             List<SurfaceEntry> Surfaces);
         #endregion
 
@@ -83,6 +84,7 @@ namespace VolcanicTransport.Model
                 game.PlayerMoney,
                 game.World.Cities,
                 game.World.Factories,
+                game.World.Vehicles,
                 GetSurfaceElements()
             );
 
@@ -118,6 +120,18 @@ namespace VolcanicTransport.Model
                         case Mushroom mushroom:
                             stage = (byte)((byte)mushroom.GrowthStage & MushroomStageMask);
                             data = (byte)(data | MushroomId | stage);
+                            break;
+
+                        case BoneBridge bridge:
+
+                            break;
+
+                        case StoneBridge bridge: 
+                            
+                            break;
+
+                        case SteelBridge bridge: 
+                            
                             break;
 
                         case Road road:

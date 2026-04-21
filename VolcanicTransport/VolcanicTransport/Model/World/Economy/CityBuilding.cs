@@ -1,11 +1,37 @@
 using System.Text;
+using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Exceptions;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class CityBuilding(City city) : ISurface, IInspectable
+    public class CityBuilding : ISurface, IInspectable
     {
-        public string Name => city.Name;
-        public List<ProductType> ProductTypes => city.ProductTypes;
+        #region Fields
+        public string Name => _cityReference.Name;
+
+        [JsonIgnore]
+        public List<ProductType> ProductTypes => _cityReference.ProductTypes;
+        [JsonIgnore]
+        private readonly City _cityReference;
+        #endregion
+        #region Constructors
+
+        public CityBuilding(City city)
+        {
+            _cityReference = city;
+        }
+
+        public CityBuilding(string cityName)
+        {
+            var targets = World.Instance.Cities.Where(c => c.Name == cityName).ToList();
+
+            if (targets.Count != 1) 
+                throw new LoadingException();
+
+            _cityReference = targets[0];
+        }
+        #endregion
+        #region Methods
 
         public string Inspect()
         {
@@ -18,5 +44,6 @@ namespace VolcanicTransport.Model.World.Economy
 
             return info.ToString();
         }
+        #endregion
     }
 }
