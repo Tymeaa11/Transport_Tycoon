@@ -699,8 +699,13 @@ namespace VolcanicTransport_WPF.ViewModel
             foreach (var vehicle in GameModel.WorldInstance.Vehicles)
                 VehicleViewModels.Add(new VehicleViewModel(vehicle));
 
+            if (VehicleViewModels.Count > 0)
+                SelectedVehicle = VehicleViewModels[0];
 
+            OnPropertyChanged(nameof(VehicleViewModels));
             InitialiseAfter();
+            OnSetTimescale0X();
+            IsPausedView = true;
         }
 
         public void SaveGame(string fileName)
