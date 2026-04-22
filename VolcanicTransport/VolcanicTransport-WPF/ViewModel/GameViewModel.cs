@@ -849,7 +849,12 @@ namespace VolcanicTransport_WPF.ViewModel
                 UpdateHoveredCoordinateAndTooltips(_lastMousePosition);
             }
 
-            Camera.Update(deltaTime);
+            bool isTyping = System.Windows.Input.Keyboard.FocusedElement is System.Windows.Controls.TextBox;
+
+            if (!isTyping)
+            {
+                Camera.Update(deltaTime);
+            }
 
         }
 
