@@ -106,6 +106,7 @@ namespace VolcanicTransport_WPF
 
             _mainMenuViewModel = new MainMenuViewModel();
             _mainMenuViewModel.NewGameRequested += MainMenuViewModel_StartNewGameRequested;
+            _mainMenuViewModel.ExitRequested += MainMenuViewModel_ExitRequested;
             _mainMenuViewModel.LoadGameRequested += MainMenuViewModel_LoadGameRequested;
             _mainMenuWindow = new MainMenuWindow
             {
