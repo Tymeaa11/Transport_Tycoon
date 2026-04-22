@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
@@ -18,7 +19,6 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
-        public System.Collections.ObjectModel.ObservableCollection<Route> SavedRoutes { get; } = [];
         public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;
@@ -28,8 +28,6 @@ namespace VolcanicTransport.Model
 
         public event EventHandler? MoneyChanged;
         public event EventHandler? GameOver;
-        //public event EventHandler? NewGame;
-        //public event EventHandler? StationBought;
         public event EventHandler? RoadBought;
         public event EventHandler? VehicleBought;
         public event EventHandler? VehicleSold;
@@ -37,8 +35,6 @@ namespace VolcanicTransport.Model
         public event EventHandler? GamePaused;
         public event EventHandler? GameUnpaused;
         public event EventHandler? TimescaleChanged;
-        //public event EventHandler? FieldChanged;
-        //public event EventHandler? VehicleSelectedIndex;
         public event EventHandler? OnPlacementFailed;
 
         #endregion
@@ -47,19 +43,11 @@ namespace VolcanicTransport.Model
 
         private static GameModel? _instance;
 
-        private GameModel(int worldSize, int seed)
+        private GameModel()
         {
-            World.World.Initialise(worldSize, seed);
             _savefileManager = new SaveFileManager();
 
             _instance = this;
-
-            WorldInstance.GameWorldGenerator = new GameWorldGenerator(
-                new TerrainHeightGenerator(),
-                new MushroomGenerator(),
-                new FactoryAndCityGenerator(GameSettings.CityCount, GameSettings.FactoryCount)
-                );
-            WorldInstance.Generate();
 
             PlayerMoney = GameSettings.StartingMoney;
 
@@ -68,19 +56,46 @@ namespace VolcanicTransport.Model
             {
                 UpdateMushroomsOnTimer();
             };
+        }
+
+        private GameModel(int worldSize, int seed) : this()
+        {
+            World.World.Initialise(worldSize, seed);
+
+            WorldInstance.GameWorldGenerator = new GameWorldGenerator(
+                new TerrainHeightGenerator(),
+                new MushroomGenerator(),
+                new FactoryAndCityGenerator(GameSettings.CityCount, GameSettings.FactoryCount)
+            );
+
+            WorldInstance.Generate();
             _mushroomGrowthTimer.Start();
         }
 
+        private GameModel(string fileName) : this()
+        {
+            LoadGame(fileName);
+            _mushroomGrowthTimer.Start();
+        }
+
+        ~GameModel() { Dispose(); }
+
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
-        public static void Initialise(int worldSize, int seed)
+        public static void InitialiseNewGame(int worldSize, int seed)
         {
             _instance = new GameModel(worldSize, seed);
         }
+
+        public static void InitialiseLoadedGame(string fileName)
+        {
+            _instance = new GameModel(fileName);
+        }
+
         #endregion
 
         #region SavingAndLoading
-        public void LoadGame(string filename)
+        private void LoadGame(string filename)
         => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename);
 
         public void SaveGame(string filename)
@@ -88,7 +103,7 @@ namespace VolcanicTransport.Model
         #endregion
 
         #region  Methods
-        public void GenerateWorld() => WorldInstance.Generate();
+
 
         private static double GetMushroomCosts(Field field)
         {
@@ -136,7 +151,8 @@ namespace VolcanicTransport.Model
         }
         private void UpdateMushroomsOnTimer()
         {
-            UpdateAllMushrooms(0.1);
+            if(World.World.IsInitialised())
+                UpdateAllMushrooms(0.1);
         }
         public void Update(double deltaTime)
         {
@@ -232,13 +248,13 @@ namespace VolcanicTransport.Model
 
         private void CheckAndRegisterJunctions(Coordinate centerCoord)
         {
-            Coordinate[] coordsToCheck = {
+            Coordinate[] coordsToCheck = [
                 centerCoord,
-                new Coordinate(centerCoord.X, centerCoord.Y - 1), // Észak
-                new Coordinate(centerCoord.X, centerCoord.Y + 1), // Dél
-                new Coordinate(centerCoord.X + 1, centerCoord.Y), // Kelet
-                new Coordinate(centerCoord.X - 1, centerCoord.Y)  // Nyugat
-            };
+                new(centerCoord.X, centerCoord.Y - 1), // Észak
+                new(centerCoord.X, centerCoord.Y + 1), // Dél
+                new(centerCoord.X + 1, centerCoord.Y), // Kelet
+                new(centerCoord.X - 1, centerCoord.Y)  // Nyugat
+            ];
 
             foreach (var c in coordsToCheck)
             {
@@ -343,8 +359,8 @@ namespace VolcanicTransport.Model
             if (startField == null || endField == null) return false;
             if (startField.Type != endField.Type) return false;
 
-            Road tempStartRoad = new Road(start);
-            Road tempEndRoad = new Road(end);
+            var tempStartRoad = new Road(start);
+            var tempEndRoad = new Road(end);
 
             var originalStartSurface = startField.Surface;
             var originalEndSurface = endField.Surface;
@@ -373,10 +389,10 @@ namespace VolcanicTransport.Model
             int stepY = start.Y == end.Y ? 0 : (end.Y > start.Y ? 1 : -1);
             RoadType bridgeDir = stepX == 0 ? RoadType.STRAIGHT_NS : RoadType.STRAIGHT_EW;
 
-            List<Coordinate> bridgeCoords = new();
+            List<Coordinate> bridgeCoords = [];
             for (int i = 0; i < length; i++)
             {
-                Coordinate c = new Coordinate(start.X + i * stepX, start.Y + i * stepY);
+                var c = new Coordinate(start.X + i * stepX, start.Y + i * stepY);
                 bridgeCoords.Add(c);
                 Field? f = WorldInstance.GetField(c);
 
@@ -429,20 +445,21 @@ namespace VolcanicTransport.Model
                 Field field = WorldInstance.GetField(c)!;
 
                 if (i == 0 || i == length - 1)
-                {
                     PlaceRoad(c);
-
-                }
                 else
-                {
-                    field.Surface = new Bridge(c, bridgeDir, bridgeType.MaxSpeed, startField.Type);
-                }
+                    field.Surface = bridgeType.Tier switch
+                    {
+                        0 => new BoneBridge(c, bridgeDir, startField.Type),
+                        1 => new StoneBridge(c, bridgeDir, startField.Type),
+                        2 => new SteelBridge(c, bridgeDir, startField.Type),
+                        _ => throw new NotImplementedException()
+                    };
             }
 
             foreach (var c in bridgeCoords)
             {
-                if (WorldInstance.GetField(c)?.Surface is Road r) r.Update();
-
+                if (WorldInstance.GetField(c)?.Surface is Road r) 
+                    r.Update();
                 WorldInstance.UpdateRoadNetworkAround(c);
 
                 CheckAndRegisterJunctions(c);
@@ -480,8 +497,8 @@ namespace VolcanicTransport.Model
             var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 4);
 
             Station? newStation = null;
-            if (city != null) newStation = new CityStation(city, coord, "CityStation");
-            else if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
+            if (city != null) newStation = new CityStation(city, coord, $"CityStation{coord}");
+            else if (factory != null) newStation = new FactoryStation(coord, $"FactoryStation{coord}", factory);
 
             if (newStation == null || !TryPurchase(stationCost)) return false;
 
@@ -530,7 +547,7 @@ namespace VolcanicTransport.Model
             v.TriggerRouteChanged();
         }
 
-        private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
+        public void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
         {
             Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
 
@@ -654,7 +671,7 @@ namespace VolcanicTransport.Model
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _mushroomGrowthTimer.Dispose();
         }
     }
 }

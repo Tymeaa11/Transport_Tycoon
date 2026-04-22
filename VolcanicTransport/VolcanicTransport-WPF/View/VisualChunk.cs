@@ -109,6 +109,9 @@ namespace VolcanicTransport_WPF.View
                         ImageWithRotation imageWithRotation = f.Surface switch
                         {
                             Mushroom m => RenderMushroom(m),
+                            BoneBridge r => RenderBoneBridge(r),
+                            StoneBridge r => RenderStoneBridge(r),
+                            SteelBridge r => RenderSteelBridge(r),
                             Station s => RenderStation(),
                             Road r => RenderRoad(r),
                             FactoryBuilding => RenderFactoryBuilding(),
@@ -138,6 +141,14 @@ namespace VolcanicTransport_WPF.View
             => new(TextureAtlas.InvalidTexture, 0);
         private ImageWithRotation RenderMushroom(Mushroom m)
             => new(TextureAtlas.MushroomTextures[(int)m.GrowthStage], 0);
+
+        private ImageWithRotation RenderBoneBridge(BoneBridge r)
+            => TextureAtlas.BoneBridgeTextures[r.RoadType];
+        private ImageWithRotation RenderStoneBridge(StoneBridge r)
+             => TextureAtlas.StoneBridgeTextures[r.RoadType];
+        private ImageWithRotation RenderSteelBridge(SteelBridge r)
+            => TextureAtlas.SteelBridgeTextures[r.RoadType];
+
         private ImageWithRotation RenderRoad(Road r)
             => TextureAtlas.RoadTextures[r.RoadType];
         private ImageWithRotation RenderCityBuilding()

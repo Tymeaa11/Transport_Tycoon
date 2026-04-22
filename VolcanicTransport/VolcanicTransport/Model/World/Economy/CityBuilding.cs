@@ -1,16 +1,40 @@
 using System.Text;
+using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Exceptions;
+using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class CityBuilding(City city) : ISurface, IInspectable
+    public class CityBuilding : ISurface, IInspectable, IContainsReference
     {
-        public string Name => city.Name;
-        public List<ProductType> ProductTypes => city.ProductTypes;
+        #region Fields
+        public string CityName { get; private set; }
+
+        [JsonIgnore]
+        public List<ProductType> ProductTypes => _cityReference!.ProductTypes;
+        [JsonIgnore]
+        private City? _cityReference;
+        #endregion
+        #region Constructors
+
+        public CityBuilding(City city)
+        {
+            _cityReference = city;
+            CityName = city.Name;
+        }
+
+        [JsonConstructor]
+        public CityBuilding(string cityName)
+        {
+            CityName = cityName;
+        }
+        #endregion
+        #region Methods
 
         public string Inspect()
         {
             var info = new StringBuilder();
-            info.AppendLine($"City: {Name}");
+            info.AppendLine($"City: {CityName}");
             info.AppendLine("Product needs:");
 
             foreach (ProductType pt in ProductTypes)
@@ -18,5 +42,19 @@ namespace VolcanicTransport.Model.World.Economy
 
             return info.ToString();
         }
+
+        public void RestoreReference(Coordinate coordinate)
+        {
+            var targets = World.Instance.Cities.Where(c => c.Name == CityName).ToList();
+
+            if (targets.Count != 1)
+                throw new LoadingException();
+
+            _cityReference = targets[0];
+
+            var f = World.Instance.GetField(coordinate) ?? throw new LoadingException();
+            targets[0].AddField(f);
+        }
+        #endregion
     }
 }

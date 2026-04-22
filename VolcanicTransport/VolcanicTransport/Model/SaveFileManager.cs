@@ -1,15 +1,17 @@
+using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model
 {
     public class SaveFileManager : ISaveFileManager
     {
-        private class LoadingException : Exception { }
 
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
@@ -28,8 +30,10 @@ namespace VolcanicTransport.Model
             double PlayerMoney,
             List<City> Cities,
             List<Factory> Factories,
-            //List<Vehicle> Vehicles, // TODO Waiting for observable fix
-            List<SurfaceEntry> Surfaces);
+            ObservableCollection<Vehicle> Vehicles,
+            ObservableCollection<Route> Routes,
+            List<SurfaceEntry> Surfaces
+        );
         #endregion
 
         public ISaveFileManager.GameData LoadGame(string filename)
@@ -55,8 +59,25 @@ namespace VolcanicTransport.Model
 
             world.Cities.AddRange(surfaceData.Cities);
             world.Factories.AddRange(surfaceData.Factories);
+            
 
             RestoreSurfaceElements(surfaceData.Surfaces);
+            FinalizeRoadNetwork();
+
+            foreach (var route in surfaceData.Routes)
+            {
+                route.RestoreReference();
+                world.SavedRoutes.Add(route);
+            }
+
+            foreach (var vehicle in surfaceData.Vehicles)
+            {
+                world.AddVehicle(vehicle);
+                world.VehicleManager.AddVehicle(vehicle);
+                vehicle.RestoreReference(default);
+                vehicle.ArrivedAtStation += GameModel.Instance.HandleVehicleArrived;
+            }
+
 
             return new ISaveFileManager.GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
         }
@@ -73,6 +94,12 @@ namespace VolcanicTransport.Model
                 SaveBinaryMap(writer);
             }
 
+            foreach (var vehicle in game.World.Vehicles)
+                vehicle.PrepareForSave();
+
+            foreach (var r in game.World.SavedRoutes) 
+                r.PrepareForSave();
+
             var surfaceEntry = archive.CreateEntry("surface.json");
             using var jsonStream = surfaceEntry.Open();
             var saveData = new SurfaceSaveData(
@@ -83,6 +110,8 @@ namespace VolcanicTransport.Model
                 game.PlayerMoney,
                 game.World.Cities,
                 game.World.Factories,
+                game.World.Vehicles,
+                game.World.SavedRoutes,
                 GetSurfaceElements()
             );
 
@@ -96,11 +125,10 @@ namespace VolcanicTransport.Model
             World.World.Instance.SizeInChunks.X * World.World.Instance.SizeInChunks.Y * FieldsPerChunk;
 
         private const byte LowMask = 0x0F;
-        private const byte MushroomStageMask = 0b0000_0011;
         private const byte MushroomId = 0b0000_0100;
+        private const byte MushroomStageMask = 0b0000_0011;
         private const byte RoadId = 0b0000_1000;
         private const byte RoadDataMask = 0b0000_0001;
-        private const byte CityBuildingId = 0b0000_1100;
         private const byte SurfaceTypeMask = 0b0000_1100;
 
         private static void SaveBinaryMap(BinaryWriter writer)
@@ -120,12 +148,11 @@ namespace VolcanicTransport.Model
                             data = (byte)(data | MushroomId | stage);
                             break;
 
+                        case Station:
+                        case Bridge: break;
+
                         case Road road:
                             data = (byte)(data | RoadId | (road.IsReserved ? 0b1 : 0b0));
-                            break;
-
-                        case CityBuilding:
-                            data = (byte)(data | CityBuildingId);
                             break;
                     }
 
@@ -174,11 +201,9 @@ namespace VolcanicTransport.Model
                         RoadId
                             => new Road(coordinate) { IsReserved = (low & RoadDataMask) == 1 },
 
-                        //CityBuildingId
-                        //=> new CityBuilding(),
-
                         _ => field.Surface
                     };
+                        
                 })
             );
         }
@@ -196,8 +221,22 @@ namespace VolcanicTransport.Model
                     if (field.Surface is null) return;
                     var coordinate = new Coordinate(x * GameSettings.ChunkSize + fx, y * GameSettings.ChunkSize + fy);
 
-                    if (field.Surface is not Mushroom && field.Surface is not Road && field.Surface is not CityBuilding)
-                        surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
+                    switch (field.Surface)
+                    {
+                        case Station:
+                        case Bridge:
+                            surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
+                            break;
+                        
+
+                        case Mushroom: // stored in binary data, skip
+                        case Road:
+                            break;
+
+                        default:
+                            surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
+                            break;
+                    }
                 })
             );
 
@@ -211,18 +250,47 @@ namespace VolcanicTransport.Model
             {
                 var field = world.GetField(coordinate);
 
-                if (field is null || field.Surface is not null) throw new LoadingException();
+                if (field is null || field.Surface is not null) 
+                    throw new LoadingException();
 
                 field.Surface = surface;
 
-                switch (surface)
-                {
-                    case KnowsNeighbour knowsNeighbour:
-                        knowsNeighbour.UpdateNeighbourReferences();
-                        break;
-                }
+                if (surface is IContainsReference hasReference)
+                    hasReference.RestoreReference(coordinate);
 
+                if (surface is Station station)
+                    world.Stations.Add(station);
             }
+
+            foreach (var (_, surface) in surfaces)
+                if (surface is KnowsNeighbour knowsNeighbour)
+                    knowsNeighbour.UpdateNeighbourReferences();
+        }
+
+        private static void FinalizeRoadNetwork()
+        {
+            var world = World.World.Instance;
+
+            world.ChunkMatrix.ReadEach((_, _, chunk) =>
+                chunk.FieldMatrix.ReadEach((_, _, field) =>
+                {
+                    if (field.Surface is KnowsNeighbour kn)
+                        kn.UpdateNeighbourReferences();
+                })
+            );
+
+            world.ChunkMatrix.ReadEach((_, _, chunk) =>
+                chunk.FieldMatrix.ReadEach((_, _, field) =>
+                {
+                    if (field.Surface is Road road && field.Surface is not Bridge)
+                    {
+                        road.Update();
+                        world.Roadnetwork.RegisterNodeIfNeeded(road.Coordinate);
+                    }
+                })
+            );
+
+            world.Roadnetwork.RebuildEdges();
         }
 
         #endregion

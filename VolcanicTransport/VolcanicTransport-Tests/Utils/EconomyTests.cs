@@ -49,7 +49,7 @@ namespace VolcanicTransport_Tests.Utils
             var truck = new CargoTruck("TestTruck");
             truck.Load(30, ProductType.ASH);
 
-            int received = buffer.ReciveProduct(truck, 30);
+            int received = buffer.ReceiveProduct(truck, 30);
 
             Assert.AreEqual(30, received, "A raktárnak át kellett volna vennie mind a 30 egységet.");
             Assert.AreEqual(80, buffer.CurrentLoad, "A raktár készletének 80-nak kellene lennie.");
@@ -63,7 +63,7 @@ namespace VolcanicTransport_Tests.Utils
             var truck = new CargoTruck("TestTruck");
             truck.Load(50, ProductType.SULFUR);
 
-            int received = buffer.ReciveProduct(truck, 50);
+            int received = buffer.ReceiveProduct(truck, 50);
 
             Assert.AreEqual(10, received, "Csak 10 egységet szabadott volna átvennie.");
             Assert.AreEqual(100, buffer.CurrentLoad, "A raktárnak meg kellene telnie.");
@@ -77,7 +77,7 @@ namespace VolcanicTransport_Tests.Utils
             var tanker = new TankerTruck("TestTanker");
             tanker.Load(50, ProductType.WATER);
 
-            int received = buffer.ReciveProduct(tanker, 50);
+            int received = buffer.ReceiveProduct(tanker, 50);
 
             Assert.AreEqual(0, received, "Nem szabadna átvenni eltérő típusú terméket.");
             Assert.AreEqual(50, tanker.CurrentLoad, "A jármű rakományának érintetlennek kell maradnia.");

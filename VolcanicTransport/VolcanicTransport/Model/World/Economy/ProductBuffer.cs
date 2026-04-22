@@ -40,7 +40,7 @@ namespace VolcanicTransport.Model.World.Economy
             }
         }
 
-        public int ReciveProduct(Vehicle vehicle, int amount) //visszatérési érték: amennyit átvett 
+        public int ReceiveProduct(Vehicle vehicle, int amount) //visszatérési érték: amennyit átvett 
         {
             if (vehicle.CurrentType != ProductType) return 0;
 

@@ -6,7 +6,7 @@ namespace VolcanicTransport.Model.World
     {
         #region Fields
         public bool IsReserved { get; set; } = false;
-        public RoadType RoadType { get; protected set; }
+        public virtual RoadType RoadType { get; protected set; }
         #endregion
 
         #region Methods

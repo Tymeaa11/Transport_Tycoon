@@ -3,6 +3,7 @@ using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
@@ -24,6 +25,7 @@ namespace VolcanicTransport.Model.World
             }
         }
         public Random SharedRandom { get; private set; } = new();
+        public Perlin SharedPerlin { get; private set; }
 
         public Coordinate SizeInChunks { get; }
         public Coordinate SizeInFields { get; }
@@ -31,7 +33,8 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; } = [];
         public List<Factory> Factories { get; } = [];
         public List<Station> Stations { get; } = [];
-        public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
+        public ObservableCollection<Route> SavedRoutes { get; } = [];
+        public ObservableCollection<Vehicle> Vehicles { get; } = [];
 
         public IWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
@@ -56,13 +59,16 @@ namespace VolcanicTransport.Model.World
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
             WorldSeed = seed;
 
+            SharedPerlin = new Perlin(4, 0.5f, seed);
+
             InitialiseWorld();
 
             Roadnetwork = new RoadNetworkGraph();
+
         }
 
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
-
+        public static bool IsInitialised() => _instance is not null;
         public static void Initialise(int worldSize, int seed)
             => _instance = new World(worldSize, seed);
         #endregion

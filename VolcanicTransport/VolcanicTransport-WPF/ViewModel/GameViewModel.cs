@@ -28,6 +28,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         #region Events
         public event EventHandler? ExitToMenuRequested;
+        public event EventHandler? SaveGameRequested;
+        public event EventHandler? LoadGameRequested;
 
         private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
         {
@@ -129,6 +131,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
         public DelegateCommand BuyVehicleCommand { get; private set; }
         public DelegateCommand AddStopCommand { get; }
+        public DelegateCommand SaveGameCommand {  get; private set; }
+        public DelegateCommand LoadGameCommand {  get; private set; }
         #endregion
 
         #region FieldClicked
@@ -140,23 +144,6 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             if (IsPausedView) return;
             Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
-
-            if (CurrentBuildMode == BuildMode.BRIDGE)
-            {
-                if (_bridgeStartCoord == null)
-                {
-                    _bridgeStartCoord = coord;
-                    System.Diagnostics.Debug.WriteLine($"Híd 1. pontja lerakva: {coord}. Kattints legfeljebb {SelectedBridgeType.Length} mezővel arrébb a túlpartra!");
-                }
-                else
-                {
-                    bool success = GameModelInstance.PlaceBridge(_bridgeStartCoord.Value, coord, SelectedBridgeType);
-                    System.Diagnostics.Debug.WriteLine(success ? "Híd felépítve!" : "Hibás hídelhelyezés! Ellenőrizd a partot, a magasságot és a hosszt.");
-
-                    _bridgeStartCoord = null;
-                }
-                return;
-            }
 
             //Camera.PrintDebug();
 
@@ -198,13 +185,53 @@ namespace VolcanicTransport_WPF.ViewModel
                     }
                     break;
 
+                case BuildMode.BRIDGE:
+                    OnBuildModeBridge(coord);
+                    break;
+
                 default:
                     // Handle BuildMode.NONE or unhandled cases
                     break;
             }
         }
 
-        public ObservableCollection<Route> SavedRoutes => GameModelInstance.SavedRoutes;
+        private void OnBuildModeBridge(Coordinate coordinate)
+        {
+            if (_bridgeStartCoord == null)
+            {
+                _bridgeStartCoord = coordinate;
+                Debug.WriteLine($"Híd 1. pontja lerakva: {coordinate}. Kattints legfeljebb {SelectedBridgeType.Length} mezővel arrébb a túlpartra!");
+            }
+            else
+            {
+                bool success = GameModelInstance.PlaceBridge(_bridgeStartCoord.Value, coordinate, SelectedBridgeType);
+                Debug.WriteLine(success ? "Híd felépítve!" : "Hibás hídelhelyezés! Ellenőrizd a partot, a magasságot és a hosszt.");
+
+                _bridgeStartCoord = null;
+            }
+            return;
+        }
+
+        private void OnBuildModeSelectStation(Field field)
+        {
+            if (IsPausedView) return;
+            Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {field.Surface?.GetType().Name}");
+            if (field.Surface is Station clickedStation)
+            {
+                if (SelectedVehicle != null)
+                {
+                    var v = SelectedVehicle.GetVehicle;
+                    if (v != null)
+                    {
+                        Debug.WriteLine("Station megvan, küldöm a modellnek!");
+                        GameModel.AddStopToVehicle(v, clickedStation);
+                    }
+                }
+                CurrentBuildMode = BuildMode.NONE;
+            }
+        }
+
+        public ObservableCollection<Route> SavedRoutes => GameModel.WorldInstance.SavedRoutes;
 
         private Route? _selectedSavedRoute;
         public Route? SelectedSavedRoute
@@ -234,24 +261,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand CreateGlobalRouteCommand { get; private set; }
         public DelegateCommand EditGlobalRouteCommand { get; private set; }
 
-        private void OnBuildModeSelectStation(Field field)
-        {
-            if (IsPausedView) return;
-            Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {field.Surface?.GetType().Name}");
-            if (field.Surface is Station clickedStation)
-            {
-                if (SelectedVehicle != null)
-                {
-                    var v = SelectedVehicle.GetVehicle;
-                    if (v != null)
-                    {
-                        Debug.WriteLine("Station megvan, küldöm a modellnek!");
-                        GameModel.AddStopToVehicle(v, clickedStation);
-                    }
-                }
-                CurrentBuildMode = BuildMode.NONE;
-            }
-        }
+
         #endregion
 
         #region Minimap
@@ -479,7 +489,7 @@ namespace VolcanicTransport_WPF.ViewModel
                     newVehicle.AssignNewRoute(chosenRoute);
                     newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
 
-                    List<Road> path = new List<Road>();
+                    List<Road> path = [];
                     if (secondStation != null)
                     {
                         var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
@@ -488,7 +498,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
                         if (startNode != null && endNode != null)
                         {
-                            path = Pathfinder.FindPath(startNode, endNode) ?? new List<Road>();
+                            path = Pathfinder.FindPath(startNode, endNode) ?? [];
                         }
                     }
 
@@ -591,7 +601,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 LoadedChunks.Clear();
                 ChunkMap.Clear();
                 
-                Initialise();
+                InitialiseNewGame();
 
                 GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
                 {
@@ -618,12 +628,12 @@ namespace VolcanicTransport_WPF.ViewModel
                 }
             });
 
+            SaveGameCommand = new DelegateCommand(_ => SaveGameRequested?.Invoke(this, EventArgs.Empty));
+            LoadGameCommand = new DelegateCommand(_ => LoadGameRequested?.Invoke(this, EventArgs.Empty));
         }
 
-        public void Initialise()
+        private void InitialiseAfter()
         {
-            GameModel.Initialise(GameSettings.DefaultWorldSize, new Random().Next());
-
             GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
             {
                 ChunkViewModel chunkViewModel = new(c);
@@ -675,6 +685,34 @@ namespace VolcanicTransport_WPF.ViewModel
             StartGameLoop();
         }
 
+        public void InitialiseNewGame()
+        {
+            GameModel.InitialiseNewGame(GameSettings.DefaultWorldSize, new Random().Next());
+            InitialiseAfter();
+        }
+
+        public void InitialiseLodedGame(string fileName)
+        {
+            GameModel.InitialiseLoadedGame(fileName);
+
+            VehicleViewModels.Clear();
+            foreach (var vehicle in GameModel.WorldInstance.Vehicles)
+                VehicleViewModels.Add(new VehicleViewModel(vehicle));
+
+            if (VehicleViewModels.Count > 0)
+                SelectedVehicle = VehicleViewModels[0];
+
+            OnPropertyChanged(nameof(VehicleViewModels));
+            InitialiseAfter();
+            OnSetTimescale0X();
+            IsPausedView = true;
+        }
+
+        public void SaveGame(string fileName)
+        {
+            GameModel.Instance.SaveGame(fileName);
+        }
+
         #region BuildMode
         private BuildMode currentBuildMode = BuildMode.NONE;
         public BuildMode CurrentBuildMode
@@ -702,6 +740,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
+        public bool IsBuildModeEditGlobalRoute => CurrentBuildMode == BuildMode.EDIT_GLOBAL_ROUTE;
 
         private void OnSetBuildMode(BuildMode mode)
         {

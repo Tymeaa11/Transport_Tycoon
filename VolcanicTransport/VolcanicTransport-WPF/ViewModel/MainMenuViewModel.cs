@@ -11,6 +11,7 @@
         #region Events
         public event EventHandler? NewGameRequested;
         public event EventHandler? ExitRequested;
+        public event EventHandler? LoadGameRequested;
         #endregion
 
         public MainMenuViewModel()
@@ -27,7 +28,7 @@
 
         private void OnLoadGame()
         {
-            // Majd ide jön a betöltés logikája
+            LoadGameRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnExit()

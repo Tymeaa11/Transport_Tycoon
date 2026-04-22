@@ -1,25 +1,48 @@
 using System.Text;
+using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public class CityStation(City city, Coordinate coordinate, string name) 
-        : Station(
-            coordinate, 
-            name, 
-            new ProductBuffer(ProductType.HUMAN, 50), 
-            new Product(ProductType.HUMAN, 0, 50, 5)
-        )
-        , IInspectable
+    public class CityStation : Station, IInspectable, IContainsReference
     {
-        private readonly City _city = city;
+        #region Fields
+        public string CityName {get; private set;}
 
-        public List<ProductType> GetCityProductNeeds => _city.ProductTypes;
+        [JsonIgnore]
+        private City? _city;
 
+        [JsonIgnore]
+        public List<ProductType> GetCityProductNeeds => _city!.ProductTypes;
+        #endregion
+
+        #region Constructors
+        public CityStation(City city, Coordinate coordinate, string stationName) :
+            base(
+                coordinate,
+                stationName,
+                new ProductBuffer(ProductType.HUMAN, 50),
+                new Product(ProductType.HUMAN, 0, 50, 5)
+            )
+        {
+            _city = city;
+            CityName = city.Name;
+        }
+
+        [JsonConstructor]
+        public CityStation(string cityName, Coordinate coordinate, string stationName, ProductBuffer passengerBuffer, Product passengerDemand, double passengerAccumulator)
+            : base(coordinate, stationName, passengerBuffer, passengerDemand, passengerAccumulator)
+        {
+            CityName = cityName;
+        }
+        #endregion
+
+        #region Methods
         public override int UnLoadProductFromVehicle(Vehicle vehicle)
         {
-            if (vehicle == null || !_city.IsProductNeeded(vehicle.CurrentType))
+            if (vehicle == null || !_city!.IsProductNeeded(vehicle.CurrentType))
             {
                 return 0;
             }
@@ -34,7 +57,7 @@ namespace VolcanicTransport.Model.World.Economy
         {
             var info = new StringBuilder();
 
-            info.AppendLine($"City Station: {Name}");
+            info.AppendLine($"City Station: {StationName}");
             info.AppendLine("Product needs:");
 
             foreach (ProductType pt in GetCityProductNeeds)
@@ -44,5 +67,16 @@ namespace VolcanicTransport.Model.World.Economy
 
             return info.ToString();
         }
+
+        public void RestoreReference(Coordinate coordinate)
+        {
+            var targets = World.Instance.Cities.Where(c => c.Name == CityName).ToList();
+
+            if (targets.Count != 1)
+                throw new LoadingException();
+
+            _city = targets[0];
+        }
+        #endregion
     }
 }
