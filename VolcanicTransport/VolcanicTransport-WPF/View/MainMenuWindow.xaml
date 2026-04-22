@@ -36,8 +36,7 @@
 
             <Button Content="Load Game" 
                     Command="{Binding LoadGameCommand}" 
-                    Margin="0,0,0,15" Padding="10" FontSize="16"
-                    ToolTip="Még nem elérhető"/>
+                    Margin="0,0,0,15" Padding="10" FontSize="16"/>
 
             <Button Content="Exit" 
                     Command="{Binding ExitCommand}" 
