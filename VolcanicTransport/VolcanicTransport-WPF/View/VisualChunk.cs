@@ -1,7 +1,9 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VolcanicTransport.Model;
+using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport_WPF.ViewModel;
@@ -106,6 +108,10 @@ namespace VolcanicTransport_WPF.View
                     // Draw Surface
                     if (f.Surface != null)
                     {
+                        int globalX = chunkData.Coordinate.X * GameSettings.ChunkSize + x;
+                        int globalY = chunkData.Coordinate.Y * GameSettings.ChunkSize + y;
+                        Coordinate globalCoord = new(globalX, globalY);
+
                         ImageWithRotation imageWithRotation = f.Surface switch
                         {
                             Mushroom m => RenderMushroom(m),
@@ -114,7 +120,7 @@ namespace VolcanicTransport_WPF.View
                             SteelBridge r => RenderSteelBridge(r),
                             Station s => RenderStation(),
                             Road r => RenderRoad(r),
-                            FactoryBuilding => RenderFactoryBuilding(),
+                            FactoryBuilding => RenderFactoryBuilding(globalCoord),
                             CityBuilding => RenderCityBuilding(),
                             _ => RenderInvalid()
                         };
@@ -153,10 +159,25 @@ namespace VolcanicTransport_WPF.View
             => TextureAtlas.RoadTextures[r.RoadType];
         private ImageWithRotation RenderCityBuilding()
             => new(TextureAtlas.CityBuildingTexture, 0);
-        private ImageWithRotation RenderFactoryBuilding()
-            => new(TextureAtlas.FactoryBuildingTexture, 0);
         private ImageWithRotation RenderStation()
             => new(TextureAtlas.StationTexture, 0);
+
+        private ImageWithRotation RenderFactoryBuilding(Coordinate coord)
+        {
+            bool isLeft = true;
+            bool isTop = true;
+
+            var leftField = GameModel.WorldInstance.GetField(new Coordinate(coord.X - 1, coord.Y));
+            if (leftField?.Surface is FactoryBuilding) isLeft = false;
+
+            var topField = GameModel.WorldInstance.GetField(new Coordinate(coord.X, coord.Y - 1));
+            if (topField?.Surface is FactoryBuilding) isTop = false;
+
+            int tileX = isLeft ? 0 : 1;
+            int tileY = isTop ? 0 : 1;
+
+            return new ImageWithRotation(TextureAtlas.FactoryBuildingTextures[tileX, tileY], 0);
+        }
         #endregion
 
     }

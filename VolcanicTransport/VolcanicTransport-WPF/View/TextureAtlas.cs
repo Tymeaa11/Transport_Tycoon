@@ -14,9 +14,7 @@ namespace VolcanicTransport_WPF.View
         public static ImageSource CityBuildingTexture
             => cityBuildingTexture ?? throw new TextureAtlasNotInitialisedException();
 
-        private static ImageSource? factoryBuildingTexture;
-        public static ImageSource FactoryBuildingTexture
-            => factoryBuildingTexture ?? throw new TextureAtlasNotInitialisedException();
+        public static ImageSource[,] FactoryBuildingTextures { get; private set; } = new ImageSource[2, 2];
 
         private static ImageSource? stationTexture;
         public static ImageSource StationTexture
@@ -53,12 +51,16 @@ namespace VolcanicTransport_WPF.View
                 GetTile(atlas, 0, 1),
                 GetTile(atlas, 0, 2),
                 GetTile(atlas, 0, 3)
-                ];
+            ];
 
             cityBuildingTexture = GetTile(atlas, 0, 4);
-            factoryBuildingTexture = GetTile(atlas, 0, 5);
             stationTexture = GetTile(atlas, 0, 6);
 
+            BitmapImage factAtlas = new(new Uri("Assets/fact.png", UriKind.RelativeOrAbsolute));
+            FactoryBuildingTextures[0, 0] = GetTile(factAtlas, 0, 0);
+            FactoryBuildingTextures[1, 0] = GetTile(factAtlas, 0, 1);
+            FactoryBuildingTextures[0, 1] = GetTile(factAtlas, 1, 0);
+            FactoryBuildingTextures[1, 1] = GetTile(factAtlas, 1, 1);
 
             var straight =  GetTile(atlas, 1, 0);
             var curved =    GetTile(atlas, 1, 1);
@@ -122,7 +124,7 @@ namespace VolcanicTransport_WPF.View
         private const int TextureSize = 32;
         private static ImageSource GetTile(BitmapSource atlas, int row, int col)
             => new CroppedBitmap(
-                atlas, 
+                atlas,
                 new Int32Rect(col * TextureSize, row * TextureSize, TextureSize, TextureSize)
             );
     }

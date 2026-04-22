@@ -82,7 +82,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!-- magic suspected here -->
-                    <Rectangle Width="24" Height="12" Fill="Red" Stroke="White" StrokeThickness="1" 
+                    <Rectangle Width="18" Height="9" Fill="Red" Stroke="White" StrokeThickness="1" 
            RadiusX="2" RadiusY="2">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
