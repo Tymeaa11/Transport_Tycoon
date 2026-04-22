@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -29,7 +30,7 @@ namespace VolcanicTransport.Model
             double PlayerMoney,
             List<City> Cities,
             List<Factory> Factories,
-            List<Vehicle> Vehicles,
+            ObservableCollection<Vehicle> Vehicles,
             List<SurfaceEntry> Surfaces);
         #endregion
 
@@ -178,8 +179,6 @@ namespace VolcanicTransport.Model
                         _ => field.Surface
                     };
                         
-                    if (field.Surface is Road r) 
-                        r.RoadLayoutChanged += GameModel.OnRoadBecameJunction;
                 })
             );
         }

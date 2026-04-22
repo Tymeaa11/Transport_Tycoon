@@ -19,7 +19,10 @@ namespace VolcanicTransport_WPF.ViewModel
         public static GameModel GameModelInstance { get => GameModel.Instance; }
         public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
+        public int MinimapBorderSize => GameSettings.WorldSizeInFields + 20; //used to size minimap border
+        public int MinimapSize => GameSettings.WorldSizeInFields; //used to size minimap
         public Camera Camera { get; }
+        public CameraToMinimap MinimapSelector { get; }
         public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
 
 
@@ -157,10 +160,6 @@ namespace VolcanicTransport_WPF.ViewModel
                     OnBuildModeSelectStation(field);
                     break;
 
-                case BuildMode.BUY_VEHICLE:
-                    OnBuildModeBuyVehicle(field);
-                    break;
-
                 case BuildMode.ROAD:
                     if (field.IsBuildable()) 
                         GameModelInstance.PlaceRoad(coord);
@@ -177,6 +176,13 @@ namespace VolcanicTransport_WPF.ViewModel
 
                 case BuildMode.LOWER:
                     GameModelInstance.LowerField(coord);
+                    break;
+                case BuildMode.EDIT_GLOBAL_ROUTE:
+                    if (field.Surface is Station clickedGlobalStation && SelectedSavedRoute != null)
+                    {
+                        SelectedSavedRoute.AddStop(clickedGlobalStation);
+                        System.Diagnostics.Debug.WriteLine($"Állomás hozzáadva a {SelectedSavedRoute.Name} járathoz!");
+                    }
                     break;
 
                 case BuildMode.BRIDGE:
@@ -225,100 +231,46 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        private void OnBuildModeBuyVehicle(Field field)
+        public ObservableCollection<Route> SavedRoutes => GameModelInstance.SavedRoutes;
+
+        private Route? _selectedSavedRoute;
+        public Route? SelectedSavedRoute
         {
-            if (IsPausedView) return;
-            if (field.Surface is Station clickedStation)
-            {
-                if (_firstSelectedStation == null)
-                {
-                    // 1. KATTINTÁS: Eltároljuk a start állomást
-                    _firstSelectedStation = clickedStation;
-                    Debug.WriteLine($"1. állomás rögzítve: {clickedStation.Coordinate}. Kattints a célra!");
-                }
-                else
-                {
-                    // 2. KATTINTÁS: Megvan a cél állomás
-                    Station secondSelectedStation = clickedStation;
-
-                    if (_firstSelectedStation == secondSelectedStation)
-                    {
-                        Debug.WriteLine("A cél nem lehet ugyanaz, mint a start!");
-                        return;
-                    }
-
-                    var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
-                    RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == _firstSelectedStation.Coordinate);
-                    RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondSelectedStation.Coordinate);
-
-                    if (startNode != null && endNode != null)
-                    {
-                        if (SelectedVehicle != null)
-                        {
-                            Vehicle v = SelectedVehicle.GetVehicle;
-
-                            var newRoute = new Route();
-                            newRoute.AddStop(_firstSelectedStation);
-                            newRoute.AddStop(secondSelectedStation);
-
-                            v.AssignNewRoute(newRoute);
-
-                            Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
-                        }
-                        else
-                        {
-                            List<Road>? path = Pathfinder.FindPath(startNode, endNode);
-
-                            if (path != null && path.Count > 0)
-                            {
-                                // TODO : Is this allowed in MVVM?
-                                var nameDialog = new VehicleNameWindow { Owner = Application.Current.MainWindow };
-
-                                if (nameDialog.ShowDialog() == true)
-                                {
-                                    string chosenName = nameDialog.VehicleName;
-                                    string? chosenType = nameDialog.SelectedType;
-
-                                    Vehicle newVehicle = chosenType switch
-                                    {
-                                        "CargoTruck" => new CargoTruck(chosenName),
-                                        "TankerTruck" => new TankerTruck(chosenName),
-                                        "MiniBus" => new MiniBus(chosenName),
-                                        _ => new Bus(chosenName)
-                                    };
-
-                                    var initialRoute = new Route();
-                                    initialRoute.AddStop(_firstSelectedStation);
-                                    initialRoute.AddStop(secondSelectedStation);
-                                    newVehicle.Route = initialRoute;
-                                    newVehicle.CurrentStopIndex = 1;
-
-                                    newVehicle.StartJourney(path, false, _firstSelectedStation);
-                                    GameModelInstance.BuyVehicle(newVehicle);
-                                    Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
-                                }
-                                else
-                                {
-                                    Debug.WriteLine("Vásárlás megszakítva.");
-                                }
-                            }
-                            else
-                            {
-                                Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
-                            }
-                        }
-
-                        _firstSelectedStation = null;
-                        CurrentBuildMode = BuildMode.NONE;
-                    }
-                }
-            }
-            else
-            {
-                Debug.WriteLine("Kérlek egy állomásra kattints!");
-            }
+            get => _selectedSavedRoute;
+            set { _selectedSavedRoute = value; OnPropertyChanged(); }
         }
 
+        private string _newRouteName = "Új Járat 1";
+        public string NewRouteName
+        {
+            get => _newRouteName;
+            set { _newRouteName = value; OnPropertyChanged(); }
+        }
+
+        public DelegateCommand SaveCurrentRouteCommand { get; private set; }
+        public DelegateCommand AssignSavedRouteCommand { get; private set; }
+
+        private bool _isTimetablePanelVisible = false;
+        public bool IsTimetablePanelVisible
+        {
+            get => _isTimetablePanelVisible;
+            set { _isTimetablePanelVisible = value; OnPropertyChanged(); }
+        }
+
+        public DelegateCommand ToggleTimetablePanelCommand { get; private set; }
+        public DelegateCommand CreateGlobalRouteCommand { get; private set; }
+        public DelegateCommand EditGlobalRouteCommand { get; private set; }
+
+
+        #endregion
+
+        #region Minimap
+        public void MinimapTeleport(Vector vector)
+        {
+            Debug.WriteLine($"Minimap clicked at: {vector.X}, {vector.Y}");
+            Camera.Position = -vector * GameSettings.FieldSize * Camera.Scale;
+
+        }
         #endregion
 
         #region Hovered field & Inspector
@@ -437,12 +389,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
             IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
         }
-       
-        
+
+
         #endregion
 
         #region Vehicles
-        public List<Vehicle> Vehicles => World.Instance.Vehicles;
+        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
 
         public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
 
@@ -479,6 +431,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public GameViewModel()
         {
             Camera = new Camera();
+            MinimapSelector = new CameraToMinimap(Camera);
             Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
             CurrentTimeScale = 1;
@@ -508,9 +461,60 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimeScale4Command = new DelegateCommand(_ => OnSetTimescale4X());
             BuyVehicleCommand = new DelegateCommand(_ =>
             {
-                SelectedVehicle = null;
-                _firstSelectedStation = null;
-                OnSetBuildMode(BuildMode.BUY_VEHICLE);
+                var nameDialog = new VehicleNameWindow(SavedRoutes) { Owner = Application.Current.MainWindow };
+
+                if (nameDialog.ShowDialog() == true)
+                {
+                    string chosenName = nameDialog.VehicleName;
+                    string? chosenType = nameDialog.SelectedType;
+                    Route? chosenRoute = nameDialog.SelectedRoute;
+
+                    if (chosenRoute == null || chosenRoute.Stops.Count < 2)
+                    {
+                        MessageBox.Show("Válaszd ki a kezdő járatot, amiben van legalább két megálló, hogy a jármű le tudjon spawnolni!", "Hiba", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    Station firstStation = chosenRoute.Stops[0];
+                    Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
+
+                    Vehicle newVehicle = chosenType switch
+                    {
+                        "CargoTruck" => new CargoTruck(chosenName),
+                        "TankerTruck" => new TankerTruck(chosenName),
+                        "MiniBus" => new MiniBus(chosenName),
+                        _ => new Bus(chosenName)
+                    };
+
+                    newVehicle.AssignNewRoute(chosenRoute);
+                    newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
+
+                    List<Road> path = [];
+                    if (secondStation != null)
+                    {
+                        var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
+                        RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == firstStation.Coordinate);
+                        RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondStation.Coordinate);
+
+                        if (startNode != null && endNode != null)
+                        {
+                            path = Pathfinder.FindPath(startNode, endNode) ?? [];
+                        }
+                    }
+
+                    if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
+                    {
+                        path.Insert(0, firstStation);
+                    }
+                    if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
+                    {
+                        path.Add(secondStation);
+                    }
+
+                    newVehicle.StartJourney(path, false, firstStation);
+                    GameModelInstance.BuyVehicle(newVehicle);
+                    System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                }
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
             ToggleVehiclePanelCommand = new DelegateCommand(_ =>
@@ -536,6 +540,62 @@ namespace VolcanicTransport_WPF.ViewModel
                     Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
                 }
             });
+            SaveCurrentRouteCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle != null && SelectedVehicle.GetVehicle.Route != null && SelectedVehicle.GetVehicle.Route.Stops.Count > 0)
+                {
+                    var currentRoute = SelectedVehicle.GetVehicle.Route;
+                    currentRoute.Name = NewRouteName;
+
+                    if (!SavedRoutes.Contains(currentRoute))
+                    {
+                        SavedRoutes.Add(currentRoute);
+                        Debug.WriteLine($"[Járat] '{currentRoute.Name}' elmentve a globális listába!");
+                    }
+
+                    NewRouteName = $"Új Járat {SavedRoutes.Count + 1}";
+                }
+            });
+
+            AssignSavedRouteCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle != null && SelectedSavedRoute != null)
+                {
+                    if (SelectedSavedRoute.Stops.Count < 2)
+                    {
+                        MessageBox.Show("Egy menetrendnek legalább 2 megállót kell tartalmaznia!", "Érvénytelen menetrend", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    SelectedVehicle.GetVehicle.AssignNewRoute(SelectedSavedRoute);
+                    Debug.WriteLine($"[Járat] A(z) '{SelectedVehicle.GetName}' megkapta a '{SelectedSavedRoute.Name}' menetrendet!");
+                }
+            });
+
+            ToggleTimetablePanelCommand = new DelegateCommand(_ =>
+            {
+                IsTimetablePanelVisible = !IsTimetablePanelVisible;
+                if (!IsTimetablePanelVisible && CurrentBuildMode == BuildMode.EDIT_GLOBAL_ROUTE)
+                    CurrentBuildMode = BuildMode.NONE;
+            });
+
+            CreateGlobalRouteCommand = new DelegateCommand(_ =>
+            {
+                var newRoute = new Route { Name = NewRouteName };
+                SavedRoutes.Add(newRoute);
+                SelectedSavedRoute = newRoute;
+                NewRouteName = $"Járat {SavedRoutes.Count + 1}";
+            });
+
+            EditGlobalRouteCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedSavedRoute != null)
+                {
+                    CurrentBuildMode = BuildMode.EDIT_GLOBAL_ROUTE;
+                    System.Diagnostics.Debug.WriteLine($"Szerkesztés indul: {SelectedSavedRoute.Name}. Kattints a megállókra!");
+                }
+            });
+
             ReGenerateWithRandomSeed = new DelegateCommand(_ =>
             {
                 LoadedChunks.Clear();
@@ -669,6 +729,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
+        public bool IsBuildModeEditGlobalRoute => CurrentBuildMode == BuildMode.EDIT_GLOBAL_ROUTE;
 
         private void OnSetBuildMode(BuildMode mode)
         {

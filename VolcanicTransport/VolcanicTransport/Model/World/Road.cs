@@ -11,17 +11,6 @@ namespace VolcanicTransport.Model.World
 
         #region Methods
 
-        public class FieldEventArgs(Coordinate coordinate) : EventArgs
-        {
-            public Coordinate Coordinate { get; } = coordinate;
-        }
-
-        public event EventHandler<FieldEventArgs>? RoadLayoutChanged;
-
-        protected virtual void OnRoadLayoutChanged(Coordinate coord)
-        {
-            RoadLayoutChanged?.Invoke(this, new FieldEventArgs(coord));
-        }
 
         private (bool hasRoad, int diff) GetNeighborInfo(Field? neighborField, RoadType expectedBridgeDir)
         {
@@ -105,11 +94,6 @@ namespace VolcanicTransport.Model.World
                     else
                         RoadType = baseType | RoadType.JUNCTION; 
                     break;
-            }
-
-            if (neighbourCount >= 3)
-            {
-                OnRoadLayoutChanged(Coordinate);
             }
 
         }

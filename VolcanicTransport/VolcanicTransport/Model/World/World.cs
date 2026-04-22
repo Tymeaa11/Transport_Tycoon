@@ -33,7 +33,7 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; } = [];
         public List<Factory> Factories { get; } = [];
         public List<Station> Stations { get; } = [];
-        public List<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
+        public ObservableCollection<Vehicle> Vehicles { get; } = [];
 
         public IWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
@@ -41,6 +41,8 @@ namespace VolcanicTransport.Model.World
         public event EventHandler<ChunkUpdatedEventArgs>? ChunkChanged;
 
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
+
+        public Roadnetwork.VehicleManager VehicleManager { get; } = new();
 
         #endregion
 

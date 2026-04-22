@@ -41,10 +41,6 @@ namespace VolcanicTransport_WPF.ViewModel
                         string prefix = (i == _vehicle.CurrentStopIndex && _vehicle.PendingRoute == null) ? "➔ " : "   ";
                         ScheduleList.Add($"{prefix}Állomás: {stop.Coordinate.X}, {stop.Coordinate.Y}");
                     }
-                    if (_vehicle.PendingRoute != null)
-                    {
-                        ScheduleList.Insert(0, "[FÜGGŐBEN - Érkezés után aktiválódik]");
-                    }
                 }
                 else
                 {

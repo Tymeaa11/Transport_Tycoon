@@ -4,17 +4,17 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand, double passengerAccumulator = 0) : KnowsNeighbour(coordinate)
+    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand, double passengerAccumulator = 0) : Road(coordinate)
     {
         #region Fields
         public string StationName { get; protected set; } = name;
         [JsonInclude]
-        protected ProductBuffer passangerBuffer = passangerBuffer;
+        protected ProductBuffer PassengerBuffer = passangerBuffer;
         [JsonInclude]
         protected Product PassengerDemand = passengerDemand;
-        public bool IsOccupied { get; protected set; }
         [JsonIgnore]
-        public int WaitingPassengers => passangerBuffer.CurrentLoad;
+        public int WaitingPassengers => PassengerBuffer.CurrentLoad;
+        public bool IsOccupied { get; set; } = false;
 
         [JsonInclude]
         private double _passengerAccumulator = passengerAccumulator;
@@ -28,10 +28,10 @@ namespace VolcanicTransport.Model.World.Economy
             if (_passengerAccumulator >= 1.0)
             {
                 int newPeople = (int)_passengerAccumulator;
-                int left = passangerBuffer.AddAmount(newPeople);
+                int left = PassengerBuffer.AddAmount(newPeople);
                 _passengerAccumulator -= left;
             }
-            return passangerBuffer.CurrentLoad;
+            return PassengerBuffer.CurrentLoad;
         }
         public int GetPricePerPassenger(float time)
         {
@@ -45,14 +45,14 @@ namespace VolcanicTransport.Model.World.Economy
                 return 0;
             }
 
-            var waitingPassengers = passangerBuffer.CurrentLoad;
+            var waitingPassengers = PassengerBuffer.CurrentLoad;
 
             if (waitingPassengers == 0)
             {
                 return 0;
             }
 
-            var taken = passangerBuffer.FillVehicle(vehicle);
+            var taken = PassengerBuffer.FillVehicle(vehicle);
 
             return taken;
         }
@@ -79,6 +79,11 @@ namespace VolcanicTransport.Model.World.Economy
             int actualUnloaded = vehicle.Unload(leavingCount);
 
             return actualUnloaded;
+        }
+
+        public override void Update()
+        {
+            base.Update();
         }
         #endregion
     }

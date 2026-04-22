@@ -11,6 +11,7 @@ public static class GameSettings
 
     #region World & WorldGeneration
     public const int FieldSize = 32; // should be divisible by 8
+    public const int MiniFieldSize = 4; // used for minimap
     public const int ChunkSize = 32; // should be even
 
     public const int DefaultWorldSize = 8;
@@ -20,6 +21,9 @@ public static class GameSettings
     public const int FieldSizeP8 = FieldSize / 8;
 
     public const int ChunkSizeInPixels = ChunkSize * FieldSize;
+    public const int MiniChunkSizeInPixels = ChunkSize * MiniFieldSize;
+
+    public const int WorldSizeInFields = DefaultWorldSize * ChunkSize;
 
     private static readonly Dictionary<FieldType, float> FieldTypeThickness = new()
     {
@@ -163,7 +167,7 @@ public static class GameSettings
 
     public static readonly VehicleData BusData = new(
         ProductTypes: [ProductType.HUMAN],
-        MaxSpeed: 60.0f,
+        MaxSpeed: 50.0f,
         Capacity: 50,
          Price: 4000
     );
@@ -195,7 +199,7 @@ public static class GameSettings
 
     #region GameplayConstants
 
-    public const int StartingMoney = 80_000;
+    public const int StartingMoney = 80_000_000;
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;
@@ -217,25 +221,25 @@ public static class GameSettings
 
     public static readonly BridgeData BoneBridge = new(
         Length: 5,
-        MaxSpeed: 40.0f,
+        MaxSpeed: 10.0f,
         Price: 100,
-        "Csonthíd (5 mező) - 40 km/h",
+        "Csonthíd (5 mező) - 10 km/h",
         0
     );
 
     public static readonly BridgeData StoneBridge = new(
         Length: 9,
-        MaxSpeed: 60.0f,
+        MaxSpeed: 15.0f,
         Price: 200,
-        "Kőhíd (9 mező) - 60 km/h",
+        "Kőhíd (9 mező) - 15 km/h",
         1
     );
 
     public static readonly BridgeData SteelBridge = new(
         Length: 13,
-        MaxSpeed: 80.0f,
+        MaxSpeed: 20.0f,
         Price: 300,
-        "Acélhíd (13 mező) - 80 km/h",
+        "Acélhíd (13 mező) - 20 km/h",
         2
     );
 

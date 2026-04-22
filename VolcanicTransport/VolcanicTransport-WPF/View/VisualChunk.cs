@@ -112,8 +112,8 @@ namespace VolcanicTransport_WPF.View
                             BoneBridge r => RenderBoneBridge(r),
                             StoneBridge r => RenderStoneBridge(r),
                             SteelBridge r => RenderSteelBridge(r),
-                            Road r => RenderRoad(r),
                             Station s => RenderStation(),
+                            Road r => RenderRoad(r),
                             FactoryBuilding => RenderFactoryBuilding(),
                             CityBuilding => RenderCityBuilding(),
                             _ => RenderInvalid()

@@ -27,6 +27,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 if (pos.HasValue)
                     CreateFactory(pos.Value);
             }
+            World.World.Instance.Roadnetwork.RebuildEdges();
         }
 
         private static Coordinate? FindValidLocation()
@@ -73,13 +74,13 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             newCity.AddField(fields[0]);
 
             fields[2].Surface = new CityBuilding(newCity);
-            newCity.AddField(fields[0]);
+            newCity.AddField(fields[2]);
 
             fields[6].Surface = new CityBuilding(newCity);
-            newCity.AddField(fields[0]);
+            newCity.AddField(fields[6]);
 
             fields[8].Surface = new CityBuilding(newCity);
-            newCity.AddField(fields[0]);
+            newCity.AddField(fields[8]);
 
             fields[1].Surface = new Road(center + Direction.North);
             fields[3].Surface = new Road(center + Direction.West);
@@ -93,11 +94,26 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 switch (f.Surface)
                 {
                     case Road r:
-                        r.RoadLayoutChanged += GameModel.OnRoadBecameJunction;
                         r.Update();
                         break;
                 }
             });
+
+            Coordinate[] roadCoords = {
+                center + Direction.North,
+                center + Direction.West,
+                center,
+                center + Direction.East,
+                center + Direction.South
+            };
+
+            foreach (var coord in roadCoords)
+            {
+                if (World.World.Instance.GetField(coord)?.Surface is Road r && r.RoadType.HasFlag(RoadType.JUNCTION))
+                {
+                    World.World.Instance.Roadnetwork.RegisterNodeIfNeeded(coord);
+                }
+            }
 
             World.World.Instance.Cities.Add(newCity);
         }
