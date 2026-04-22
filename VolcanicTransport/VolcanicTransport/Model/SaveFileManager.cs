@@ -59,6 +59,8 @@ namespace VolcanicTransport.Model
 
             RestoreSurfaceElements(surfaceData.Surfaces);
 
+            FinalizeRoadNetwork();
+
             return new ISaveFileManager.GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
         }
 
@@ -175,6 +177,9 @@ namespace VolcanicTransport.Model
 
                         _ => field.Surface
                     };
+                        
+                    if (field.Surface is Road r) 
+                        r.RoadLayoutChanged += GameModel.OnRoadBecameJunction;
                 })
             );
         }
@@ -219,17 +224,45 @@ namespace VolcanicTransport.Model
             {
                 var field = world.GetField(coordinate);
 
-                if (field is null || field.Surface is not null) throw new LoadingException();
+                if (field is null || field.Surface is not null) 
+                    throw new LoadingException();
 
                 field.Surface = surface;
 
-                if (surface is KnowsNeighbour knowsNeighbour) 
-                    knowsNeighbour.UpdateNeighbourReferences();
-
                 if (surface is IContainsReference hasReference)
                     hasReference.RestoreReference(coordinate);
-
             }
+
+            foreach (var (_, surface) in surfaces)
+                if (surface is KnowsNeighbour knowsNeighbour)
+                    knowsNeighbour.UpdateNeighbourReferences();
+        }
+
+        private static void FinalizeRoadNetwork()
+        {
+            var world = World.World.Instance;
+
+            // Update neighbor references
+            world.ChunkMatrix.ReadEach((_, _, chunk) =>
+                chunk.FieldMatrix.ReadEach((_, _, field) =>
+                {
+                    if (field.Surface is KnowsNeighbour kn)
+                        kn.UpdateNeighbourReferences();
+                })
+            );
+
+            // Calculate RoadTypes
+            world.ChunkMatrix.ReadEach((_, _, chunk) =>
+                chunk.FieldMatrix.ReadEach((_, _, field) =>
+                {
+                    if (field.Surface is Road road && field.Surface is not Bridge)
+                    {
+                        road.Update();
+                    }
+                })
+            );
+
+            world.Roadnetwork.RebuildEdges();
         }
 
         #endregion

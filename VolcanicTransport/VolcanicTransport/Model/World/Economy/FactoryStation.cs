@@ -41,8 +41,8 @@ namespace VolcanicTransport.Model.World.Economy
         }
 
         [JsonConstructor]
-        public FactoryStation(string factoryName, Coordinate coordinate, string stationName, ProductBuffer passangerBuffer, Product passengerDemand)
-            : base(coordinate, stationName, passangerBuffer, passengerDemand)
+        public FactoryStation(string factoryName, Coordinate coordinate, string stationName, ProductBuffer passangerBuffer, Product passengerDemand, double passengerAccumulator)
+            : base(coordinate, stationName, passangerBuffer, passengerDemand, passengerAccumulator)
         {
             FactoryName = factoryName;
         }
@@ -75,7 +75,7 @@ namespace VolcanicTransport.Model.World.Economy
 
             if (amountNeededForFactory == 0) { return 0; }
 
-            int provided = _factory.BaseProductBuffer.ReciveProduct(vehicle, amountNeededForFactory);
+            int provided = _factory.BaseProductBuffer.ReceiveProduct(vehicle, amountNeededForFactory);
 
             return provided;
         }

@@ -4,7 +4,7 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
+    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand, double passengerAccumulator = 0) : KnowsNeighbour(coordinate)
     {
         #region Fields
         public string StationName { get; protected set; } = name;
@@ -17,7 +17,7 @@ namespace VolcanicTransport.Model.World.Economy
         public int WaitingPassengers => passangerBuffer.CurrentLoad;
 
         [JsonInclude]
-        private double _passengerAccumulator = 0;
+        private double _passengerAccumulator = passengerAccumulator;
         #endregion
 
         #region Methods
