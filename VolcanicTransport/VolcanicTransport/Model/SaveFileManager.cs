@@ -58,6 +58,14 @@ namespace VolcanicTransport.Model
             world.Cities.AddRange(surfaceData.Cities);
             world.Factories.AddRange(surfaceData.Factories);
 
+            foreach (var vehicle in surfaceData.Vehicles)
+            {
+                world.AddVehicle(vehicle);
+                vehicle.RestoreReference(default);
+            }
+
+            
+
             RestoreSurfaceElements(surfaceData.Surfaces);
 
             FinalizeRoadNetwork();
@@ -76,6 +84,9 @@ namespace VolcanicTransport.Model
             {
                 SaveBinaryMap(writer);
             }
+
+            foreach (var vehicle in game.World.Vehicles)
+                vehicle.PrepareForSave();
 
             var surfaceEntry = archive.CreateEntry("surface.json");
             using var jsonStream = surfaceEntry.Open();

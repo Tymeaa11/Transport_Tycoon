@@ -498,8 +498,8 @@ namespace VolcanicTransport.Model
             var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 4);
 
             Station? newStation = null;
-            if (city != null) newStation = new CityStation(city, coord, "CityStation");
-            else if (factory != null) newStation = new FactoryStation(coord, "FactoryStation", factory);
+            if (city != null) newStation = new CityStation(city, coord, $"CityStation{coord}");
+            else if (factory != null) newStation = new FactoryStation(coord, $"FactoryStation{coord}", factory);
 
             if (newStation == null || !TryPurchase(stationCost)) return false;
 
