@@ -19,7 +19,6 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
-        public ObservableCollection<Route> SavedRoutes { get; } = [];
         public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;

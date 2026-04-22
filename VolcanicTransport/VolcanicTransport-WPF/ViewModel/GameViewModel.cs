@@ -231,7 +231,7 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        public ObservableCollection<Route> SavedRoutes => GameModelInstance.SavedRoutes;
+        public ObservableCollection<Route> SavedRoutes => GameModel.WorldInstance.SavedRoutes;
 
         private Route? _selectedSavedRoute;
         public Route? SelectedSavedRoute
@@ -694,6 +694,12 @@ namespace VolcanicTransport_WPF.ViewModel
         public void InitialiseLodedGame(string fileName)
         {
             GameModel.InitialiseLoadedGame(fileName);
+
+            VehicleViewModels.Clear();
+            foreach (var vehicle in GameModel.WorldInstance.Vehicles)
+                VehicleViewModels.Add(new VehicleViewModel(vehicle));
+
+
             InitialiseAfter();
         }
 

@@ -31,7 +31,9 @@ namespace VolcanicTransport.Model
             List<City> Cities,
             List<Factory> Factories,
             ObservableCollection<Vehicle> Vehicles,
-            List<SurfaceEntry> Surfaces);
+            ObservableCollection<Route> Routes,
+            List<SurfaceEntry> Surfaces
+        );
         #endregion
 
         public ISaveFileManager.GameData LoadGame(string filename)
@@ -60,12 +62,18 @@ namespace VolcanicTransport.Model
             
 
             RestoreSurfaceElements(surfaceData.Surfaces);
-
             FinalizeRoadNetwork();
+
+            foreach (var route in surfaceData.Routes)
+            {
+                route.RestoreReference();
+                world.SavedRoutes.Add(route);
+            }
 
             foreach (var vehicle in surfaceData.Vehicles)
             {
                 world.AddVehicle(vehicle);
+                world.VehicleManager.AddVehicle(vehicle);
                 vehicle.RestoreReference(default);
             }
 
@@ -88,6 +96,9 @@ namespace VolcanicTransport.Model
             foreach (var vehicle in game.World.Vehicles)
                 vehicle.PrepareForSave();
 
+            foreach (var r in game.World.SavedRoutes) 
+                r.PrepareForSave();
+
             var surfaceEntry = archive.CreateEntry("surface.json");
             using var jsonStream = surfaceEntry.Open();
             var saveData = new SurfaceSaveData(
@@ -99,6 +110,7 @@ namespace VolcanicTransport.Model
                 game.World.Cities,
                 game.World.Factories,
                 game.World.Vehicles,
+                game.World.SavedRoutes,
                 GetSurfaceElements()
             );
 
@@ -258,7 +270,6 @@ namespace VolcanicTransport.Model
         {
             var world = World.World.Instance;
 
-            // Update neighbor references
             world.ChunkMatrix.ReadEach((_, _, chunk) =>
                 chunk.FieldMatrix.ReadEach((_, _, field) =>
                 {
@@ -267,13 +278,13 @@ namespace VolcanicTransport.Model
                 })
             );
 
-            // Calculate RoadTypes
             world.ChunkMatrix.ReadEach((_, _, chunk) =>
                 chunk.FieldMatrix.ReadEach((_, _, field) =>
                 {
                     if (field.Surface is Road road && field.Surface is not Bridge)
                     {
                         road.Update();
+                        world.Roadnetwork.RegisterNodeIfNeeded(road.Coordinate);
                     }
                 })
             );

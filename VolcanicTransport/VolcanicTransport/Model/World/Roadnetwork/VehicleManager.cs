@@ -7,7 +7,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     {
         public ObservableCollection<Vehicle> Vehicles { get; } = [];
 
-        private readonly Dictionary<Coordinate, List<Vehicle>> _spatialGrid = new();
+        private readonly Dictionary<Coordinate, List<Vehicle>> _spatialGrid = [];
 
         public IReadOnlyList<Vehicle> GetVehiclesOnField(Coordinate coord)
         {
@@ -15,14 +15,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 return vehicles;
             }
-            return Array.Empty<Vehicle>();
+            return [];
         }
 
         public void RegisterVehicleOnField(Vehicle vehicle, Coordinate coord)
         {
             if (!_spatialGrid.TryGetValue(coord, out var vehicles))
             {
-                vehicles = new List<Vehicle>();
+                vehicles = [];
                 _spatialGrid[coord] = vehicles;
             }
             if (!vehicles.Contains(vehicle))

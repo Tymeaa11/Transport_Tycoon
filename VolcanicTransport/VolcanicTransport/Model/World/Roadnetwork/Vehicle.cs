@@ -32,7 +32,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public List<Coordinate>? SavedPathCoordinates { get; set; }
 
         [JsonInclude]
-        public List<string>? SavedRouteStationNames { get; set; }
+        public string? RouteName { get; set; }
 
         [JsonInclude] public double WaitTimer => waitTimer;
         [JsonInclude] public int CurrentPathIndex => currentPathIndex;
@@ -604,14 +604,9 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         {
             var world = World.Instance;
 
-            if (SavedRouteStationNames != null)
+            if (!string.IsNullOrEmpty(RouteName))
             {
-                Route = new Route();
-                foreach (var name in SavedRouteStationNames)
-                {
-                    var station = world.Stations.FirstOrDefault(s => s.StationName == name);
-                    if (station != null) Route.AddStop(station);
-                }
+                Route = world.SavedRoutes.FirstOrDefault(r => r.Name == RouteName);
             }
 
             if (SavedPathCoordinates != null)
@@ -636,15 +631,15 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 world.VehicleManager.RegisterVehicleOnField(this, CurrentRoad.Coordinate);
             }
 
+
+
             LoadWaypointsForField();
         }
 
         public void PrepareForSave()
         {
             SavedPathCoordinates = [.. currentPath.Select(r => r.Coordinate)];
-
-            if (Route != null)
-                SavedRouteStationNames = [.. Route.Stops.Select(s => s.StationName)];
+            RouteName = Route?.Name;
         }
 
         public class VehicleArrivedEventArgs(Vehicle vehicle, Station station) : EventArgs
