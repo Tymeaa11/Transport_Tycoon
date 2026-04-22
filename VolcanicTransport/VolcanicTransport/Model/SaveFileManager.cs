@@ -57,6 +57,11 @@ namespace VolcanicTransport.Model
 
             world.Cities.AddRange(surfaceData.Cities);
             world.Factories.AddRange(surfaceData.Factories);
+            
+
+            RestoreSurfaceElements(surfaceData.Surfaces);
+
+            FinalizeRoadNetwork();
 
             foreach (var vehicle in surfaceData.Vehicles)
             {
@@ -64,11 +69,6 @@ namespace VolcanicTransport.Model
                 vehicle.RestoreReference(default);
             }
 
-            
-
-            RestoreSurfaceElements(surfaceData.Surfaces);
-
-            FinalizeRoadNetwork();
 
             return new ISaveFileManager.GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
         }
@@ -244,6 +244,9 @@ namespace VolcanicTransport.Model
 
                 if (surface is IContainsReference hasReference)
                     hasReference.RestoreReference(coordinate);
+
+                if (surface is Station station)
+                    world.Stations.Add(station);
             }
 
             foreach (var (_, surface) in surfaces)

@@ -9,14 +9,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     [JsonDerivedType(typeof(MiniBus), "mini_bus")]
     [JsonDerivedType(typeof(TankerTruck), "tanker_truck")]
     [JsonDerivedType(typeof(CargoTruck), "cargo_truck")]
-    public abstract class Vehicle : IContainsReference
+    public abstract class Vehicle(string name, GameSettings.VehicleData vehicleData) : IContainsReference
     {
-        public Vehicle(string name, GameSettings.VehicleData vehicleData)
-        {
-            Name = name;
-            this.vehicleData = vehicleData;
-        }
-
         protected Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType currentType,
                     int currentLoad, int currentStopIndex, VehicleState state, float posX, float posY,
                     float angle, PathDirection currentEntry, PathDirection currentExit,
@@ -56,7 +50,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
 
         [JsonIgnore]
-        private readonly GameSettings.VehicleData vehicleData;
+        private readonly GameSettings.VehicleData vehicleData = vehicleData;
 
         [JsonIgnore]
         public List<ProductType> AllType => vehicleData.ProductTypes;
@@ -74,7 +68,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         protected int MaintenanceCost => (int)(Price * 0.05);
 
 
-        public string Name { get; }
+        public string Name { get; } = name;
         public ProductType CurrentType { get; protected set; } = ProductType.NONE;
 
         [JsonIgnore]
@@ -341,8 +335,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 {
                     if (newPath.Last().Coordinate != targetStation.Coordinate)
                     {
-                        var destRoad = World.Instance.GetField(targetStation.Coordinate)?.Surface as Road;
-                        if (destRoad != null)
+                        if (World.Instance.GetField(targetStation.Coordinate)?.Surface is Road destRoad)
                         {
                             newPath.Add(destRoad);
                         }

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
@@ -18,7 +19,7 @@ namespace VolcanicTransport.Model
 
         #region Fields
 
-        public System.Collections.ObjectModel.ObservableCollection<Route> SavedRoutes { get; } = [];
+        public ObservableCollection<Route> SavedRoutes { get; } = [];
         public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
         public bool IsPaused { get; private set; }
         public double Time { get; private set; } = 0;
@@ -28,8 +29,6 @@ namespace VolcanicTransport.Model
 
         public event EventHandler? MoneyChanged;
         public event EventHandler? GameOver;
-        //public event EventHandler? NewGame;
-        //public event EventHandler? StationBought;
         public event EventHandler? RoadBought;
         public event EventHandler? VehicleBought;
         public event EventHandler? VehicleSold;
@@ -37,8 +36,6 @@ namespace VolcanicTransport.Model
         public event EventHandler? GamePaused;
         public event EventHandler? GameUnpaused;
         public event EventHandler? TimescaleChanged;
-        //public event EventHandler? FieldChanged;
-        //public event EventHandler? VehicleSelectedIndex;
         public event EventHandler? OnPlacementFailed;
 
         #endregion
@@ -252,13 +249,13 @@ namespace VolcanicTransport.Model
 
         private void CheckAndRegisterJunctions(Coordinate centerCoord)
         {
-            Coordinate[] coordsToCheck = {
+            Coordinate[] coordsToCheck = [
                 centerCoord,
-                new Coordinate(centerCoord.X, centerCoord.Y - 1), // Észak
-                new Coordinate(centerCoord.X, centerCoord.Y + 1), // Dél
-                new Coordinate(centerCoord.X + 1, centerCoord.Y), // Kelet
-                new Coordinate(centerCoord.X - 1, centerCoord.Y)  // Nyugat
-            };
+                new(centerCoord.X, centerCoord.Y - 1), // Észak
+                new(centerCoord.X, centerCoord.Y + 1), // Dél
+                new(centerCoord.X + 1, centerCoord.Y), // Kelet
+                new(centerCoord.X - 1, centerCoord.Y)  // Nyugat
+            ];
 
             foreach (var c in coordsToCheck)
             {
