@@ -547,7 +547,7 @@ namespace VolcanicTransport.Model
             v.TriggerRouteChanged();
         }
 
-        private void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
+        public void HandleVehicleArrived(object? sender, VehicleArrivedEventArgs e)
         {
             Debug.WriteLine($"[GameModel Üzleti Logika] {e.Vehicle.Name} megérkezett a(z) {e.Station.Coordinate} állomásra!");
 

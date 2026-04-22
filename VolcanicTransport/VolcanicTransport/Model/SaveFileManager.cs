@@ -75,6 +75,7 @@ namespace VolcanicTransport.Model
                 world.AddVehicle(vehicle);
                 world.VehicleManager.AddVehicle(vehicle);
                 vehicle.RestoreReference(default);
+                vehicle.ArrivedAtStation += GameModel.Instance.HandleVehicleArrived;
             }
 
 
