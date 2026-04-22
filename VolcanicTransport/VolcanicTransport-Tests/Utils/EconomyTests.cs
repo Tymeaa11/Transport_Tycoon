@@ -12,6 +12,7 @@ using VolcanicTransport.Model.World.Roadnetwork;
 namespace VolcanicTransport_Tests.Utils
 {
     [TestClass]
+    [DoNotParallelize]
     public class EconomyTests
     {
         public static World _world => World.Instance;

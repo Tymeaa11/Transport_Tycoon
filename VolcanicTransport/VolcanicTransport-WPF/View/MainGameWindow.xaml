@@ -350,7 +350,7 @@
                 Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
 
                 <Button Content="Load Game" Command="{Binding LoadGameCommand}"
-                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18"/>
+                Width="200" Padding="10" Margin="0,0,0,15" FontSize="18" Visibility="Collapsed"/>
 
                 <Button Content="Quit to Menu" Command="{Binding QuitToMainMenuCommand}"
                 Width="200" Padding="10" FontSize="18"/>

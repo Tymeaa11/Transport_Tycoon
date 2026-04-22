@@ -64,7 +64,7 @@ namespace VolcanicTransport.Model.World
             InitialiseWorld();
 
             Roadnetwork = new RoadNetworkGraph();
-
+            VehicleManager = new VehicleManager();
         }
 
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
