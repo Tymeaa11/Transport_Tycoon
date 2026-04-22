@@ -6,9 +6,9 @@ namespace VolcanicTransport.Model.World
 {
 
     [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-    [JsonDerivedType(typeof(AshProducer), "ash")]
-    [JsonDerivedType(typeof(BoneProducer), "bone")]
-    [JsonDerivedType(typeof(MushroomProducer), "mushroom")]
+    [JsonDerivedType(typeof(BoneBridge), "bone_bridge")]
+    [JsonDerivedType(typeof(StoneBridge), "stone_bridge")]
+    [JsonDerivedType(typeof(SteelBridge), "steel_bridge")]
     public abstract class Bridge(Coordinate coordinate, RoadType fixedType, FieldType elevation, GameSettings.BridgeData bridgeData) : Road(coordinate)
     {
         public override RoadType RoadType => fixedType;
