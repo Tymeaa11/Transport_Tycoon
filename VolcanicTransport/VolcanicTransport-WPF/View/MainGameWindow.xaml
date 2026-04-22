@@ -167,7 +167,7 @@
         </Border>
 
 
-        <Border VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" Margin="0,0,20,40" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Border Panel.ZIndex="200"  VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" Margin="0,0,20,40" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <StackPanel>
                 <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
 
