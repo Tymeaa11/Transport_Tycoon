@@ -8,6 +8,7 @@ using VolcanicTransport.Model.World.Economy;
 namespace VolcanicTransport_Tests.Utils
 {
     [TestClass]
+    [DoNotParallelize]
     public class WorldGenTests
     {
         public static World World => World.Instance;

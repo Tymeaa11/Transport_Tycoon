@@ -40,12 +40,12 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         [JsonInclude]
         public float PosX { 
             get => Position.X; 
-            private set => Position = new Vector2(value, Position.Y); 
+            set => Position = new Vector2(value, Position.Y); 
         }
         [JsonInclude]
         public float PosY { 
             get => Position.Y; 
-            private set => Position = new Vector2(Position.X, value); 
+            set => Position = new Vector2(Position.X, value); 
         }
 
 
@@ -85,7 +85,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public int CurrentStopIndex { get; set; } = 1;
 
         protected bool active = false;
-        public VehicleState State { get; protected set; } = VehicleState.Waiting;
+        public VehicleState State { get; set; } = VehicleState.Waiting;
 
         protected List<Road> currentPath = [];
         protected int currentPathIndex;
@@ -100,7 +100,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         [JsonIgnore]
         public Vector2 Position { get; protected set; }
-        public float Angle { get; protected set; }
+        public float Angle { get; set; }
 
         public PathDirection CurrentEntry { get; protected set; }
         public PathDirection CurrentExit { get; protected set; }
