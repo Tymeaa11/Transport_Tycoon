@@ -32,7 +32,7 @@ namespace VolcanicTransport.Model.World.Economy
         private readonly List<Field> _factoryFields = [];
 
         [JsonInclude]
-        private double _productionAccumulator = productionAccumulator;
+        private double productionAccumulator = productionAccumulator;
         #endregion
 
         #region Constructors
@@ -65,12 +65,12 @@ namespace VolcanicTransport.Model.World.Economy
 
             double currentProduction = GameSettings.BaseProductionRate * efficiency;
 
-            _productionAccumulator += deltaTime * currentProduction;
+            productionAccumulator += deltaTime * currentProduction;
 
 
-            if (_productionAccumulator >= 1.0)
+            if (productionAccumulator >= 1.0)
             {
-                int producedCount = (int)_productionAccumulator;
+                int producedCount = (int)productionAccumulator;
 
                 int actuallyStored = FinalProductBuffer.AddAmount(producedCount);
 
@@ -81,11 +81,11 @@ namespace VolcanicTransport.Model.World.Economy
                         BaseProductBuffer.DeductAmount(actuallyStored);
                     }
 
-                    _productionAccumulator -= actuallyStored;
+                    productionAccumulator -= actuallyStored;
                 }
                 else if (FinalProductBuffer.CurrentLoad >= FinalProductBuffer.MaxCapacity)
                 {
-                    _productionAccumulator = 0.99;
+                    productionAccumulator = 0.99;
                 }
             }
         }

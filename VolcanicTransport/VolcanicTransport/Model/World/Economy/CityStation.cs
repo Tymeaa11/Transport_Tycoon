@@ -32,8 +32,8 @@ namespace VolcanicTransport.Model.World.Economy
         }
 
         [JsonConstructor]
-        public CityStation(string cityName, Coordinate coordinate, string stationName, ProductBuffer passangerBuffer, Product passengerDemand, double passengerAccumulator)
-            : base(coordinate, stationName, passangerBuffer, passengerDemand, passengerAccumulator)
+        public CityStation(string cityName, Coordinate coordinate, string stationName, ProductBuffer passengerBuffer, Product passengerDemand, double passengerAccumulator)
+            : base(coordinate, stationName, passengerBuffer, passengerDemand, passengerAccumulator)
         {
             CityName = cityName;
         }

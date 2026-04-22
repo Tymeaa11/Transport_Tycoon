@@ -82,6 +82,8 @@ namespace VolcanicTransport.Model
             _mushroomGrowthTimer.Start();
         }
 
+        ~GameModel() { Dispose(); }
+
         public static GameModel Instance => _instance ?? throw new GameModelNotInitialisedException();
 
         public static void InitialiseNewGame(int worldSize, int seed)
@@ -153,7 +155,8 @@ namespace VolcanicTransport.Model
         }
         private void UpdateMushroomsOnTimer()
         {
-            UpdateAllMushrooms(0.1);
+            if(World.World.IsInitialised())
+                UpdateAllMushrooms(0.1);
         }
         public void Update(double deltaTime)
         {

@@ -31,6 +31,9 @@ namespace VolcanicTransport.Model.World
 
         public void UpdateNeighbourReferences()
         {
+            if (!World.IsInitialised()) 
+                return;
+
             North = World.Instance.GetField(Coordinate + Direction.North);
             South = World.Instance.GetField(Coordinate + Direction.South);
             East = World.Instance.GetField(Coordinate + Direction.East);

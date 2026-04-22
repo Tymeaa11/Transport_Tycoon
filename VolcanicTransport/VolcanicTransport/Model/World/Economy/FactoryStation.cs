@@ -41,8 +41,8 @@ namespace VolcanicTransport.Model.World.Economy
         }
 
         [JsonConstructor]
-        public FactoryStation(string factoryName, Coordinate coordinate, string stationName, ProductBuffer passangerBuffer, Product passengerDemand, double passengerAccumulator)
-            : base(coordinate, stationName, passangerBuffer, passengerDemand, passengerAccumulator)
+        public FactoryStation(string factoryName, Coordinate coordinate, string stationName, ProductBuffer passengerBuffer, Product passengerDemand, double passengerAccumulator)
+            : base(coordinate, stationName, passengerBuffer, passengerDemand, passengerAccumulator)
         {
             FactoryName = factoryName;
         }

@@ -67,7 +67,7 @@ namespace VolcanicTransport.Model.World
         }
 
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
-
+        public static bool IsInitialised() => _instance is not null;
         public static void Initialise(int worldSize, int seed)
             => _instance = new World(worldSize, seed);
         #endregion

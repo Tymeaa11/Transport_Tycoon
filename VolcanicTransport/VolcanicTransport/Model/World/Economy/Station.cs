@@ -17,19 +17,19 @@ namespace VolcanicTransport.Model.World.Economy
         public bool IsOccupied { get; set; } = false;
 
         [JsonInclude]
-        private double _passengerAccumulator = passengerAccumulator;
+        private double passengerAccumulator = passengerAccumulator;
         #endregion
 
         #region Methods
         public int GetWaitingPassengers(double deltaTime)
         {
-            _passengerAccumulator += deltaTime * GameSettings.PeopleGrowthRate;
+            passengerAccumulator += deltaTime * GameSettings.PeopleGrowthRate;
 
-            if (_passengerAccumulator >= 1.0)
+            if (passengerAccumulator >= 1.0)
             {
-                int newPeople = (int)_passengerAccumulator;
+                int newPeople = (int)passengerAccumulator;
                 int left = PassengerBuffer.AddAmount(newPeople);
-                _passengerAccumulator -= left;
+                passengerAccumulator -= left;
             }
             return PassengerBuffer.CurrentLoad;
         }

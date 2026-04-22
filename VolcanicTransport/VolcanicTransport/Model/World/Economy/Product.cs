@@ -3,18 +3,18 @@ using System.Text.Json.Serialization;
 namespace VolcanicTransport.Model.World.Economy
 {
     [method: JsonConstructor]
-    public class Product(ProductType productType, float minvalue, float maxvalue, float offset, float variability)
+    public class Product(ProductType productType, float minvalue, float maxvalue, float perlinOffset, float variability)
     {
         public static float GetRandomOffset() => World.Instance.SharedRandom.NextSingle() * 50_000 - 25_000;
-        public float NewRandomOffset() => _perlinOffset = GetRandomOffset();
+        public float NewRandomOffset() => PerlinOffset = GetRandomOffset();
 
         #region Fields
         [JsonInclude]
         public ProductType ProductType { get; } = productType;
 
         [JsonInclude]
-        private float _perlinOffset = offset;
-        private float Noise(float t) => World.Instance.SharedPerlin.Noise(t + _perlinOffset);
+        private float PerlinOffset = perlinOffset;
+        private float Noise(float t) => World.Instance.SharedPerlin.Noise(t + PerlinOffset);
 
         [JsonInclude]
         private float MinValue { get; } = minvalue;
@@ -29,7 +29,7 @@ namespace VolcanicTransport.Model.World.Economy
 
         #region Constructors
         public Product(Product other) :
-            this(other.ProductType, other.MinValue, other.MaxValue, other._perlinOffset, other.Variability)
+            this(other.ProductType, other.MinValue, other.MaxValue, other.PerlinOffset, other.Variability)
         { }
 
         public Product(ProductType productType, float minvalue, float maxvalue, float variability = 0.05f) :

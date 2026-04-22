@@ -109,49 +109,49 @@ public static class GameSettings
 
     public static readonly FactoryData AshProducerFactoryData = new(
         BaseProduct: ProductType.NONE,
-        FinalProduct: new Product(ProductType.ASH, 5, 20, 0.02f),
+        FinalProduct: new Product(ProductType.ASH, 5, 20, 0, 0.02f),
         BaseProductBufferCapacity: 0,
         FinalProductBufferCapacity: 5000
         );
 
     public static readonly FactoryData BoneProducerFactoryData = new(
         BaseProduct: ProductType.NONE,
-        FinalProduct: new Product(ProductType.BONE, 100, 200, 0.08f),
+        FinalProduct: new Product(ProductType.BONE, 100, 200, 0, 0.08f),
         BaseProductBufferCapacity: 0,
         FinalProductBufferCapacity: 5000
     );
 
     public static readonly FactoryData MushroomProducerFactoryData = new(
         BaseProduct: ProductType.NONE,
-        FinalProduct: new Product(ProductType.MUSHROOM, 50, 120, 0.15f),
+        FinalProduct: new Product(ProductType.MUSHROOM, 50, 120, 0, 0.15f),
         BaseProductBufferCapacity: 0,
         FinalProductBufferCapacity: 5000
     );
 
     public static readonly FactoryData SteamProducerFactoryData = new(
         BaseProduct: ProductType.NONE,
-        FinalProduct: new Product(ProductType.STEAM, 150, 250, 0.5f),
+        FinalProduct: new Product(ProductType.STEAM, 150, 250, 0, 0.5f),
         BaseProductBufferCapacity: 0,
         FinalProductBufferCapacity: 5000
     );
 
     public static readonly FactoryData SulfurProducerFactoryData = new(
         BaseProduct: ProductType.NONE,
-        FinalProduct: new Product(ProductType.SULFUR, 30, 60, 0.4f),
+        FinalProduct: new Product(ProductType.SULFUR, 30, 60, 0, 0.4f),
         BaseProductBufferCapacity: 0,
         FinalProductBufferCapacity: 5000
     );
 
     public static readonly FactoryData ConcreteFactoryData = new(
         BaseProduct: ProductType.ASH,
-        FinalProduct: new Product(ProductType.CONCRETE, 25, 400, 0.03f),
+        FinalProduct: new Product(ProductType.CONCRETE, 25, 400, 0, 0.03f),
         BaseProductBufferCapacity: 5000,
         FinalProductBufferCapacity: 5000
     );
 
     public static readonly FactoryData CondensatorFactoryData = new(
         BaseProduct: ProductType.STEAM,
-        FinalProduct: new Product(ProductType.WATER, 40, 80, 0.06f),
+        FinalProduct: new Product(ProductType.WATER, 40, 80, 0, 0.06f),
         BaseProductBufferCapacity: 5000,
         FinalProductBufferCapacity: 5000
     );
