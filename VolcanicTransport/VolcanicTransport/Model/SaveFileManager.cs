@@ -124,6 +124,7 @@ namespace VolcanicTransport.Model
                             data = (byte)(data | MushroomId | stage);
                             break;
 
+                        case Station:
                         case Bridge: break;
 
                         case Road road:
@@ -198,9 +199,11 @@ namespace VolcanicTransport.Model
 
                     switch (field.Surface)
                     {
+                        case Station:
                         case Bridge:
                             surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
                             break;
+                        
 
                         case Mushroom: // stored in binary data, skip
                         case Road:

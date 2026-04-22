@@ -12,8 +12,10 @@ namespace VolcanicTransport.Model.World
     public abstract class Bridge(Coordinate coordinate, RoadType fixedType, FieldType elevation, GameSettings.BridgeData bridgeData) : Road(coordinate)
     {
         public override RoadType RoadType => fixedType;
-        public float SpeedLimit => bridgeData.MaxSpeed;
         public FieldType Elevation { get; } = elevation;
+
+        [JsonIgnore]
+        public float SpeedLimit => bridgeData.MaxSpeed;
 
         public override void Update() {}
     }
