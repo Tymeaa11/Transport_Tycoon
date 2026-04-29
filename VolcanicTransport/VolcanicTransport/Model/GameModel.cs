@@ -191,15 +191,6 @@ namespace VolcanicTransport.Model
             return false;
         }
 
-        public void SellVehicle(Vehicle v)
-        {
-            if (!WorldInstance.HasVehicle(v)) return;
-
-            AddMoney(v.Price * 0.5);
-            WorldInstance.RemoveVehicle(v);
-            VehicleSold?.Invoke(this, EventArgs.Empty);
-        }
-
         public bool TryPurchase(double amount)
         {
             if (!(PlayerMoney >= amount)) return false;
@@ -214,9 +205,6 @@ namespace VolcanicTransport.Model
             PlayerMoney += amount;
             MoneyChanged?.Invoke(this, EventArgs.Empty);
         }
-
-        //public void SaveGame() => savefileManager?.Save(this);
-        //public void LoadGame() => savefileManager?.Load(this);
 
         private void HandleMonthlyExpenses()
         {

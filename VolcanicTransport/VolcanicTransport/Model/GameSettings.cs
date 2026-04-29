@@ -168,30 +168,44 @@ public static class GameSettings
     public static readonly VehicleData BusData = new(
         ProductTypes: [ProductType.HUMAN],
         MaxSpeed: 50.0f,
-        Capacity: 50,
-         Price: 4000
+        Capacity: 30,
+         Price: 6000
     );
 
     public static readonly VehicleData MiniBusData = new(
         ProductTypes: [ProductType.HUMAN],
-        MaxSpeed: 60.0f,
-        Capacity: 15,
-        Price: 6000
+        MaxSpeed: 80.0f,
+        Capacity: 12,
+        Price: 4000
     );
 
     public static readonly VehicleData TankerTruckData = new(
         ProductTypes: [ProductType.STEAM, ProductType.WATER, ProductType.CONCRETE],
         MaxSpeed: 60.0f,
-        Capacity: 800,
+        Capacity: 80,
         Price: 10000
     );
 
+    public static readonly VehicleData MiniTankerTruckData = new(
+    ProductTypes: [ProductType.STEAM, ProductType.WATER, ProductType.CONCRETE],
+    MaxSpeed: 70.0f,
+    Capacity: 40,
+    Price: 7000
+);
+
     public static readonly VehicleData CargoTruckData = new(
         ProductTypes: [ProductType.ASH, ProductType.SULFUR, ProductType.MUSHROOM, ProductType.BONE],
-        MaxSpeed: 70.0f,
-        Capacity: 900,
+        MaxSpeed: 65.0f,
+        Capacity: 80,
         Price: 11000
     );
+
+    public static readonly VehicleData MiniCargoTruckData = new(
+    ProductTypes: [ProductType.ASH, ProductType.SULFUR, ProductType.MUSHROOM, ProductType.BONE],
+    MaxSpeed: 75.0f,
+    Capacity: 40,
+    Price: 8000
+);
 
     #endregion
     #endregion
@@ -199,7 +213,7 @@ public static class GameSettings
 
     #region GameplayConstants
 
-    public const int StartingMoney = 80_000_000;
+    public const int StartingMoney = 100_000;
     public const double BaseRoadPrice = 100;
     public const double BaseStationPrice = 500;
     public const double BaseTerraformationPrice = 500;
