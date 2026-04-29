@@ -185,13 +185,13 @@ namespace VolcanicTransport_Tests.Utils
 
             int boarded = station.Boarding(miniBus);
 
-            Assert.AreEqual(people, boarded, "A minibuszra csak 15 ember férhet fel.");
-            Assert.AreEqual(people, miniBus.CurrentLoad, "A busznak tele kellene lennie.");
+            Assert.AreEqual(people, boarded, "A minibuszra csak 12 ember férhet fel.");
+            Assert.AreEqual(people, miniBus.CurrentLoad, "A buszra mindenkinek fel kellett volna férnie");
             Assert.AreEqual(ProductType.HUMAN, miniBus.CurrentType);
 
             people = station.GetWaitingPassengers(1000);
             boarded = station.Boarding(miniBus);
-            Assert.AreEqual(5, boarded, "A minibuszra csak 15 ember férhet fel.");
+            Assert.AreEqual(miniBus.Capacity-people, boarded, "A minibuszra csak 12 ember férhet fel.");
             Assert.AreEqual(miniBus.Capacity, miniBus.CurrentLoad, "A busznak tele kellene lennie.");
         }
 
