@@ -4,19 +4,23 @@ namespace VolcanicTransport.Model.Utils
 {
     public class NameSet
     {
-        public int loopNumber;
-        public HashSet<string> usable;
-        public HashSet<string> allNames;
+        public int LoopNumber { get => _loopNumber; set { _loopNumber = value; }}
+        public HashSet<string> Usable { get => _usable; set { _usable = value; } }
+        public HashSet<string> AllNames { get => _allNames; set { _allNames = value; } }
+
+        private int _loopNumber;
+        private HashSet<string> _usable;
+        private HashSet<string> _allNames;
         public NameSet(HashSet<string> names)
         {
-            allNames = names;
-            usable = new(allNames);
-            loopNumber = 1;
+            _allNames = names;
+            _usable = new(_allNames);
+            _loopNumber = 1;
         }
     }
     public class RandomNameGenerator
     {
-        private static Dictionary<Type, NameSet> names = new Dictionary<Type, NameSet>();
+        private static readonly Dictionary<Type, NameSet> names = new();
 
         public static void Reset()
         {
@@ -31,14 +35,14 @@ namespace VolcanicTransport.Model.Utils
         }
         public static string NewName(Type placeType, int randomness)
         {
-            if (names[placeType].usable.Count == 0)
+            if (names[placeType].Usable.Count == 0)
             {
-                names[placeType].usable = new(names[placeType].allNames);
-                names[placeType].loopNumber += 1;
+                names[placeType].Usable = new(names[placeType].AllNames);
+                names[placeType].LoopNumber += 1;
             }
-            string name = names[placeType].usable.ElementAt(randomness % names[placeType].usable.Count);
-            names[placeType].usable.Remove(name);
-            return name + (names[placeType].loopNumber > 1 ? " " + names[placeType].loopNumber.ToString() : "");
+            string name = names[placeType].Usable.ElementAt(randomness % names[placeType].Usable.Count);
+            names[placeType].Usable.Remove(name);
+            return name + (names[placeType].LoopNumber > 1 ? " " + names[placeType].LoopNumber.ToString() : "");
         }
     }
 }
