@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using VolcanicTransport.Model.World.Roadnetwork;
+using System.Windows.Media;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -8,6 +9,26 @@ namespace VolcanicTransport_WPF.ViewModel
         private readonly Vehicle _vehicle;
 
         public ObservableCollection<string> ScheduleList { get; } = [];
+
+        public Brush VehicleColor
+        {
+            get
+            {
+                return _vehicle switch
+                {
+                    MiniBus => Brushes.Khaki,
+                    Bus => Brushes.Gold,
+
+                    MiniTankerTruck => Brushes.LightSkyBlue,
+                    TankerTruck => Brushes.RoyalBlue,
+
+                    MiniCargoTruck => Brushes.LightGreen,
+                    CargoTruck => Brushes.ForestGreen,
+
+                    _ => Brushes.Gray
+                };
+            }
+        }
 
         public VehicleViewModel(Vehicle vehicle)
         {

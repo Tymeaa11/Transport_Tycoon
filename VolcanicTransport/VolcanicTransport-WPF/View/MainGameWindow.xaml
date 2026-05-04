@@ -82,7 +82,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!-- magic suspected here -->
-                    <Rectangle Width="18" Height="9" Fill="Red" Stroke="White" StrokeThickness="1" 
+                    <Rectangle Width="18" Height="9" Fill="{Binding VehicleColor}" Stroke="White" StrokeThickness="1" 
            RadiusX="2" RadiusY="2">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
@@ -237,7 +237,7 @@
                 </StackPanel.Resources>
 
                 <Button Content="Buy vehicle" 
-                      Command="{Binding BuyVehicleCommand}" />
+                      Command="{Binding OpenPurchasePanelCommand}" />
                 <ToggleButton Content="Road" 
                       Command="{Binding SetBuildModeRoadCommand}" 
                       IsChecked="{Binding IsBuildModeRoad, Mode=OneWay}">
@@ -355,6 +355,41 @@
                 <Button Content="Quit to Menu" Command="{Binding QuitToMainMenuCommand}"
                 Width="200" Padding="10" FontSize="18"/>
             </StackPanel>
+        </Grid>
+        <Grid Visibility="{Binding IsPurchasePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+      Background="#AA000000">
+            <Border Background="White" CornerRadius="10" 
+            Width="500" HorizontalAlignment="Center" VerticalAlignment="Center" 
+            Padding="20" BorderBrush="Gray" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="PURCHASE NEW VEHICLE" FontSize="18" FontWeight="Bold" 
+                       HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="Choose a type:" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <DataGrid ItemsSource="{Binding VehicleTemplates}" SelectedItem="{Binding SelectedVehicleTemplate}"
+                      AutoGenerateColumns="False" IsReadOnly="True" Height="150" Margin="0,0,0,15">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Type:" Binding="{Binding Name}" Width="100"/>
+                            <DataGridTextColumn Header="Price:" Binding="{Binding PriceDisplay}" Width="80"/>
+                            <DataGridTextColumn Header="Transportable cargo:" Binding="{Binding CargoDescription}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Text="Vehicle name:" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding NewVehicleName, UpdateSourceTrigger=PropertyChanged}" Height="25" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Initial route:" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding SavedRoutes}" SelectedItem="{Binding SelectedSavedRoute}"
+                      DisplayMemberPath="Name" Height="25" Margin="0,0,0,20"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Cancel" Command="{Binding ClosePurchasePanelCommand}" 
+                        Width="80" Margin="0,0,10,0" Padding="5"/>
+                        <Button Content="Buy" Command="{Binding ConfirmPurchaseCommand}" 
+                        Background="LightGreen" FontWeight="Bold" Width="100" Padding="5"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </Window>

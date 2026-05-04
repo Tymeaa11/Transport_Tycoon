@@ -129,10 +129,13 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand ResumeCommand { get; private set; }
         public DelegateCommand QuitToMainMenuCommand { get; private set; }
         public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
-        public DelegateCommand BuyVehicleCommand { get; private set; }
+        public DelegateCommand OpenPurchasePanelCommand { get; private set; }
+        public DelegateCommand ClosePurchasePanelCommand { get; private set; }
+        public DelegateCommand ConfirmPurchaseCommand { get; private set; }
         public DelegateCommand AddStopCommand { get; }
         public DelegateCommand SaveGameCommand {  get; private set; }
         public DelegateCommand LoadGameCommand {  get; private set; }
+        public DelegateCommand ToggleVehiclePanelCommand { get; private set; }
         #endregion
 
         #region FieldClicked
@@ -411,6 +414,36 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged(nameof(IsVehiclePanelVisible));
             }
         }
+        private bool _isPurchasePanelVisible;
+        public bool IsPurchasePanelVisible
+        {
+            get => _isPurchasePanelVisible;
+            set { _isPurchasePanelVisible = value; OnPropertyChanged(); }
+        }
+
+        private VehicleTemplate? _selectedVehicleTemplate;
+        public VehicleTemplate? SelectedVehicleTemplate
+        {
+            get => _selectedVehicleTemplate;
+            set { _selectedVehicleTemplate = value; OnPropertyChanged(); }
+        }
+
+        private string _newVehicleName = "New Vehicle";
+        public string NewVehicleName
+        {
+            get => _newVehicleName;
+            set { _newVehicleName = value; OnPropertyChanged(); }
+        }
+
+        public List<VehicleTemplate> VehicleTemplates { get; } = new()
+        {
+            new() { Name = "Bus", Price = 6000, CargoDescription = "Passengers", InternalType = "Bus" },
+            new() { Name = "Mini Bus", Price = 4000, CargoDescription = "Passengers", InternalType = "MiniBus" },
+            new() { Name = "Cargo Truck", Price = 11000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "CargoTruck" },
+            new() { Name = "Mini Cargo", Price = 8000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "MiniCargoTruck" },
+            new() { Name = "Tanker Truck", Price = 10000, CargoDescription = "Steam, Water, Concrete", InternalType = "TankerTruck" },
+            new() { Name = "Mini Tanker", Price = 7000, CargoDescription = "Steam, Water, Concrete", InternalType = "MiniTankerTruck" }
+        };
 
         private double _accumulator = 0;
         private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
@@ -421,8 +454,6 @@ namespace VolcanicTransport_WPF.ViewModel
             get => _isVehiclePanelVisible;
             set { _isVehiclePanelVisible = value; OnPropertyChanged(); }
         }
-
-        public DelegateCommand ToggleVehiclePanelCommand { get; private set; }
 
         #endregion
 
@@ -459,67 +490,81 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimeScale1Command = new DelegateCommand(_ => OnSetTimescale1X());
             SetTimeScale2Command = new DelegateCommand(_ => OnSetTimescale2X());
             SetTimeScale4Command = new DelegateCommand(_ => OnSetTimescale4X());
-            BuyVehicleCommand = new DelegateCommand(_ =>
+            
+            OpenPurchasePanelCommand = new DelegateCommand(_ =>
             {
-                var nameDialog = new VehicleNameWindow(SavedRoutes) { Owner = Application.Current.MainWindow };
+                IsPurchasePanelVisible = true;
+                NewVehicleName = $"Vehicle {Vehicles.Count + 1}";
+            });
 
-                if (nameDialog.ShowDialog() == true)
+            ClosePurchasePanelCommand = new DelegateCommand(_ => IsPurchasePanelVisible = false);
+
+            ConfirmPurchaseCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicleTemplate == null || SelectedSavedRoute == null || SelectedSavedRoute.Stops.Count < 2)
                 {
-                    string chosenName = nameDialog.VehicleName;
-                    string? chosenType = nameDialog.SelectedType;
-                    Route? chosenRoute = nameDialog.SelectedRoute;
-
-                    if (chosenRoute == null || chosenRoute.Stops.Count < 2)
-                    {
-                        MessageBox.Show("Válaszd ki a kezdő járatot, amiben van legalább két megálló, hogy a jármű le tudjon spawnolni!", "Hiba", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    Station firstStation = chosenRoute.Stops[0];
-                    Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
-
-                    Vehicle newVehicle = chosenType switch
-                    {
-                        "CargoTruck" => new CargoTruck(chosenName),
-                        "TankerTruck" => new TankerTruck(chosenName),
-                        "MiniBus" => new MiniBus(chosenName),
-                        _ => new Bus(chosenName)
-                    };
-
-                    newVehicle.AssignNewRoute(chosenRoute);
-                    newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
-
-                    List<Road> path = [];
-                    if (secondStation != null)
-                    {
-                        var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
-                        RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == firstStation.Coordinate);
-                        RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondStation.Coordinate);
-
-                        if (startNode != null && endNode != null)
-                        {
-                            path = Pathfinder.FindPath(startNode, endNode) ?? [];
-                        }
-                    }
-
-                    if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
-                    {
-                        path.Insert(0, firstStation);
-                    }
-                    if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
-                    {
-                        path.Add(secondStation);
-                    }
-
-                    newVehicle.StartJourney(path, false, firstStation);
-                    GameModelInstance.BuyVehicle(newVehicle);
-                    System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                    MessageBox.Show("Please select a vehicle type and a route with at least 2 stops to allow the vehicle to spawn!",
+                                    "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
+
+                string chosenName = NewVehicleName;
+                string? chosenType = SelectedVehicleTemplate.InternalType;
+                Route? chosenRoute = SelectedSavedRoute;
+
+                Station firstStation = chosenRoute.Stops[0];
+                Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
+
+                Vehicle newVehicle = chosenType switch
+                {
+                    "CargoTruck" => new CargoTruck(chosenName),
+                    "MiniCargoTruck" => new MiniCargoTruck(chosenName),
+                    "TankerTruck" => new TankerTruck(chosenName),
+                    "MiniTankerTruck" => new MiniTankerTruck(chosenName),
+                    "MiniBus" => new MiniBus(chosenName),
+                    _ => new Bus(chosenName)
+                };
+
+                newVehicle.AssignNewRoute(chosenRoute);
+                newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
+
+                List<Road> path = [];
+                if (secondStation != null)
+                {
+                    var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
+                    RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == firstStation.Coordinate);
+                    RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondStation.Coordinate);
+
+                    if (startNode != null && endNode != null)
+                    {
+                        path = Pathfinder.FindPath(startNode, endNode) ?? [];
+                    }
+                }
+
+                if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
+                {
+                    path.Insert(0, firstStation);
+                }
+                if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
+                {
+                    path.Add(secondStation);
+                }
+
+                newVehicle.StartJourney(path, false, firstStation);
+                GameModelInstance.BuyVehicle(newVehicle);
+                System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+
+                IsPurchasePanelVisible = false;
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
             ToggleVehiclePanelCommand = new DelegateCommand(_ =>
             {
                 IsVehiclePanelVisible = !IsVehiclePanelVisible;
+            });
+            OpenPurchasePanelCommand = new DelegateCommand(_ =>
+            {
+                IsPurchasePanelVisible = true;
+                NewRouteName = "New vehicle";
             });
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
             QuitToMainMenuCommand = new DelegateCommand(_ =>
