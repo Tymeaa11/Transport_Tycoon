@@ -82,8 +82,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!-- magic suspected here -->
-                    <Rectangle Width="18" Height="9" Fill="{Binding VehicleColor}" Stroke="White" StrokeThickness="1" 
-           RadiusX="2" RadiusY="2">
+                    <Rectangle Width="18" Height="9" Fill="{Binding VehicleColor}" RadiusX="2" RadiusY="2">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
                                 <TranslateTransform X="-12" Y="-6" />
@@ -168,6 +167,22 @@
 
 
         <Border Panel.ZIndex="200"  VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" Margin="0,0,20,40" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="IsEnabled" Value="True"/>
+                    <Setter Property="Opacity" Value="1.0"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsPausedView}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsPurchasePanelVisible}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <StackPanel>
                 <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
 
@@ -196,6 +211,20 @@
         </Border>
 
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="220" Margin="20,0,0,80" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsTimetablePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsPausedView}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsPurchasePanelVisible}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <StackPanel>
                 <TextBlock Text="Timetables (Lines)" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 

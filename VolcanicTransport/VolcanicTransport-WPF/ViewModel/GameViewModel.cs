@@ -200,6 +200,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnBuildModeBridge(Coordinate coordinate)
         {
+            if (IsPausedView || IsPurchasePanelVisible) return;
             if (_bridgeStartCoord == null)
             {
                 _bridgeStartCoord = coordinate;
@@ -217,7 +218,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnBuildModeSelectStation(Field field)
         {
-            if (IsPausedView) return;
+            if (IsPausedView || IsPurchasePanelVisible) return;
             Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {field.Surface?.GetType().Name}");
             if (field.Surface is Station clickedStation)
             {
@@ -270,6 +271,7 @@ namespace VolcanicTransport_WPF.ViewModel
         #region Minimap
         public void MinimapTeleport(Vector vector)
         {
+            if (IsPausedView || IsPurchasePanelVisible) return;
             Debug.WriteLine($"Minimap clicked at: {vector.X}, {vector.Y}");
             Camera.Position = -vector * GameSettings.FieldSize * Camera.Scale;
 
@@ -345,7 +347,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
-            if (IsPausedView) return;
+            if (IsPausedView || IsPurchasePanelVisible) return;
             IsHoveredFieldBuildable = CurrentBuildMode switch
             {
                 BuildMode.HEIGHTEN => GameModelInstance.IsHeightenable(HoveredCoordinate),
@@ -357,7 +359,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void UpdateHoveredCoordinateAndTooltips(Vector mouseXY)
         {
-            if (IsPausedView) return;
+            if (IsPausedView || IsPurchasePanelVisible) return;
             _lastMousePosition = mouseXY;
             Camera.CurrentMousePosition = mouseXY;
 
