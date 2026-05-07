@@ -1,6 +1,4 @@
-﻿using VolcanicTransport.Model.Utils;
-
-namespace VolcanicTransport.Model
+﻿namespace VolcanicTransport.Model.Utils
 {
     public class ChunkUpdatedEventArgs(Coordinate coordinate) : EventArgs
     {
