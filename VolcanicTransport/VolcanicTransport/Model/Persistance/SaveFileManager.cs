@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,6 +11,7 @@ namespace VolcanicTransport.Model.Persistance
 {
     public class SaveFileManager : ISaveFileManager
     {
+        public ISaveFormat SaveFormat { get; init; }
 
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
@@ -19,24 +19,7 @@ namespace VolcanicTransport.Model.Persistance
             ReferenceHandler = ReferenceHandler.IgnoreCycles
         };
 
-        #region DataWrappers
-        private record SurfaceEntry(Coordinate C, ISurface S);
-
-        private readonly record struct SurfaceSaveData(
-            int WorldSeed,
-            Coordinate SizeInChunks,
-            double Time,
-            bool IsPaused,
-            double PlayerMoney,
-            List<City> Cities,
-            List<Factory> Factories,
-            ObservableCollection<Vehicle> Vehicles,
-            ObservableCollection<Route> Routes,
-            List<SurfaceEntry> Surfaces
-        );
-        #endregion
-
-        public ISaveFileManager.GameData LoadGame(string filename, EventHandler<VehicleArrivedEventArgs> vehicleArrived)
+        public GameData LoadGame(string filename, EventHandler<VehicleArrivedEventArgs> vehicleArrived)
         {
             using var archive = ZipFile.OpenRead(filename);
 
@@ -79,10 +62,10 @@ namespace VolcanicTransport.Model.Persistance
             }
 
 
-            return new ISaveFileManager.GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
+            return new GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
         }
 
-        public void SaveGame(ISaveFileManager.GameData game, string filename) // save.zip
+        public void SaveGame(GameData game, string filename) // save.zip
         {
             using FileStream zipToOpen = new(filename, FileMode.Create);
             using ZipArchive archive = new(zipToOpen, ZipArchiveMode.Create);
