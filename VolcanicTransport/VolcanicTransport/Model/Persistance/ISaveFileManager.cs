@@ -1,6 +1,6 @@
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport.Model
+namespace VolcanicTransport.Model.Persistance
 {
     public interface ISaveFileManager
     {

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VolcanicTransport.Model.Utils;
 
-namespace VolcanicTransport.Model
+namespace VolcanicTransport.Model.Persistance
 {
     internal interface IContainsReference
     {

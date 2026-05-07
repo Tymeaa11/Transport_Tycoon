@@ -8,7 +8,7 @@ using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport.Model
+namespace VolcanicTransport.Model.Persistance
 {
     public class SaveFileManager : ISaveFileManager
     {
