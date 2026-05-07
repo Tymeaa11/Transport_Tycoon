@@ -36,7 +36,7 @@ namespace VolcanicTransport.Model
         );
         #endregion
 
-        public ISaveFileManager.GameData LoadGame(string filename)
+        public ISaveFileManager.GameData LoadGame(string filename, EventHandler<VehicleArrivedEventArgs> vehicleArrived)
         {
             using var archive = ZipFile.OpenRead(filename);
 
@@ -75,7 +75,7 @@ namespace VolcanicTransport.Model
                 world.AddVehicle(vehicle);
                 world.VehicleManager.AddVehicle(vehicle);
                 vehicle.RestoreReference(default);
-                vehicle.ArrivedAtStation += GameModel.Instance.HandleVehicleArrived;
+                vehicle.ArrivedAtStation += vehicleArrived;
             }
 
 

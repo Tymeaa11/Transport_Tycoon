@@ -96,7 +96,7 @@ namespace VolcanicTransport.Model
 
         #region SavingAndLoading
         private void LoadGame(string filename)
-        => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename);
+        => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename, HandleVehicleArrived);
 
         public void SaveGame(string filename)
             => _savefileManager.SaveGame(new ISaveFileManager.GameData(this), filename);

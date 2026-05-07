@@ -1,3 +1,5 @@
+using VolcanicTransport.Model.World.Roadnetwork;
+
 namespace VolcanicTransport.Model
 {
     public interface ISaveFileManager
@@ -17,7 +19,7 @@ namespace VolcanicTransport.Model
             { }
         }
 
-        public GameData LoadGame(string filename);
+        public GameData LoadGame(string filename, EventHandler<VehicleArrivedEventArgs> vehicleArrived);
         public void SaveGame(GameData game, string filename);
     }
 }
