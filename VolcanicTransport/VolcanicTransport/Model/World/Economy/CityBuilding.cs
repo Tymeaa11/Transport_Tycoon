@@ -49,11 +49,11 @@ namespace VolcanicTransport.Model.World.Economy
             var targets = World.Instance.Cities.Where(c => c.Name == CityName).ToList();
 
             if (targets.Count != 1)
-                throw new LoadingException();
+                throw new PersistanceException();
 
             _cityReference = targets[0];
 
-            var f = World.Instance.GetField(coordinate) ?? throw new LoadingException();
+            var f = World.Instance.GetField(coordinate) ?? throw new PersistanceException();
             targets[0].AddField(f);
         }
         #endregion

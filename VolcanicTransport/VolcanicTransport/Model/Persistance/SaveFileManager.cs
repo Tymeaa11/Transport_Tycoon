@@ -11,7 +11,7 @@ namespace VolcanicTransport.Model.Persistance
 {
     public class SaveFileManager : ISaveFileManager
     {
-        public ISaveFormat SaveFormat { get; init; }
+        public ISaveFormat? SaveFormat { get; init; }
 
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
@@ -26,7 +26,7 @@ namespace VolcanicTransport.Model.Persistance
             var mapEntry = archive.GetEntry("map.bin");
             var surfaceEntry = archive.GetEntry("surface.json");
 
-            if (mapEntry is null || surfaceEntry is null) throw new LoadingException();
+            if (mapEntry is null || surfaceEntry is null) throw new PersistanceException();
 
             using var jsonStream = surfaceEntry.Open();
             var surfaceData = JsonSerializer.Deserialize<SurfaceSaveData>(jsonStream);
@@ -153,14 +153,14 @@ namespace VolcanicTransport.Model.Persistance
             while (index < totalBytes && binStream.CanRead)
             {
                 var b = binStream.ReadByte();
-                if (b == -1) throw new LoadingException();
+                if (b == -1) throw new PersistanceException();
                 bytes[index++] = (byte)b;
             }
 
             byte high;
             byte low;
 
-            if (index != totalBytes) throw new LoadingException();
+            if (index != totalBytes) throw new PersistanceException();
 
             index = 0;
             World.World.Instance.ChunkMatrix.ReadEach((x, y, chunk)
@@ -234,7 +234,7 @@ namespace VolcanicTransport.Model.Persistance
                 var field = world.GetField(coordinate);
 
                 if (field is null || field.Surface is not null) 
-                    throw new LoadingException();
+                    throw new PersistanceException();
 
                 field.Surface = surface;
 

@@ -55,11 +55,11 @@ namespace VolcanicTransport.Model.World.Economy
             var targets = World.Instance.Factories.Where(c => c.Name == FactoryName).ToList();
 
             if (targets.Count != 1)
-                throw new LoadingException();
+                throw new PersistanceException();
 
             _factoryReference = targets[0];
 
-            var f = World.Instance.GetField(coordinate) ?? throw new LoadingException();
+            var f = World.Instance.GetField(coordinate) ?? throw new PersistanceException();
             targets[0].AddField(f);
         }
         #endregion

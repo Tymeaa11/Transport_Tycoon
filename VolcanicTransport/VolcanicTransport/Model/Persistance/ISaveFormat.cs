@@ -1,11 +1,14 @@
 ﻿namespace VolcanicTransport.Model.Persistance
 {
-    public interface ISaveFormat
+    public interface ISaveFormat : IDisposable
     {
-        public void SaveBinaryData(BinaryWriter binaryWriter);
-        public void ReadBinaryData(Stream binaryData);
-        public List<SurfaceEntry> GetSurfaceEntries();
-        public void SaveGameData(GameData gameData);
-        public GameData LoadGameData();
+        public void OpenZipForSaving(string filename);
+        public void OpenZipForLoading(string filename);
+
+        public void SaveBinaryData(byte[] data);
+        public byte[] ReadBinaryData(int totalBytes);
+
+        public void SaveSurfaceSaveData(SurfaceSaveData gameData);
+        public SurfaceSaveData LoadSurfaceSaveData();
     }
 }

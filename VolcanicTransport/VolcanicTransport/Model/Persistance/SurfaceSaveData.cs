@@ -5,7 +5,7 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.Persistance
 {
-    internal readonly record struct SurfaceSaveData(
+    public readonly record struct SurfaceSaveData(
         int WorldSeed,
         Coordinate SizeInChunks,
         double Time,

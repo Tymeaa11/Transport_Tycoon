@@ -74,7 +74,7 @@ namespace VolcanicTransport.Model.World.Economy
             var targets = World.Instance.Cities.Where(c => c.Name == CityName).ToList();
 
             if (targets.Count != 1)
-                throw new LoadingException();
+                throw new PersistanceException();
 
             _city = targets[0];
         }

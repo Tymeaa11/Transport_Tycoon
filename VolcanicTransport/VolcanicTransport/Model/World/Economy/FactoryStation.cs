@@ -103,7 +103,7 @@ namespace VolcanicTransport.Model.World.Economy
             var targets = World.Instance.Factories.Where(c => c.Name == FactoryName).ToList();
 
             if (targets.Count != 1)
-                throw new LoadingException();
+                throw new PersistanceException();
 
             _factory = targets[0];
         }
