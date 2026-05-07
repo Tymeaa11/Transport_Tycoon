@@ -9,40 +9,24 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.Persistance
 {
-    public class SaveFileManager : ISaveFileManager
+    public class SaveFileManager(ISaveFormat saveFormat) : ISaveFileManager
     {
-        public ISaveFormat? SaveFormat { get; init; }
-
-        private readonly JsonSerializerOptions _jsonOptions = new()
-        {
-            WriteIndented = true,
-            ReferenceHandler = ReferenceHandler.IgnoreCycles
-        };
+        public ISaveFormat SaveFormat { get; init; } = saveFormat;
 
         public GameData LoadGame(string filename, EventHandler<VehicleArrivedEventArgs> vehicleArrived)
         {
-            using var archive = ZipFile.OpenRead(filename);
-
-            var mapEntry = archive.GetEntry("map.bin");
-            var surfaceEntry = archive.GetEntry("surface.json");
-
-            if (mapEntry is null || surfaceEntry is null) throw new PersistanceException();
-
-            using var jsonStream = surfaceEntry.Open();
-            var surfaceData = JsonSerializer.Deserialize<SurfaceSaveData>(jsonStream);
+            SaveFormat.OpenZipForLoading(filename);
+            var surfaceData = SaveFormat.LoadSurfaceSaveData();
 
             World.World.Initialise(surfaceData.SizeInChunks.X, surfaceData.WorldSeed);
-
             var world = World.World.Instance;
 
-            using (var binStream = mapEntry.Open())
-            {
-                LoadBinaryMap(binStream);
-            }
+            LoadBinaryMap(SaveFormat.ReadBinaryData(GetTotalBytes()));
+
+            SaveFormat.Dispose();
 
             world.Cities.AddRange(surfaceData.Cities);
             world.Factories.AddRange(surfaceData.Factories);
-            
 
             RestoreSurfaceElements(surfaceData.Surfaces);
             FinalizeRoadNetwork();
@@ -61,21 +45,13 @@ namespace VolcanicTransport.Model.Persistance
                 vehicle.ArrivedAtStation += vehicleArrived;
             }
 
-
             return new GameData(world, surfaceData.IsPaused, surfaceData.Time, surfaceData.PlayerMoney);
         }
 
-        public void SaveGame(GameData game, string filename) // save.zip
+        public void SaveGame(GameData game, string filename)
         {
-            using FileStream zipToOpen = new(filename, FileMode.Create);
-            using ZipArchive archive = new(zipToOpen, ZipArchiveMode.Create);
-
-            var mapEntry = archive.CreateEntry("map.bin");
-            using (var mapStream = mapEntry.Open())
-            using (var writer = new BinaryWriter(mapStream))
-            {
-                SaveBinaryMap(writer);
-            }
+            SaveFormat.OpenZipForSaving(filename);
+            SaveFormat.SaveBinaryData(GetBinaryData());
 
             foreach (var vehicle in game.World.Vehicles)
                 vehicle.PrepareForSave();
@@ -83,8 +59,6 @@ namespace VolcanicTransport.Model.Persistance
             foreach (var r in game.World.SavedRoutes) 
                 r.PrepareForSave();
 
-            var surfaceEntry = archive.CreateEntry("surface.json");
-            using var jsonStream = surfaceEntry.Open();
             var saveData = new SurfaceSaveData(
                 game.World.WorldSeed,
                 game.World.SizeInChunks,
@@ -98,7 +72,9 @@ namespace VolcanicTransport.Model.Persistance
                 GetSurfaceElements()
             );
 
-            JsonSerializer.Serialize(jsonStream, saveData, _jsonOptions);
+            SaveFormat.SaveSurfaceSaveData( saveData );
+
+            SaveFormat.Dispose();
         }
 
         #region FieldType
@@ -114,8 +90,10 @@ namespace VolcanicTransport.Model.Persistance
         private const byte RoadDataMask = 0b0000_0001;
         private const byte SurfaceTypeMask = 0b0000_1100;
 
-        private static void SaveBinaryMap(BinaryWriter writer)
+        private static byte[] GetBinaryData()
         {
+            var bytes = new byte[GetTotalBytes()];
+            var index = 0;
             byte data;
             byte stage;
 
@@ -139,30 +117,20 @@ namespace VolcanicTransport.Model.Persistance
                             break;
                     }
 
-                    writer.Write(data);
+                    bytes[index++] = data;
                 })
             );
+
+            return bytes;
         }
 
-        private static void LoadBinaryMap(Stream binStream)
+        private static void LoadBinaryMap(byte[] bytes)
         {
-            var totalBytes = GetTotalBytes();
-            var index = 0;
-            var bytes = new byte[totalBytes];
-
-            while (index < totalBytes && binStream.CanRead)
-            {
-                var b = binStream.ReadByte();
-                if (b == -1) throw new PersistanceException();
-                bytes[index++] = (byte)b;
-            }
-
             byte high;
             byte low;
 
-            if (index != totalBytes) throw new PersistanceException();
+            var index = 0;
 
-            index = 0;
             World.World.Instance.ChunkMatrix.ReadEach((x, y, chunk)
                 => chunk.FieldMatrix.ReadEach((fx, fy, field) =>
                 {

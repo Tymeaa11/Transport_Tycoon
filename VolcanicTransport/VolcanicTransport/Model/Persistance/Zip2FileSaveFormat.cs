@@ -25,12 +25,6 @@ namespace VolcanicTransport.Model.Persistance
         {
             Dispose();
             _zipArchive = new(new FileStream(filename, FileMode.Create), ZipArchiveMode.Create);
-
-            _mapEntry = _zipArchive.CreateEntry("map.bin");
-            _surfaceEntry = _zipArchive.CreateEntry("surface.json");
-
-            if (_mapEntry == null || _surfaceEntry == null)
-                throw new PersistanceException("Error opening zip archive for saving.");
         }
 
         public void OpenZipForLoading(string filename) 
@@ -46,10 +40,11 @@ namespace VolcanicTransport.Model.Persistance
 
         public void SaveSurfaceSaveData(SurfaceSaveData surfaceSaveData)
         {
-            if (_surfaceEntry == null)
-                throw new PersistanceException("Unable to save JSON data.");
+            if (_zipArchive == null) throw new PersistanceException("No zip archive opened for saving.");
 
-            using var jsonStream = _surfaceEntry.Open();
+            var surfaceEntry = _zipArchive.CreateEntry("surface.json") ?? throw new PersistanceException("Unable to save JSON data.");
+
+            using var jsonStream = surfaceEntry.Open();
             JsonSerializer.Serialize(jsonStream, surfaceSaveData, _jsonOptions);
         }
 
@@ -84,10 +79,14 @@ namespace VolcanicTransport.Model.Persistance
 
         public void SaveBinaryData(byte[] data)
         {
-            if (_mapEntry == null || data == null)
+            if (_zipArchive == null) throw new PersistanceException("No zip archive opened for saving.");
+
+            var mapEntry = _zipArchive.CreateEntry("map.bin");
+
+            if (mapEntry == null || data == null)
                 throw new PersistanceException("Unable to save binary data.");
 
-            using var mapStream = _mapEntry.Open();
+            using var mapStream = mapEntry.Open();
             using var writer = new BinaryWriter(mapStream);
 
             writer.Write(data);

@@ -46,7 +46,7 @@ namespace VolcanicTransport.Model
 
         private GameModel()
         {
-            _savefileManager = new SaveFileManager();
+            _savefileManager = new SaveFileManager(new Zip2FileSaveFormat());
 
             _instance = this;
 
