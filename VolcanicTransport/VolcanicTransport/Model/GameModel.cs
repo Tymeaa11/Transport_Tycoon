@@ -275,7 +275,7 @@ namespace VolcanicTransport.Model
             if (!field.IsBuildable())
                 return null;
 
-            foreach (var dir in Direction.Directions)
+            foreach (var dir in Coordinate.Directions)
             {
                 Field? adjField = WorldInstance.GetField(coord + dir);
 
@@ -412,7 +412,7 @@ namespace VolcanicTransport.Model
             for (int i = 1; i < length - 1; i++)
             {
                 Coordinate c = bridgeCoords[i];
-                foreach (var dir in Direction.Directions)
+                foreach (var dir in Coordinate.Directions)
                 {
                     Coordinate adjCoord = c + dir;
                     if (bridgeCoords.Contains(adjCoord)) continue;
@@ -483,7 +483,7 @@ namespace VolcanicTransport.Model
             var field = WorldInstance.GetField(coord);
             if (field == null) return false;
 
-            var hasValidNearRoad = Direction.Directions.Any(dir =>
+            var hasValidNearRoad = Coordinate.Directions.Any(dir =>
             {
                 var neighbor = WorldInstance.GetField(coord + dir);
                 return neighbor?.Surface is Road && neighbor.Type == field.Type;

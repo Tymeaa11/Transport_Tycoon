@@ -33,7 +33,7 @@ namespace VolcanicTransport.Model.World
 
             if (IsAbleToSpread() && rand.NextDouble() < GameSettings.SpreadBaseChance)
             {
-                Coordinate targetCoord = myCoord + Direction.GetRandomDirection();
+                Coordinate targetCoord = myCoord + Coordinate.GetRandomDirection();
                 ;
                 Field? targetField = World.Instance.GetField(targetCoord);
 

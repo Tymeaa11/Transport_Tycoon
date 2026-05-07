@@ -84,11 +84,11 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             fields[8].Surface = new CityBuilding(newCity);
             newCity.AddField(fields[8]);
 
-            fields[1].Surface = new Road(center + Direction.North);
-            fields[3].Surface = new Road(center + Direction.West);
+            fields[1].Surface = new Road(center + Coordinate.North);
+            fields[3].Surface = new Road(center + Coordinate.West);
             fields[4].Surface = new Road(center);
-            fields[5].Surface = new Road(center + Direction.East);
-            fields[7].Surface = new Road(center + Direction.South);
+            fields[5].Surface = new Road(center + Coordinate.East);
+            fields[7].Surface = new Road(center + Coordinate.South);
 
 
             fields.ForEach(f =>
@@ -102,11 +102,11 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             });
 
             Coordinate[] roadCoords = {
-                center + Direction.North,
-                center + Direction.West,
+                center + Coordinate.North,
+                center + Coordinate.West,
                 center,
-                center + Direction.East,
-                center + Direction.South
+                center + Coordinate.East,
+                center + Coordinate.South
             };
 
             foreach (var coord in roadCoords)
