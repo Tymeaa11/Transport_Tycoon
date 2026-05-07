@@ -641,11 +641,5 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             SavedPathCoordinates = [.. currentPath.Select(r => r.Coordinate)];
             RouteName = Route?.Name;
         }
-
-        public class VehicleArrivedEventArgs(Vehicle vehicle, Station station) : EventArgs
-        {
-            public Vehicle Vehicle { get; } = vehicle;
-            public Station Station { get; } = station;
-        }
     }
 }
