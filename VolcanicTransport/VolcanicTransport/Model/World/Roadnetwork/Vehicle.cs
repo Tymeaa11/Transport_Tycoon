@@ -10,7 +10,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     [JsonDerivedType(typeof(MiniBus), "mini_bus")]
     [JsonDerivedType(typeof(TankerTruck), "tanker_truck")]
     [JsonDerivedType(typeof(CargoTruck), "cargo_truck")]
-    public abstract class Vehicle(string name, GameSettings.VehicleData vehicleData) : IContainsReference
+    public abstract class Vehicle(string name, GameSettings.VehicleData vehicleData) : IContainsReference, IHasSavedState
     {
         protected Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType currentType,
                     int currentLoad, int currentStopIndex, VehicleState state, float posX, float posY,

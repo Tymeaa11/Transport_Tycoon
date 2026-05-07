@@ -6,7 +6,7 @@ using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public class Route : IContainsReference
+    public class Route : IContainsReference, IHasSavedState
     {
         public string Name { get; set; } = "Névtelen járat";
         [JsonIgnore]
