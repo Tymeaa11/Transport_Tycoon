@@ -2,22 +2,7 @@ using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.Utils
 {
-    public class NameSet
-    {
-        public int LoopNumber { get => _loopNumber; set { _loopNumber = value; }}
-        public HashSet<string> Usable { get => _usable; set { _usable = value; } }
-        public HashSet<string> AllNames { get => _allNames; set { _allNames = value; } }
-
-        private int _loopNumber;
-        private HashSet<string> _usable;
-        private HashSet<string> _allNames;
-        public NameSet(HashSet<string> names)
-        {
-            _allNames = names;
-            _usable = new(_allNames);
-            _loopNumber = 1;
-        }
-    }
+    
     public class RandomNameGenerator
     {
         private static readonly Dictionary<Type, NameSet> names = new();
@@ -37,7 +22,7 @@ namespace VolcanicTransport.Model.Utils
         {
             if (names[placeType].Usable.Count == 0)
             {
-                names[placeType].Usable = new(names[placeType].AllNames);
+                names[placeType].Usable = [.. names[placeType].AllNames];
                 names[placeType].LoopNumber += 1;
             }
             string name = names[placeType].Usable.ElementAt(randomness % names[placeType].Usable.Count);
