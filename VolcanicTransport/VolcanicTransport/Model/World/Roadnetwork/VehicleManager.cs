@@ -1,11 +1,12 @@
-﻿using System.Collections.ObjectModel;
-using VolcanicTransport.Model.Utils;
+﻿using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public class VehicleManager
+    public class VehicleManager : IVehicleManager
     {
-        public ObservableCollection<Vehicle> Vehicles { get; } = [];
+        private readonly List<Vehicle> _vehicles = [];
+
+        public IReadOnlyList<Vehicle> GetVehicles() => _vehicles.AsReadOnly();
 
         private readonly Dictionary<Coordinate, List<Vehicle>> _spatialGrid = [];
 
@@ -13,7 +14,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         {
             if (_spatialGrid.TryGetValue(coord, out var vehicles))
             {
-                return vehicles;
+                return vehicles.AsReadOnly();
             }
             return [];
         }
@@ -45,17 +46,17 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public void AddVehicle(Vehicle vehicle)
         {
-            Vehicles.Add(vehicle);
+            _vehicles.Add(vehicle);
         }
 
         public void RemoveVehicle(Vehicle vehicle)
         {
-            Vehicles.Remove(vehicle);
+            _vehicles.Remove(vehicle);
         }
 
         public void Update(double deltaTime)
         {
-            var currentVehicles = Vehicles.ToList();
+            var currentVehicles = _vehicles.ToList();
             foreach (var v in currentVehicles)
             {
                 v.Update(deltaTime);

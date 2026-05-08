@@ -30,8 +30,8 @@ namespace VolcanicTransport.Model
             double PlayerMoney,
             List<City> Cities,
             List<Factory> Factories,
-            ObservableCollection<Vehicle> Vehicles,
-            ObservableCollection<Route> Routes,
+            List<Vehicle> Vehicles,
+            List<Route> Routes,
             List<SurfaceEntry> Surfaces
         );
         #endregion
@@ -67,7 +67,7 @@ namespace VolcanicTransport.Model
             foreach (var route in surfaceData.Routes)
             {
                 route.RestoreReference();
-                world.SavedRoutes.Add(route);
+                world.AddRoute(route);
             }
 
             foreach (var vehicle in surfaceData.Vehicles)
@@ -110,8 +110,8 @@ namespace VolcanicTransport.Model
                 game.PlayerMoney,
                 game.World.Cities,
                 game.World.Factories,
-                game.World.Vehicles,
-                game.World.SavedRoutes,
+                game.World.Vehicles.ToList(),
+                game.World.SavedRoutes.ToList(),
                 GetSurfaceElements()
             );
 

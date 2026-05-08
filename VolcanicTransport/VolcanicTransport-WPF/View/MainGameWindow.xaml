@@ -192,6 +192,8 @@
                         <Button Content="Assign Route" Command="{Binding AssignSavedRouteCommand}" Padding="5" FontWeight="SemiBold" Background="#AEEA00"/>
                     </StackPanel>
                 </Border>
+
+                <Button Content="Sell" Command="{Binding SellVehicleCommand}" Padding="5" Margin="0,10,0,0" FontWeight="SemiBold" Background="#FF5252" Foreground="White"/>
             </StackPanel>
         </Border>
 

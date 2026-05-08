@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
@@ -33,8 +32,12 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; } = [];
         public List<Factory> Factories { get; } = [];
         public List<Station> Stations { get; } = [];
-        public ObservableCollection<Route> SavedRoutes { get; } = [];
-        public ObservableCollection<Vehicle> Vehicles { get; } = [];
+
+        private readonly List<Route> _savedRoutes = [];
+        public IReadOnlyList<Route> SavedRoutes => _savedRoutes.AsReadOnly();
+
+        private readonly List<Vehicle> _vehicles = [];
+        public IReadOnlyList<Vehicle> Vehicles => _vehicles.AsReadOnly();
 
         public IWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
@@ -131,9 +134,13 @@ namespace VolcanicTransport.Model.World
             => ChunkChanged?.Invoke(this, new(chunkCoordinate));
 
 
-        public void AddVehicle(Vehicle v) => Vehicles.Add(v);
-        public void RemoveVehicle(Vehicle v) => Vehicles.Remove(v);
-        public bool HasVehicle(Vehicle v) => Vehicles.Contains(v);
+        public void AddVehicle(Vehicle v) => _vehicles.Add(v);
+        public void RemoveVehicle(Vehicle v) => _vehicles.Remove(v);
+        public bool HasVehicle(Vehicle v) => _vehicles.Contains(v);
+
+        public void AddRoute(Route r) => _savedRoutes.Add(r);
+        public void RemoveRoute(Route r) => _savedRoutes.Remove(r);
+        public bool HasRoute(Route r) => _savedRoutes.Contains(r);
 
         #region Road Placement Logic
 
@@ -169,12 +176,10 @@ namespace VolcanicTransport.Model.World
 
         public void Update(double gameDt)
         {
-            foreach (var vehicle in Vehicles.ToList())
+            foreach (var vehicle in _vehicles.ToList())
             {
                 vehicle.Update(gameDt);
             }
-
-            // Itt jöhetnének késõbb az épületek frissítései (termelés, stb.)
         }
 
         #endregion
