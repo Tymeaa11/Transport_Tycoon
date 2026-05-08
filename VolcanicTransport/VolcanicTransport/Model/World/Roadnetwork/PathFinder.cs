@@ -1,8 +1,10 @@
 ﻿namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public static class Pathfinder
+    public class Pathfinder : IPathFinder
     {
-        public static List<Road>? FindPath(RoadNode startNode, RoadNode targetNode)
+        public static IPathFinder Instance { get; } = new Pathfinder();
+
+        public List<Road>? FindPath(RoadNode startNode, RoadNode targetNode)
         {
             if (startNode == targetNode)
                 return [];

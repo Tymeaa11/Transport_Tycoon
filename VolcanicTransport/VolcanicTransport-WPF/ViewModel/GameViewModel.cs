@@ -136,6 +136,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SaveGameCommand {  get; private set; }
         public DelegateCommand LoadGameCommand {  get; private set; }
         public DelegateCommand ToggleVehiclePanelCommand { get; private set; }
+        public DelegateCommand SellVehicleCommand { get; private set; }
         #endregion
 
         #region FieldClicked
@@ -235,7 +236,7 @@ namespace VolcanicTransport_WPF.ViewModel
             }
         }
 
-        public ObservableCollection<Route> SavedRoutes => GameModel.WorldInstance.SavedRoutes;
+        public ObservableCollection<Route> SavedRoutes { get; } = [];
 
         private Route? _selectedSavedRoute;
         public Route? SelectedSavedRoute
@@ -399,7 +400,7 @@ namespace VolcanicTransport_WPF.ViewModel
         #endregion
 
         #region Vehicles
-        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
+        public ObservableCollection<Vehicle> Vehicles { get; } = [];
 
         public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
 
@@ -510,6 +511,12 @@ namespace VolcanicTransport_WPF.ViewModel
                     return;
                 }
 
+                    bool success = GameModelInstance.CreateAndStartVehicle(chosenType, chosenName, chosenRoute);
+                    if (success)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                    }
+                }
                 string chosenName = NewVehicleName;
                 string? chosenType = SelectedVehicleTemplate.InternalType;
                 Route? chosenRoute = SelectedSavedRoute;
@@ -597,6 +604,7 @@ namespace VolcanicTransport_WPF.ViewModel
                     if (!SavedRoutes.Contains(currentRoute))
                     {
                         SavedRoutes.Add(currentRoute);
+                        GameModel.WorldInstance.AddRoute(currentRoute);
                         Debug.WriteLine($"[Járat] '{currentRoute.Name}' elmentve a globális listába!");
                     }
 
@@ -630,6 +638,7 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 var newRoute = new Route { Name = NewRouteName };
                 SavedRoutes.Add(newRoute);
+                GameModel.WorldInstance.AddRoute(newRoute);
                 SelectedSavedRoute = newRoute;
                 NewRouteName = $"Járat {SavedRoutes.Count + 1}";
             });
@@ -677,6 +686,11 @@ namespace VolcanicTransport_WPF.ViewModel
 
             SaveGameCommand = new DelegateCommand(_ => SaveGameRequested?.Invoke(this, EventArgs.Empty));
             LoadGameCommand = new DelegateCommand(_ => LoadGameRequested?.Invoke(this, EventArgs.Empty));
+            SellVehicleCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle == null) return;
+                GameModelInstance.SellVehicle(SelectedVehicle.GetVehicle);
+            });
         }
 
         private void InitialiseAfter()
@@ -708,11 +722,26 @@ namespace VolcanicTransport_WPF.ViewModel
                     var newModelVehicle = GameModel.WorldInstance.GetLatestVehicle();
                     if (newModelVehicle != null)
                     {
+                        Vehicles.Add(newModelVehicle);
                         var vvm = new VehicleViewModel(newModelVehicle);
                         VehicleViewModels.Add(vvm);
                         SelectedVehicle = vvm;
                         Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
                         IsVehiclePanelVisible = true;
+                    }
+                });
+            };
+
+            GameModelInstance.VehicleSold += (s, e) =>
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var vvm = SelectedVehicle;
+                    if (vvm != null)
+                    {
+                        Vehicles.Remove(vvm.GetVehicle);
+                        VehicleViewModels.Remove(vvm);
+                        SelectedVehicle = VehicleViewModels.Count > 0 ? VehicleViewModels[^1] : null;
                     }
                 });
             };
@@ -742,9 +771,13 @@ namespace VolcanicTransport_WPF.ViewModel
         {
             GameModel.InitialiseLoadedGame(fileName);
 
+            Vehicles.Clear();
             VehicleViewModels.Clear();
             foreach (var vehicle in GameModel.WorldInstance.Vehicles)
+            {
+                Vehicles.Add(vehicle);
                 VehicleViewModels.Add(new VehicleViewModel(vehicle));
+            }
 
             if (VehicleViewModels.Count > 0)
                 SelectedVehicle = VehicleViewModels[0];
