@@ -330,7 +330,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             if (startNode != null && targetNode != null)
             {
-                List<Road>? newPath = Pathfinder.FindPath(startNode, targetNode);
+                List<Road>? newPath = Pathfinder.Instance.FindPath(startNode, targetNode);
 
                 if (newPath != null && newPath.Count > 0)
                 {
@@ -547,7 +547,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             int spaceLeft = Capacity - CurrentLoad;
             int taken = Math.Min(amount, spaceLeft);
             CurrentLoad += taken;
-            if (CurrentType == ProductType.NONE)
+            if (taken > 0 && CurrentType == ProductType.NONE)
             {
                 CurrentType = type;
                 StateUpdated?.Invoke(this, EventArgs.Empty);

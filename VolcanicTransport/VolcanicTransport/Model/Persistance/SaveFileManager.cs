@@ -34,7 +34,7 @@ namespace VolcanicTransport.Model.Persistance
             foreach (var route in surfaceData.Routes)
             {
                 route.RestoreReference();
-                world.SavedRoutes.Add(route);
+                world.AddRoute(route);
             }
 
             foreach (var vehicle in surfaceData.Vehicles)
@@ -67,8 +67,8 @@ namespace VolcanicTransport.Model.Persistance
                 game.PlayerMoney,
                 game.World.Cities,
                 game.World.Factories,
-                game.World.Vehicles,
-                game.World.SavedRoutes,
+                game.World.Vehicles.ToList(),
+                game.World.SavedRoutes.ToList(),
                 GetSurfaceElements()
             );
 

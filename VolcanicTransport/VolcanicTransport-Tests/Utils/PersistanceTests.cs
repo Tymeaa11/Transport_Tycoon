@@ -47,7 +47,7 @@ namespace VolcanicTransport_Tests.Utils
             world.GetField(mushroomCoord)!.Surface = new Mushroom(mushroomCoord, MushroomGrowthStage.ADULT);
 
             var testRoute = new Route { Name = "Express 1" };
-            world.SavedRoutes.Add(testRoute);
+            world.AddRoute(testRoute);
 
             var tanker = new TankerTruck("BigRed")
             {
