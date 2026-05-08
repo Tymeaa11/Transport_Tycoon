@@ -13,8 +13,8 @@ namespace VolcanicTransport.Model.Persistance
         double PlayerMoney,
         List<City> Cities,
         List<Factory> Factories,
-        ObservableCollection<Vehicle> Vehicles,
-        ObservableCollection<Route> Routes,
+        List<Vehicle> Vehicles,
+        List<Route> Routes,
         List<SurfaceEntry> Surfaces
     );
 }

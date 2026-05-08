@@ -21,7 +21,7 @@ namespace VolcanicTransport_Tests.Utils
         [TestInitialize]
         public void Setup()
         {
-            _saveManager = new SaveFileManager();
+            _saveManager = new SaveFileManager(new Zip2FileSaveFormat());
 
             _testPath = Path.Combine(Path.GetTempPath(), $"test_save_{Guid.NewGuid()}.zip");
             World.Initialise(4, 42);
@@ -59,13 +59,13 @@ namespace VolcanicTransport_Tests.Utils
             tanker.AssignNewRoute(testRoute);
             world.AddVehicle(tanker);
 
-            var saveData = new ISaveFileManager.GameData(world, true, gameTime, money);
+            var saveData = new GameData(world, true, gameTime, money);
             _saveManager!.SaveGame(saveData, _testPath);
 
             World.Initialise(4, 42);
             Assert.AreEqual(0, World.Instance.Vehicles.Count, "World reset failed.");
 
-            var loadedData = _saveManager.LoadGame(_testPath);
+            var loadedData = _saveManager.LoadGame(_testPath, (_, _) => { });
 
             Assert.AreEqual(money, loadedData.PlayerMoney, "Money mismatch after load.");
             Assert.AreEqual(gameTime, loadedData.Time, "Time mismatch after load.");
@@ -102,9 +102,9 @@ namespace VolcanicTransport_Tests.Utils
 
             world.Factories.Add(factory);
 
-            _saveManager!.SaveGame(new ISaveFileManager.GameData(world, false, 0, 0), _testPath);
+            _saveManager!.SaveGame(new GameData(world, false, 0, 0), _testPath);
             World.Initialise(4, 42);
-            _saveManager.LoadGame(_testPath);
+            _saveManager.LoadGame(_testPath, (_, _) => { });
 
             var loadedFactory = World.Instance.Factories[0];
             var accValue = typeof(Factory).GetField("productionAccumulator", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
