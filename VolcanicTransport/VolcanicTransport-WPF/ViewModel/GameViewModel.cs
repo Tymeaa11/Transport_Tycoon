@@ -511,16 +511,10 @@ namespace VolcanicTransport_WPF.ViewModel
                     return;
                 }
 
-                    bool success = GameModelInstance.CreateAndStartVehicle(chosenType, chosenName, chosenRoute);
-                    if (success)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
-                    }
-                }
                 string chosenName = NewVehicleName;
                 string? chosenType = SelectedVehicleTemplate.InternalType;
                 Route? chosenRoute = SelectedSavedRoute;
-
+                /*
                 Station firstStation = chosenRoute.Stops[0];
                 Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
 
@@ -561,8 +555,14 @@ namespace VolcanicTransport_WPF.ViewModel
 
                 newVehicle.StartJourney(path, false, firstStation);
                 GameModelInstance.BuyVehicle(newVehicle);
-                System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
 
+                System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                */
+                bool success = GameModelInstance.CreateAndStartVehicle(chosenType, chosenName, chosenRoute);
+                if (success)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                }
                 IsPurchasePanelVisible = false;
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);

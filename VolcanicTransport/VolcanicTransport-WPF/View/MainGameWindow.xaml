@@ -194,7 +194,8 @@
                     <TextBlock Text="{Binding SelectedVehicle.StateDisplay, StringFormat='State: {0}'}" Foreground="DarkBlue" Margin="0,3"/>
                     <TextBlock Text="{Binding SelectedVehicle.Type, StringFormat='Type: {0}'}" Margin="0,3"/>
                     <TextBlock Text="{Binding SelectedVehicle.SpeedDisplay, StringFormat='Speed: {0}'}" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.GetCurrentCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                    <TextBlock Text="{Binding SelectedVehicle.Capacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                    <TextBlock Text="{Binding SelectedVehicle.GetCurrentLoad, StringFormat='Current load: {0}'}" Margin="0,3"/>
                 </StackPanel>
 
                 <TextBlock Text="Current Route:" FontWeight="Bold" Margin="0,15,0,5"/>
