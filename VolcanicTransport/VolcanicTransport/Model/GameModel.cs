@@ -83,11 +83,13 @@ namespace VolcanicTransport.Model
 
         public static void InitialiseNewGame(int worldSize, int seed)
         {
+            _instance?.Dispose();
             _instance = new GameModel(worldSize, seed);
         }
 
         public static void InitialiseLoadedGame(string fileName)
         {
+            _instance?.Dispose();
             _instance = new GameModel(fileName);
         }
 
