@@ -10,6 +10,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     [JsonDerivedType(typeof(MiniBus), "mini_bus")]
     [JsonDerivedType(typeof(TankerTruck), "tanker_truck")]
     [JsonDerivedType(typeof(CargoTruck), "cargo_truck")]
+    [JsonDerivedType(typeof(MiniCargoTruck), "mini_cargo_truck")]
+    [JsonDerivedType(typeof(MiniTankerTruck), "mini_tanker_truck")]
     public abstract class Vehicle(string name, GameSettings.VehicleData vehicleData) : IContainsReference, IHasSavedState
     {
         protected Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType currentType,
@@ -637,5 +639,13 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             SavedPathCoordinates = [.. currentPath.Select(r => r.Coordinate)];
             RouteName = Route?.Name;
         }
+    }
+    public class VehicleTemplate
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Price { get; set; }
+        public string PriceDisplay => $"{Price} $";
+        public string CargoDescription { get; set; } = string.Empty;
+        public string InternalType { get; set; } = string.Empty;
     }
 }

@@ -200,7 +200,9 @@ namespace VolcanicTransport.Model
             Vehicle newVehicle = vehicleType switch
             {
                 "CargoTruck" => new CargoTruck(vehicleName),
+                "MiniCargoTruck" => new MiniCargoTruck(vehicleName),
                 "TankerTruck" => new TankerTruck(vehicleName),
+                "MiniTankerTruck" => new MiniTankerTruck(vehicleName),
                 "MiniBus" => new MiniBus(vehicleName),
                 _ => new Bus(vehicleName)
             };
@@ -260,9 +262,6 @@ namespace VolcanicTransport.Model
             PlayerMoney += amount;
             MoneyChanged?.Invoke(this, EventArgs.Empty);
         }
-
-        //public void SaveGame() => savefileManager?.Save(this);
-        //public void LoadGame() => savefileManager?.Load(this);
 
         private void HandleMonthlyExpenses()
         {
@@ -599,7 +598,7 @@ namespace VolcanicTransport.Model
             float currentTime = (float)Time;
             ProductType productType = vehicle.CurrentType;
             Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity - vehicle.CurrentLoad}");
-            if (vehicle is CargoTruck or TankerTruck)
+            if (vehicle is CargoTruck or TankerTruck or MiniCargoTruck or MiniTankerTruck)
             {
                 int accepted = station.UnLoadProductFromVehicle(vehicle);
                 if (accepted != 0)
