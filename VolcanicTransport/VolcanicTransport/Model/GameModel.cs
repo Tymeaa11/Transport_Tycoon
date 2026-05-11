@@ -191,6 +191,51 @@ namespace VolcanicTransport.Model
             return false;
         }
 
+        public bool CreateAndStartVehicle(string vehicleType, string vehicleName, Route chosenRoute)
+        {
+            if (chosenRoute == null || chosenRoute.Stops.Count < 2)
+                return false;
+
+            Vehicle newVehicle = vehicleType switch
+            {
+                "CargoTruck" => new CargoTruck(vehicleName),
+                "TankerTruck" => new TankerTruck(vehicleName),
+                "MiniBus" => new MiniBus(vehicleName),
+                _ => new Bus(vehicleName)
+            };
+
+            newVehicle.AssignNewRoute(chosenRoute);
+
+            Station firstStation = chosenRoute.Stops[0];
+            Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
+            newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
+
+            List<Road> path = [];
+            if (secondStation != null)
+            {
+                var nodes = WorldInstance.Roadnetwork.NodeMap;
+                RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == firstStation.Coordinate);
+                RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondStation.Coordinate);
+
+                if (startNode != null && endNode != null)
+                {
+                    path = Pathfinder.Instance.FindPath(startNode, endNode) ?? [];
+                }
+            }
+
+            if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
+            {
+                path.Insert(0, firstStation);
+            }
+            if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
+            {
+                path.Add(secondStation);
+            }
+
+            newVehicle.StartJourney(path, false, firstStation);
+            return BuyVehicle(newVehicle);
+        }
+
         public void SellVehicle(Vehicle v)
         {
             if (!WorldInstance.HasVehicle(v)) return;
@@ -222,12 +267,9 @@ namespace VolcanicTransport.Model
         {
             double totalExpense = 0;
 
-            lock (WorldInstance.Vehicles)
+            foreach (var vehicle in WorldInstance.Vehicles)
             {
-                foreach (var vehicle in WorldInstance.Vehicles)
-                {
-                    totalExpense += 500;
-                }
+                totalExpense += 500;
             }
 
             if (totalExpense > 0)
@@ -497,8 +539,8 @@ namespace VolcanicTransport.Model
             var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 4);
 
             Station? newStation = null;
-            if (city != null) newStation = new CityStation(city, coord, $"CityStation{coord}");
-            else if (factory != null) newStation = new FactoryStation(coord, $"FactoryStation{coord}", factory);
+            if (city != null) newStation = new CityStation(city, coord, city.Name + " megálló");
+            else if (factory != null) newStation = new FactoryStation(coord, factory.Name + " megálló", factory);
 
             if (newStation == null || !TryPurchase(stationCost)) return false;
 

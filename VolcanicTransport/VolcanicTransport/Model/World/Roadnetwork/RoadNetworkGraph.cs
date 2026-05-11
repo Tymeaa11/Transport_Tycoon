@@ -3,7 +3,7 @@ using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public class RoadNetworkGraph
+    public class RoadNetworkGraph : IRoadNetworkGraph
     {
         public Dictionary<KnowsNeighbour, RoadNode> NodeMap { get; private set; } = [];
         public void RegisterNodeIfNeeded(Coordinate coord)
