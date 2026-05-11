@@ -1,13 +1,12 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
+using VolcanicTransport.Model.Persistance;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {
@@ -45,7 +44,7 @@ namespace VolcanicTransport.Model
 
         private GameModel()
         {
-            _savefileManager = new SaveFileManager();
+            _savefileManager = new SaveFileManager(new Zip2FileSaveFormat());
 
             _instance = this;
 
@@ -84,11 +83,13 @@ namespace VolcanicTransport.Model
 
         public static void InitialiseNewGame(int worldSize, int seed)
         {
+            _instance?.Dispose();
             _instance = new GameModel(worldSize, seed);
         }
 
         public static void InitialiseLoadedGame(string fileName)
         {
+            _instance?.Dispose();
             _instance = new GameModel(fileName);
         }
 
@@ -96,10 +97,10 @@ namespace VolcanicTransport.Model
 
         #region SavingAndLoading
         private void LoadGame(string filename)
-        => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename);
+        => (_, IsPaused, Time, PlayerMoney) = _savefileManager.LoadGame(filename, HandleVehicleArrived);
 
         public void SaveGame(string filename)
-            => _savefileManager.SaveGame(new ISaveFileManager.GameData(this), filename);
+            => _savefileManager.SaveGame(new GameData(this), filename);
         #endregion
 
         #region  Methods
@@ -199,7 +200,9 @@ namespace VolcanicTransport.Model
             Vehicle newVehicle = vehicleType switch
             {
                 "CargoTruck" => new CargoTruck(vehicleName),
+                "MiniCargoTruck" => new MiniCargoTruck(vehicleName),
                 "TankerTruck" => new TankerTruck(vehicleName),
+                "MiniTankerTruck" => new MiniTankerTruck(vehicleName),
                 "MiniBus" => new MiniBus(vehicleName),
                 _ => new Bus(vehicleName)
             };
@@ -260,9 +263,6 @@ namespace VolcanicTransport.Model
             MoneyChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        //public void SaveGame() => savefileManager?.Save(this);
-        //public void LoadGame() => savefileManager?.Load(this);
-
         private void HandleMonthlyExpenses()
         {
             double totalExpense = 0;
@@ -317,7 +317,7 @@ namespace VolcanicTransport.Model
             if (!field.IsBuildable())
                 return null;
 
-            foreach (var dir in Direction.Directions)
+            foreach (var dir in Coordinate.Directions)
             {
                 Field? adjField = WorldInstance.GetField(coord + dir);
 
@@ -454,7 +454,7 @@ namespace VolcanicTransport.Model
             for (int i = 1; i < length - 1; i++)
             {
                 Coordinate c = bridgeCoords[i];
-                foreach (var dir in Direction.Directions)
+                foreach (var dir in Coordinate.Directions)
                 {
                     Coordinate adjCoord = c + dir;
                     if (bridgeCoords.Contains(adjCoord)) continue;
@@ -525,7 +525,7 @@ namespace VolcanicTransport.Model
             var field = WorldInstance.GetField(coord);
             if (field == null) return false;
 
-            var hasValidNearRoad = Direction.Directions.Any(dir =>
+            var hasValidNearRoad = Coordinate.Directions.Any(dir =>
             {
                 var neighbor = WorldInstance.GetField(coord + dir);
                 return neighbor?.Surface is Road && neighbor.Type == field.Type;
@@ -598,7 +598,7 @@ namespace VolcanicTransport.Model
             float currentTime = (float)Time;
             ProductType productType = vehicle.CurrentType;
             Debug.WriteLine($"Várakozók: {station.WaitingPassengers}, Szabad hely: {vehicle.Capacity - vehicle.CurrentLoad}");
-            if (vehicle is CargoTruck or TankerTruck)
+            if (vehicle is CargoTruck or TankerTruck or MiniCargoTruck or MiniTankerTruck)
             {
                 int accepted = station.UnLoadProductFromVehicle(vehicle);
                 if (accepted != 0)

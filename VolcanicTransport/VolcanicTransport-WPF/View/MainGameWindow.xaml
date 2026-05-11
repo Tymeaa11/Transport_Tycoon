@@ -11,10 +11,6 @@
         x:Name="RootWindow"
         >
 
-    <Window.InputBindings>
-        <KeyBinding Key="G" Command="{Binding ReGenerateWithRandomSeed}" />
-    </Window.InputBindings>
-
     <Window.Resources>
         <view:ChunkToPixelConverter x:Key="ChunkToPixelConverter" />
         <view:MiniChunkToPixelConverter x:Key="MiniChunkToPixelConverter" />
@@ -82,8 +78,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <!-- magic suspected here -->
-                    <Rectangle Width="18" Height="9" Fill="Red" Stroke="White" StrokeThickness="1" 
-           RadiusX="2" RadiusY="2">
+                    <Rectangle Width="18" Height="9" Fill="{Binding VehicleColor}" RadiusX="2" RadiusY="2">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
                                 <TranslateTransform X="-12" Y="-6" />
@@ -168,6 +163,22 @@
 
 
         <Border Panel.ZIndex="200"  VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" Margin="0,0,20,40" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="IsEnabled" Value="True"/>
+                    <Setter Property="Opacity" Value="1.0"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsPausedView}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsPurchasePanelVisible}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <StackPanel>
                 <TextBlock Text="Vehicles" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
 
@@ -179,7 +190,8 @@
                     <TextBlock Text="{Binding SelectedVehicle.StateDisplay, StringFormat='State: {0}'}" Foreground="DarkBlue" Margin="0,3"/>
                     <TextBlock Text="{Binding SelectedVehicle.Type, StringFormat='Type: {0}'}" Margin="0,3"/>
                     <TextBlock Text="{Binding SelectedVehicle.SpeedDisplay, StringFormat='Speed: {0}'}" Margin="0,3"/>
-                    <TextBlock Text="{Binding SelectedVehicle.GetCurrentCapacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                    <TextBlock Text="{Binding SelectedVehicle.Capacity, StringFormat='Capacity: {0}'}" Margin="0,3"/>
+                    <TextBlock Text="{Binding SelectedVehicle.GetCurrentLoad, StringFormat='Current load: {0}'}" Margin="0,3"/>
                 </StackPanel>
 
                 <TextBlock Text="Current Route:" FontWeight="Bold" Margin="0,15,0,5"/>
@@ -198,6 +210,20 @@
         </Border>
 
         <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="220" Margin="20,0,0,80" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsTimetablePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsPausedView}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsPurchasePanelVisible}" Value="True">
+                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Opacity" Value="0.7"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <StackPanel>
                 <TextBlock Text="Timetables (Lines)" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
@@ -239,7 +265,7 @@
                 </StackPanel.Resources>
 
                 <Button Content="Buy vehicle" 
-                      Command="{Binding BuyVehicleCommand}" />
+                      Command="{Binding OpenPurchasePanelCommand}" />
                 <ToggleButton Content="Road" 
                       Command="{Binding SetBuildModeRoadCommand}" 
                       IsChecked="{Binding IsBuildModeRoad, Mode=OneWay}">
@@ -357,6 +383,41 @@
                 <Button Content="Quit to Menu" Command="{Binding QuitToMainMenuCommand}"
                 Width="200" Padding="10" FontSize="18"/>
             </StackPanel>
+        </Grid>
+        <Grid Visibility="{Binding IsPurchasePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+      Background="#AA000000">
+            <Border Background="White" CornerRadius="10" 
+            Width="500" HorizontalAlignment="Center" VerticalAlignment="Center" 
+            Padding="20" BorderBrush="Gray" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="PURCHASE NEW VEHICLE" FontSize="18" FontWeight="Bold" 
+                       HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="Choose a type:" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <DataGrid ItemsSource="{Binding VehicleTemplates}" SelectedItem="{Binding SelectedVehicleTemplate}"
+                      AutoGenerateColumns="False" IsReadOnly="True" Height="150" Margin="0,0,0,15">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Type:" Binding="{Binding Name}" Width="100"/>
+                            <DataGridTextColumn Header="Price:" Binding="{Binding PriceDisplay}" Width="80"/>
+                            <DataGridTextColumn Header="Transportable cargo:" Binding="{Binding CargoDescription}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Text="Vehicle name:" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding NewVehicleName, UpdateSourceTrigger=PropertyChanged}" Height="25" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Initial route:" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding SavedRoutes}" SelectedItem="{Binding SelectedSavedRoute}"
+                      DisplayMemberPath="Name" Height="25" Margin="0,0,0,20"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Cancel" Command="{Binding ClosePurchasePanelCommand}" 
+                        Width="80" Margin="0,0,10,0" Padding="5"/>
+                        <Button Content="Buy" Command="{Binding ConfirmPurchaseCommand}" 
+                        Background="LightGreen" FontWeight="Bold" Width="100" Padding="5"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </Window>

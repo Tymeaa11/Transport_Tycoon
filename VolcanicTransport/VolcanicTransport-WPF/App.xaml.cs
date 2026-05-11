@@ -128,7 +128,7 @@ namespace VolcanicTransport_WPF
                 {
                     _gameViewModel.InitialiseLodedGame(_openFileDialog.FileName);
                 }
-                catch (LoadingException ex)
+                catch (PersistanceException ex)
                 {
                     MessageBox.Show($"An error occured while trying to load {_openFileDialog.FileName}: " + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);

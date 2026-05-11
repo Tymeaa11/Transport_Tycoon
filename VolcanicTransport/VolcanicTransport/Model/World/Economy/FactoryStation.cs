@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Exceptions;
+using VolcanicTransport.Model.Persistance;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -102,7 +103,7 @@ namespace VolcanicTransport.Model.World.Economy
             var targets = World.Instance.Factories.Where(c => c.Name == FactoryName).ToList();
 
             if (targets.Count != 1)
-                throw new LoadingException();
+                throw new PersistanceException();
 
             _factory = targets[0];
         }

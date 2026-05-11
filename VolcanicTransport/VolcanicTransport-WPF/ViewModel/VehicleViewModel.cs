@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using VolcanicTransport.Model.World.Roadnetwork;
+using System.Windows.Media;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -8,6 +9,26 @@ namespace VolcanicTransport_WPF.ViewModel
         private readonly Vehicle _vehicle;
 
         public ObservableCollection<string> ScheduleList { get; } = [];
+
+        public Brush VehicleColor
+        {
+            get
+            {
+                return _vehicle switch
+                {
+                    MiniBus => Brushes.Khaki,
+                    Bus => Brushes.Gold,
+
+                    MiniTankerTruck => Brushes.LightSkyBlue,
+                    TankerTruck => Brushes.RoyalBlue,
+
+                    MiniCargoTruck => Brushes.LightGreen,
+                    CargoTruck => Brushes.ForestGreen,
+
+                    _ => Brushes.Gray
+                };
+            }
+        }
 
         public VehicleViewModel(Vehicle vehicle)
         {
@@ -19,7 +40,8 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged(nameof(VisualAngle));
                 OnPropertyChanged(nameof(StateDisplay));
                 OnPropertyChanged(nameof(Type));
-                OnPropertyChanged(nameof(GetCurrentCapacity));
+                OnPropertyChanged(nameof(GetCurrentLoad));
+                OnPropertyChanged(nameof(Capacity));
                 OnPropertyChanged(nameof(SpeedDisplay));
             };
             _vehicle.RouteChanged += (sender, args) => RefreshScheduleList();
@@ -59,8 +81,9 @@ namespace VolcanicTransport_WPF.ViewModel
         public Vehicle GetVehicle => _vehicle;
 
         public string Type => _vehicle.CurrentType.ToString();
+        public string Capacity => _vehicle.Capacity.ToString();
 
-        public string GetCurrentCapacity => (_vehicle.Capacity - _vehicle.CurrentLoad).ToString();
+        public string GetCurrentLoad => _vehicle.CurrentLoad.ToString();
         public string SpeedDisplay => (_vehicle.CurrentSpeed).ToString() + " km/h";
 
         public string StateDisplay => _vehicle.State.ToString();

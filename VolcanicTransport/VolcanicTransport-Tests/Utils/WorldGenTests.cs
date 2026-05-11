@@ -58,10 +58,10 @@ namespace VolcanicTransport_Tests.Utils
             {
                 Coordinate center = city.CenterCoordinate;
                 Coordinate[] roadCoords = [
-                    center + Direction.North, 
-                    center + Direction.South,
-                    center + Direction.East, 
-                    center + Direction.West, center
+                    center + Coordinate.North, 
+                    center + Coordinate.South,
+                    center + Coordinate.East, 
+                    center + Coordinate.West, center
                 ];
 
                 foreach (var coord in roadCoords)
@@ -71,10 +71,10 @@ namespace VolcanicTransport_Tests.Utils
                 }
 
                 Coordinate[] cornerCoords = [
-                center + Direction.North + Direction.East,
-                center + Direction.North + Direction.West,
-                center + Direction.South + Direction.East,
-                center + Direction.South + Direction.West
+                center + Coordinate.North + Coordinate.East,
+                center + Coordinate.North + Coordinate.West,
+                center + Coordinate.South + Coordinate.East,
+                center + Coordinate.South + Coordinate.West
             ];
 
                 foreach (var coord in cornerCoords)
@@ -146,12 +146,12 @@ namespace VolcanicTransport_Tests.Utils
                 Coordinate center = city.CenterCoordinate;
                 Coordinate[] cityTiles = [
                     center,
-                    center + Direction.North, center + Direction.South,
-                    center + Direction.East, center + Direction.West,
-                    center + Direction.North + Direction.East,
-                    center + Direction.North + Direction.West,
-                    center + Direction.South + Direction.East,
-                    center + Direction.South + Direction.West
+                    center + Coordinate.North, center + Coordinate.South,
+                    center + Coordinate.East, center + Coordinate.West,
+                    center + Coordinate.North + Coordinate.East,
+                    center + Coordinate.North + Coordinate.West,
+                    center + Coordinate.South + Coordinate.East,
+                    center + Coordinate.South + Coordinate.West
                 ];
 
                 foreach (var coord in cityTiles)

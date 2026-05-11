@@ -46,7 +46,7 @@ namespace VolcanicTransport.Model.World
 
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
-        public Roadnetwork.VehicleManager VehicleManager { get; } = new();
+        public VehicleManager VehicleManager { get; } = new();
 
         #endregion
 
@@ -149,10 +149,10 @@ namespace VolcanicTransport.Model.World
             List<Coordinate> targets =
             [
                 c,
-                c + Direction.North,
-                c + Direction.South,
-                c + Direction.East,
-                c + Direction.West
+                c + Coordinate.North,
+                c + Coordinate.South,
+                c + Coordinate.East,
+                c + Coordinate.West
             ];
 
             HashSet<Chunk> chunksToRender = [];
