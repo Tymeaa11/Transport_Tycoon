@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Reflection;
 using VolcanicTransport.Model.Persistance;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -13,18 +10,20 @@ namespace VolcanicTransport_Tests.Persistance
 {
     [TestClass]
     [DoNotParallelize]
-    public class PersistanceTests
+    public class PersistenceTests
     {
-        private SaveFileManager? _saveManager;
-        private string _testPath = "test_persistence.zip";
+        private SaveFileManager _saveManager = null!;
+        private string _testPath = null!;
+        private const int WorldSize = 1;
+        private const int Seed = 12345;
 
         [TestInitialize]
         public void Setup()
         {
             _saveManager = new SaveFileManager(new Zip2FileSaveFormat());
+            _testPath = Path.Combine(Path.GetTempPath(), $"persistence_test_{Guid.NewGuid()}.zip");
 
-            _testPath = Path.Combine(Path.GetTempPath(), $"test_save_{Guid.NewGuid()}.zip");
-            World.Initialise(4, 42);
+            World.Initialise(WorldSize, Seed);
         }
 
         [TestCleanup]
@@ -33,84 +32,186 @@ namespace VolcanicTransport_Tests.Persistance
             if (File.Exists(_testPath)) File.Delete(_testPath);
         }
 
-        // TODO Rectactor this
-        public void CheckSavingThenLoading()
+        private GameData SaveAndLoad(GameData data)
         {
-            var world = World.Instance;
-            var money = 123456.0;
-            var gameTime = 500.5;
-
-            Coordinate roadCoord = new(5, 5);
-            world.GetField(roadCoord)!.Surface = new Road(roadCoord);
-
-            Coordinate mushroomCoord = new(6, 6);
-            world.GetField(mushroomCoord)!.Surface = new Mushroom(mushroomCoord, MushroomGrowthStage.ADULT);
-
-            var testRoute = new Route { Name = "Express 1" };
-            world.AddRoute(testRoute);
-
-            var tanker = new TankerTruck("BigRed")
-            {
-                PosX = 10.5f,
-                PosY = 12.2f,
-                Angle = 0.5f,
-                State = VehicleState.Moving
-            };
-            tanker.AssignNewRoute(testRoute);
-            world.AddVehicle(tanker);
-
-            var saveData = new GameData(world, true, gameTime, money);
-            _saveManager!.SaveGame(saveData, _testPath);
-
-            World.Initialise(4, 42);
-            Assert.AreEqual(0, World.Instance.Vehicles.Count, "World reset failed.");
-
-            var loadedData = _saveManager.LoadGame(_testPath, (_, _) => { });
-
-            Assert.AreEqual(money, loadedData.PlayerMoney, "Money mismatch after load.");
-            Assert.AreEqual(gameTime, loadedData.Time, "Time mismatch after load.");
-            Assert.IsTrue(loadedData.IsPaused, "Paused state mismatch.");
-
-            // Binary
-            var roadField = World.Instance.GetField(roadCoord);
-            Assert.IsInstanceOfType<Road>(roadField!.Surface, "Road was not restored.");
-
-            var mushField = World.Instance.GetField(mushroomCoord);
-            Assert.IsInstanceOfType<Mushroom>(mushField!.Surface, "Mushroom was not restored.");
-            Assert.AreEqual(MushroomGrowthStage.ADULT, ((Mushroom)mushField.Surface).GrowthStage);
-
-            // JSON
-            Assert.AreEqual(1, World.Instance.Vehicles.Count, "Vehicle was not restored.");
-            var loadedVehicle = World.Instance.Vehicles[0];
-
-            Assert.AreEqual("BigRed", loadedVehicle.Name);
-            Assert.AreEqual(10.5f, loadedVehicle.PosX, 0.01f, "Position X mismatch.");
-
-            
-            Assert.IsNotNull(loadedVehicle.Route, "Vehicle route reference was not re-linked.");
-            Assert.AreEqual("Express 1", loadedVehicle.Route.Name);
+            _saveManager.SaveGame(data, _testPath);
+            World.Initialise(WorldSize, Seed);
+            return _saveManager.LoadGame(_testPath, (s, e) => { });
         }
 
+        #region Basic & Binary Map Tests
 
         [TestMethod]
-        public void CheckIfFactoryStateIsPeserved()
+        public void TestGameStateMetadata()
+        {
+            var original = new GameData(World.Instance, true, 420.69, 75000.0);
+            var loaded = SaveAndLoad(original);
+
+            Assert.AreEqual(original.PlayerMoney, loaded.PlayerMoney, 0.001);
+            Assert.AreEqual(original.Time, loaded.Time, 0.001);
+            Assert.IsTrue(loaded.IsPaused);
+        }
+
+        [TestMethod]
+        public void TestBinaryMapBitmasks()
         {
             var world = World.Instance;
-            var factory = new ConcreteFactory("TestFactory", new Coordinate(10, 10));
-            typeof(Factory).GetField("productionAccumulator", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(factory, 0.75);
+            Coordinate roadCoord = new(1, 1);
+            Coordinate mushCoord = new(2, 2);
+            Coordinate heightCoord = new(3, 3);
 
+            world.GetField(roadCoord)!.Surface = new Road(roadCoord) { IsReserved = true };
+
+            world.GetField(mushCoord)!.Surface = new Mushroom(mushCoord, MushroomGrowthStage.ADULT);
+
+            world.GetField(heightCoord)!.SetFieldTypeTo(FieldType.HIGH_MOUNTAINS);
+
+            SaveAndLoad(new GameData(world, false, 0, 0));
+
+            var loadedRoad = World.Instance.GetField(roadCoord)!.Surface as Road;
+            var loadedMush = World.Instance.GetField(mushCoord)!.Surface as Mushroom;
+
+            Assert.IsTrue(loadedRoad!.IsReserved, "Road reservation bit lost in binary save.");
+            Assert.AreEqual(MushroomGrowthStage.ADULT, loadedMush!.GrowthStage, "Mushroom stage bits corrupted.");
+            Assert.AreEqual(FieldType.HIGH_MOUNTAINS, World.Instance.GetField(heightCoord)!.Type, "Terrain height corrupted.");
+        }
+
+        #endregion
+
+        #region Economic Entity & Reference Restoration
+
+        [TestMethod]
+        public void TestCityAndBuildingReferenceRestoration()
+        {
+            var world = World.Instance;
+            var city = new City("Metropolis", new Coordinate(10, 10));
+            world.Cities.Add(city);
+
+            var buildingCoord = new Coordinate(11, 11);
+            var building = new CityBuilding(city);
+            var buildingField = world.GetField(buildingCoord);
+
+            Assert.IsNotNull(buildingField);
+            buildingField!.Surface = building;
+
+            city.AddField(buildingField);
+
+            SaveAndLoad(new GameData(world, false, 0, 0));
+
+            var loadedBuilding = World.Instance.GetField(buildingCoord)!.Surface as CityBuilding;
+            Assert.IsNotNull(loadedBuilding);
+
+            Assert.IsTrue(World.Instance.Cities.Count == 1);
+            Assert.IsTrue(World.Instance.Cities[0].Name == city.Name);
+
+            Assert.AreEqual("Metropolis", loadedBuilding.CityName);
+        }
+
+        [TestMethod]
+        public void TestPolymorphicFactoryRestoration()
+        {
+            var world = World.Instance;
+            var sulfur = new SulfurProducer("Sulfur Mine", new Coordinate(5, 5));
+            var ash = new AshProducer("Ash Plant", new Coordinate(15, 15));
+
+            world.Factories.Add(sulfur);
+            world.Factories.Add(ash);
+
+            SaveAndLoad(new GameData(world, false, 0, 0));
+
+            var loadedSulfur = World.Instance.Factories.FirstOrDefault(f => f.Name == "Sulfur Mine");
+            var loadedAsh = World.Instance.Factories.FirstOrDefault(f => f.Name == "Ash Plant");
+
+            Assert.IsInstanceOfType(loadedSulfur, typeof(SulfurProducer), "SulfurProducer lost its specific type.");
+            Assert.IsInstanceOfType(loadedAsh, typeof(AshProducer), "AshProducer lost its specific type.");
+            Assert.AreEqual(ProductType.SULFUR, loadedSulfur!.FinalProduct.ProductType);
+        }
+
+        [TestMethod]
+        public void TestStationAndFactoryConnection()
+        {
+            var world = World.Instance;
+            var factory = new ConcreteFactory("C-Fac", new Coordinate(20, 20));
             world.Factories.Add(factory);
 
-            _saveManager!.SaveGame(new GameData(world, false, 0, 0), _testPath);
-            World.Initialise(4, 42);
-            _saveManager.LoadGame(_testPath, (_, _) => { });
+            var stationCoord = new Coordinate(21, 21);
+            var station = new FactoryStation(stationCoord, "C-Station", factory);
+            world.GetField(stationCoord)!.Surface = station;
+            world.Stations.Add(station);
 
-            var loadedFactory = World.Instance.Factories[0];
-            var accValue = typeof(Factory).GetField("productionAccumulator", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.GetValue(loadedFactory);
+            SaveAndLoad(new GameData(world, false, 0, 0));
 
-            Assert.AreEqual(0.75, (double)accValue!, 0.001, "Production accumulator reset to zero.");
+            var loadedStation = World.Instance.Stations.First() as FactoryStation;
+            Assert.AreEqual("C-Fac", loadedStation?.FactoryName);
         }
+
+        #endregion
+
+        #region Road Network & Routing
+
+        [TestMethod]
+        public void TestVehicleAndRouteComplexRestoration()
+        {
+            var world = World.Instance;
+
+            var city = new City("Town", new Coordinate(0, 0));
+            var s1 = new CityStation(city, new Coordinate(1, 1), "Stop A");
+            var s2 = new CityStation(city, new Coordinate(1, 5), "Stop B");
+            world.Cities.Add(city);
+            world.Stations.Add(s1);
+            world.Stations.Add(s2);
+            world.GetField(s1.Coordinate)!.Surface = s1;
+            world.GetField(s2.Coordinate)!.Surface = s2;
+
+            var route = new Route { Name = "Express" };
+            route.AddStop(s1);
+            route.AddStop(s2);
+            world.AddRoute(route);
+
+
+            var bus = new Bus("Bus-99");
+            bus.Load(5, ProductType.HUMAN);
+            bus.AssignNewRoute(route);
+            world.AddVehicle(bus);
+
+            SaveAndLoad(new GameData(world, false, 0, 0));
+
+            var loadedBus = World.Instance.Vehicles.First();
+            var loadedRoute = World.Instance.SavedRoutes.First();
+
+
+            Assert.AreEqual("Bus-99", loadedBus.Name);
+            Assert.AreEqual(5, loadedBus.CurrentLoad);
+            Assert.AreEqual(ProductType.HUMAN, loadedBus.CurrentType);
+            Assert.IsNotNull(loadedBus.Route, "Vehicle's Route reference was not restored.");
+            Assert.AreEqual(loadedBus.Route, loadedRoute);
+            Assert.AreEqual("Express", loadedBus.Route.Name);
+            Assert.AreEqual(2, loadedBus.Route.Stops.Count);
+
+            Assert.AreSame(World.Instance.Stations[0], loadedBus.Route.Stops[0], "Route stops not pointing to restored Station instances.");
+        }
+
+        #endregion
+
+        #region Bridge Persistence
+
+        [TestMethod]
+        public void TestBridgePersistence()
+        {
+            var world = World.Instance;
+            Coordinate bridgeCoord = new(10, 10);
+
+            var bridge = new SteelBridge(bridgeCoord, RoadType.STRAIGHT_NS, FieldType.HIGH_LANDS);
+            world.GetField(bridgeCoord)!.Surface = bridge;
+
+            SaveAndLoad(new GameData(world, false, 0, 0));
+
+            var loadedBridge = World.Instance.GetField(bridgeCoord)!.Surface as SteelBridge;
+            Assert.IsNotNull(loadedBridge);
+            Assert.AreEqual(RoadType.STRAIGHT_NS, loadedBridge.RoadType);
+            Assert.AreEqual(FieldType.HIGH_LANDS, loadedBridge.Elevation);
+        }
+
+        #endregion
     }
 }

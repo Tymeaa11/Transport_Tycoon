@@ -71,8 +71,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public string Name { get; } = name;
         public ProductType CurrentType { get; protected set; } = ProductType.NONE;
-
-        [JsonIgnore]
         public int CurrentLoad { get; protected set; } = 0;
 
         [JsonIgnore]
@@ -630,11 +628,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (CurrentRoad != null)
             {
                 world.VehicleManager.RegisterVehicleOnField(this, CurrentRoad.Coordinate);
+                LoadWaypointsForField();
             }
-
-
-
-            LoadWaypointsForField();
         }
 
         public void PrepareForSave()
