@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Persistance;
@@ -8,7 +7,6 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport.Model
 {

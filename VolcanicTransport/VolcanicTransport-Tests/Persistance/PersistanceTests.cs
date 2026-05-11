@@ -9,7 +9,7 @@ using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport_Tests.Utils
+namespace VolcanicTransport_Tests.Persistance
 {
     [TestClass]
     [DoNotParallelize]
