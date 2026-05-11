@@ -696,6 +696,13 @@ namespace VolcanicTransport_WPF.ViewModel
                 SelectedVehicle = VehicleViewModels[0];
 
             OnPropertyChanged(nameof(VehicleViewModels));
+
+            SavedRoutes.Clear();
+            foreach (var route in World.Instance.SavedRoutes)
+                SavedRoutes.Add(route);
+
+
+
             InitialiseAfter();
             OnSetTimescale0X();
             IsPausedView = true;
