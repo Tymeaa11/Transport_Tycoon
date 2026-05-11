@@ -1,11 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Persistance;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public class Route : IContainsReference
+    public class Route : IContainsReference, IHasSavedState
     {
         public string Name { get; set; } = "Névtelen járat";
         [JsonIgnore]

@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Persistance;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 namespace VolcanicTransport.Model.World.Roadnetwork
@@ -11,7 +12,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
     [JsonDerivedType(typeof(CargoTruck), "cargo_truck")]
     [JsonDerivedType(typeof(MiniCargoTruck), "mini_cargo_truck")]
     [JsonDerivedType(typeof(MiniTankerTruck), "mini_tanker_truck")]
-    public abstract class Vehicle(string name, GameSettings.VehicleData vehicleData) : IContainsReference
+    public abstract class Vehicle(string name, GameSettings.VehicleData vehicleData) : IContainsReference, IHasSavedState
     {
         protected Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType currentType,
                     int currentLoad, int currentStopIndex, VehicleState state, float posX, float posY,
@@ -72,8 +73,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public string Name { get; } = name;
         public ProductType CurrentType { get; protected set; } = ProductType.NONE;
-
-        [JsonIgnore]
         public int CurrentLoad { get; protected set; } = 0;
 
         [JsonIgnore]
@@ -631,23 +630,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (CurrentRoad != null)
             {
                 world.VehicleManager.RegisterVehicleOnField(this, CurrentRoad.Coordinate);
+                LoadWaypointsForField();
             }
-
-
-
-            LoadWaypointsForField();
         }
 
         public void PrepareForSave()
         {
             SavedPathCoordinates = [.. currentPath.Select(r => r.Coordinate)];
             RouteName = Route?.Name;
-        }
-
-        public class VehicleArrivedEventArgs(Vehicle vehicle, Station station) : EventArgs
-        {
-            public Vehicle Vehicle { get; } = vehicle;
-            public Station Station { get; } = station;
         }
     }
     public class VehicleTemplate

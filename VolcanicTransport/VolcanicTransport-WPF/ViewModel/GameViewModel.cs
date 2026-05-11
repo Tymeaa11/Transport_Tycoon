@@ -128,7 +128,6 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand TogglePauseCommand { get; private set; }
         public DelegateCommand ResumeCommand { get; private set; }
         public DelegateCommand QuitToMainMenuCommand { get; private set; }
-        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
         public DelegateCommand OpenPurchasePanelCommand { get; private set; }
         public DelegateCommand ClosePurchasePanelCommand { get; private set; }
         public DelegateCommand ConfirmPurchaseCommand { get; private set; }
@@ -652,26 +651,6 @@ namespace VolcanicTransport_WPF.ViewModel
                 }
             });
 
-            ReGenerateWithRandomSeed = new DelegateCommand(_ =>
-            {
-                LoadedChunks.Clear();
-                ChunkMap.Clear();
-                
-                InitialiseNewGame();
-
-                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
-                {
-                    ChunkViewModel chunkViewModel = new(c);
-                    LoadedChunks.Add(chunkViewModel);
-                    ChunkMap[new(x, y)] = chunkViewModel;
-                });
-
-                UpdateVisibleChunks();
-
-                Camera.Reset();
-
-            }
-            );
             ClearRouteCommand = new DelegateCommand(_ =>
             {
                 if (SelectedVehicle != null)
@@ -783,6 +762,13 @@ namespace VolcanicTransport_WPF.ViewModel
                 SelectedVehicle = VehicleViewModels[0];
 
             OnPropertyChanged(nameof(VehicleViewModels));
+
+            SavedRoutes.Clear();
+            foreach (var route in World.Instance.SavedRoutes)
+                SavedRoutes.Add(route);
+
+
+
             InitialiseAfter();
             OnSetTimescale0X();
             IsPausedView = true;

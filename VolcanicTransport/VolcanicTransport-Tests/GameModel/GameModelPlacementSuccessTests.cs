@@ -20,7 +20,7 @@ namespace VolcanicTransport_Tests.GameModelTests
 
         private static void ClearAdjacentRoads(Coordinate coord)
         {
-            foreach (var dir in Direction.Directions)
+            foreach (var dir in Coordinate.Directions)
             {
                 var nf = W.GetField(coord + dir);
                 if (nf?.Surface is Road) nf.Surface = null;

@@ -6,6 +6,18 @@ namespace VolcanicTransport.Model.Utils
     [method: JsonConstructor]
     public readonly struct Coordinate(int x, int y) : IEquatable<Coordinate>
     {
+        #region Static fields
+        public static readonly Coordinate North = new(0, -1);
+        public static readonly Coordinate South = new(0, 1);
+        public static readonly Coordinate East = new(1, 0);
+        public static readonly Coordinate West = new(-1, 0);
+
+        public static readonly Coordinate[] Directions = [North, South, East, West];
+
+        public static Coordinate GetRandomDirection()
+            => Directions[World.World.Instance.SharedRandom.Next(Directions.Length)];
+        #endregion
+
         #region  Fields
         public int X { get; } = x;
         public int Y { get; } = y;

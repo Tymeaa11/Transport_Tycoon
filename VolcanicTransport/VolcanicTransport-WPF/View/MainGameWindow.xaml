@@ -11,10 +11,6 @@
         x:Name="RootWindow"
         >
 
-    <Window.InputBindings>
-        <KeyBinding Key="G" Command="{Binding ReGenerateWithRandomSeed}" />
-    </Window.InputBindings>
-
     <Window.Resources>
         <view:ChunkToPixelConverter x:Key="ChunkToPixelConverter" />
         <view:MiniChunkToPixelConverter x:Key="MiniChunkToPixelConverter" />
