@@ -14,7 +14,7 @@ namespace VolcanicTransport_Tests.WorldTests
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
         private static City MakeCity(string name = "Szolnok", int x = 5, int y = 5)
-            => new City(name, new Coordinate(x, y));
+            => new(name, new Coordinate(x, y));
 
         [TestMethod]
         public void Constructor_WithCity_SetsCityName()

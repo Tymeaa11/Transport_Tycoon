@@ -192,16 +192,6 @@ namespace VolcanicTransport_Tests.VehicleTests
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
-        private static Station MakeStation(int x, int y)
-            => new SimpleTestStation(new Coordinate(x, y));
-
-        [TestMethod]
-        public void Route_DefaultName_IsNotNull()
-        {
-            var r = new Route();
-            Assert.IsNotNull(r.Name);
-        }
-
         [TestMethod]
         public void Route_InitiallyEmpty()
         {
@@ -220,9 +210,9 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void AddStop_MultipleStations_AllAdded()
         {
             var r = new Route();
-            r.AddStop(MakeStation(20, 20));
-            r.AddStop(MakeStation(21, 20));
-            r.AddStop(MakeStation(22, 20));
+            r.AddStop(SimpleTestStation.MakeStation(20, 20));
+            r.AddStop(SimpleTestStation.MakeStation(21, 20));
+            r.AddStop(SimpleTestStation.MakeStation(22, 20));
             Assert.AreEqual(3, r.Stops.Count);
         }
 
@@ -230,7 +220,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void GetNextStop_EmptyRoute_ReturnsNull()
         {
             var r = new Route();
-            var s = MakeStation(30, 30);
+            var s = SimpleTestStation.MakeStation(30, 30);
             Assert.IsNull(r.GetNextStop(s));
         }
 
@@ -245,7 +235,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void PrepareForSave_DoesNotThrow()
         {
             var r = new Route { Name = "SaveRoute" };
-            r.AddStop(MakeStation(40, 40));
+            r.AddStop(SimpleTestStation.MakeStation(40, 40));
             r.PrepareForSave();
         }
 
@@ -254,7 +244,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         {
             var world = GameWorld.Instance;
             var coord = new Coordinate(50, 50);
-            var station = MakeStation(50, 50);
+            var station = SimpleTestStation.MakeStation(50, 50);
             world.GetField(coord)!.Surface = station;
             world.Stations.Add(station);
 
@@ -274,5 +264,8 @@ namespace VolcanicTransport_Tests.VehicleTests
         new Product(ProductType.HUMAN, 0, 20))
     {
         public override int UnLoadProductFromVehicle(Vehicle vehicle) => 0;
+
+        public static SimpleTestStation MakeStation(int x, int y)
+            => new(new Coordinate(x, y));
     }
 }

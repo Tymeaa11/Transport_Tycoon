@@ -16,10 +16,10 @@ namespace VolcanicTransport_Tests.WorldTests
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(8, 55);
 
         private static City MakeCity(string name = "TestCity", int x = 10, int y = 10)
-            => new City(name, new Coordinate(x, y));
+            => new(name, new Coordinate(x, y));
 
         private static CityStation MakeStation(City city, int x = 5, int y = 5)
-            => new CityStation(city, new Coordinate(x, y), city.Name + " Stop");
+            => new(city, new Coordinate(x, y), city.Name + " Stop");
 
         [TestMethod]
         public void CityStation_Constructor_SetsCorrectCityName()
@@ -114,8 +114,8 @@ namespace VolcanicTransport_Tests.WorldTests
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(8, 66);
 
-        private static Factory MakeFactory()
-            => new SulfurProducer("TestFactory", new Coordinate(3, 3));
+        private static SulfurProducer MakeFactory()
+            => new("TestFactory", new Coordinate(3, 3));
 
         [TestMethod]
         public void FactoryStation_Constructor_SetsFactoryName()

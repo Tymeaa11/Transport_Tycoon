@@ -14,6 +14,17 @@ namespace VolcanicTransport_Tests.VehicleTests
         new Product(ProductType.HUMAN, 0, 50))
     {
         public override int UnLoadProductFromVehicle(Vehicle vehicle) => 0;
+
+        public static TestStation MakeStation(int x, int y)
+            => new(new Coordinate(x, y));
+
+        public static TestStation PlaceStation(int x, int y)
+        {
+            var coord = new Coordinate(x, y);
+            var station = new TestStation(coord);
+            GameWorld.Instance.GetField(coord)!.Surface = station;
+            return station;
+        }
     }
 
     [TestClass]
@@ -23,14 +34,13 @@ namespace VolcanicTransport_Tests.VehicleTests
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
-        private static Station MakeStation(int x, int y)
-            => new TestStation(new Coordinate(x, y));
+
 
         [TestMethod]
         public void AddStop_NewStation_IsAdded()
         {
             var route = new Route();
-            var s = MakeStation(1, 1);
+            var s = TestStation.MakeStation(1, 1);
 
             route.AddStop(s);
 
@@ -41,7 +51,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void AddStop_SameStationTwice_CountStaysOne()
         {
             var route = new Route();
-            var s = MakeStation(1, 2);
+            var s = TestStation.MakeStation(1, 2);
 
             route.AddStop(s);
             route.AddStop(s);
@@ -53,7 +63,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void GetNextStop_SingleStop_ReturnsNull()
         {
             var route = new Route();
-            var s = MakeStation(1, 3);
+            var s = TestStation.MakeStation(1, 3);
             route.AddStop(s);
 
             Assert.IsNull(route.GetNextStop(s));
@@ -63,8 +73,8 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void GetNextStop_TwoStops_WrapsAround()
         {
             var route = new Route();
-            var s1 = MakeStation(1, 4);
-            var s2 = MakeStation(1, 5);
+            var s1 = TestStation.MakeStation(1, 4);
+            var s2 = TestStation.MakeStation(1, 5);
             route.AddStop(s1);
             route.AddStop(s2);
 
@@ -76,9 +86,9 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void GetNextStop_UnknownStation_ReturnsFirst()
         {
             var route = new Route();
-            var s1 = MakeStation(1, 6);
-            var s2 = MakeStation(1, 7);
-            var sOther = MakeStation(1, 8);
+            var s1 = TestStation.MakeStation(1, 6);
+            var s2 = TestStation.MakeStation(1, 7);
+            var sOther = TestStation.MakeStation(1, 8);
             route.AddStop(s1);
             route.AddStop(s2);
 
@@ -89,9 +99,9 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void GetNextStop_ThreeStops_CyclesCorrectly()
         {
             var route = new Route();
-            var s1 = MakeStation(1, 9);
-            var s2 = MakeStation(1, 10);
-            var s3 = MakeStation(1, 11);
+            var s1 = TestStation.MakeStation(1, 9);
+            var s2 = TestStation.MakeStation(1, 10);
+            var s3 = TestStation.MakeStation(1, 11);
             route.AddStop(s1);
             route.AddStop(s2);
             route.AddStop(s3);
@@ -121,13 +131,7 @@ namespace VolcanicTransport_Tests.VehicleTests
             return road;
         }
 
-        private static Station PlaceStation(int x, int y)
-        {
-            var coord = new Coordinate(x, y);
-            var station = new TestStation(coord);
-            GameWorld.Instance.GetField(coord)!.Surface = station;
-            return station;
-        }
+
 
         private static IReadOnlyList<Vehicle> VehiclesAt(int x, int y)
             => GameWorld.Instance.VehicleManager.GetVehiclesOnField(new Coordinate(x, y));
@@ -183,7 +187,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void StartJourney_StationAsFirstRoad_MarksStationOccupied()
         {
-            var st = PlaceStation(16, 10);
+            var st = TestStation.PlaceStation(16, 10);
             var r2  = PlaceRoad(17, 10);
             var bus = new Bus("SJ4");
 
@@ -296,7 +300,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         {
             var bus = new Bus("TS1");
             var route = new Route();
-            route.AddStop(PlaceStation(40, 10));
+            route.AddStop(TestStation.PlaceStation(40, 10));
             bus.Route = route;
 
             bus.TryStartNextRoute();
@@ -322,8 +326,8 @@ namespace VolcanicTransport_Tests.VehicleTests
             var bus = new Bus("TS3");
             bus.StartJourney([r1, r2]);
             var route = new Route();
-            route.AddStop(PlaceStation(43, 10));
-            route.AddStop(PlaceStation(44, 10));
+            route.AddStop(TestStation.PlaceStation(43, 10));
+            route.AddStop(TestStation.PlaceStation(44, 10));
             bus.Route = route;
 
             bus.TryStartNextRoute();
@@ -360,8 +364,10 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Update_MovingWithNoPath_SetsWaiting()
         {
-            var bus = new Bus("UP3");
-            bus.State = VehicleState.Moving;
+            var bus = new Bus("UP3")
+            {
+                State = VehicleState.Moving
+            };
 
             bus.Update(1.0);
 
@@ -398,7 +404,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Boarding_EmptyStation_ReturnsZero()
         {
-            var station = PlaceStation(60, 10);
+            var station = TestStation.PlaceStation(60, 10);
             var bus = new Bus("BD1");
 
             int boarded = station.Boarding(bus);
@@ -409,7 +415,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Boarding_StationWithPassengers_LoadsVehicle()
         {
-            var station = PlaceStation(61, 10);
+            var station = TestStation.PlaceStation(61, 10);
             station.GetWaitingPassengers(200.0);
             var bus = new Bus("BD2");
 
@@ -423,7 +429,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Boarding_VehicleCarryingOtherProduct_ReturnsZero()
         {
-            var station = PlaceStation(62, 10);
+            var station = TestStation.PlaceStation(62, 10);
             station.GetWaitingPassengers(200.0);
             var truck = new TankerTruck("BD3");
             truck.Load(100, ProductType.WATER);
@@ -437,7 +443,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Boarding_StationPassengersDecreaseAfterBoarding()
         {
-            var station = PlaceStation(63, 10);
+            var station = TestStation.PlaceStation(63, 10);
             station.GetWaitingPassengers(200.0);
             var bus = new Bus("BD4");
 
@@ -450,7 +456,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void UnBoarding_NonHumanVehicle_ReturnsZero()
         {
-            var station = PlaceStation(64, 10);
+            var station = TestStation.PlaceStation(64, 10);
             var truck = new TankerTruck("BD5");
             truck.Load(200, ProductType.WATER);
 
@@ -462,7 +468,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void UnBoarding_HumanVehicle_EventuallyReducesLoad()
         {
-            var station = PlaceStation(65, 10);
+            var station = TestStation.PlaceStation(65, 10);
             var bus = new Bus("BD6");
             bus.Load(50, ProductType.HUMAN);
 
@@ -480,7 +486,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void UnBoarding_EmptyVehicle_ReturnsZero()
         {
-            var station = PlaceStation(66, 10);
+            var station = TestStation.PlaceStation(66, 10);
             var bus = new Bus("BD7");
             bus.Load(10, ProductType.HUMAN);
             bus.Unload(10);
@@ -494,7 +500,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Update_LoadingTimerExceeds_SingleStopRoute_SetsWaiting()
         {
-            var st = PlaceStation(67, 10);
+            var st = TestStation.PlaceStation(67, 10);
             var bus = new Bus("EV1");
             var route = new Route();
             route.AddStop(st);
@@ -616,8 +622,10 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void PrepareForSave_WithRoute_SavesRouteName()
         {
-            var bus = new Bus("PS2");
-            bus.Route = new Route { Name = "RouteX" };
+            var bus = new Bus("PS2")
+            {
+                Route = new Route { Name = "RouteX" }
+            };
 
             bus.PrepareForSave();
 
@@ -643,8 +651,10 @@ namespace VolcanicTransport_Tests.VehicleTests
             bus.StartJourney([r1, r2]);
             bus.PrepareForSave();
 
-            var bus2 = new Bus("RR1b");
-            bus2.SavedPathCoordinates = bus.SavedPathCoordinates;
+            var bus2 = new Bus("RR1b")
+            {
+                SavedPathCoordinates = bus.SavedPathCoordinates
+            };
 
             bus2.RestoreReference(r1.Coordinate);
 
