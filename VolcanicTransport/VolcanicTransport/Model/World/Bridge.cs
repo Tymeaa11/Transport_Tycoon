@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World
 {
@@ -17,14 +16,14 @@ namespace VolcanicTransport.Model.World
         [JsonIgnore]
         public float SpeedLimit => bridgeData.MaxSpeed;
 
-        public override void Update() {}
+        public override void Update() { }
     }
 
     public class BoneBridge(
         Coordinate coordinate,
-        RoadType roadType, 
-        FieldType elevation) 
-    : Bridge(coordinate, roadType, elevation, GameSettings.BoneBridge) 
+        RoadType roadType,
+        FieldType elevation)
+    : Bridge(coordinate, roadType, elevation, GameSettings.BoneBridge)
     {
 
     }

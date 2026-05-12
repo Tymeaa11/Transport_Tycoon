@@ -1,6 +1,5 @@
 ﻿using Microsoft.Win32;
 using System.Windows;
-using VolcanicTransport.Model;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport_WPF.View;
 using VolcanicTransport_WPF.ViewModel;

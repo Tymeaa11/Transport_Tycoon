@@ -10,7 +10,7 @@ namespace VolcanicTransport.Model.World.Economy
     public class CityStation : Station, IInspectable, IContainsReference
     {
         #region Fields
-        public string CityName {get; private set;}
+        public string CityName { get; private set; }
 
         [JsonIgnore]
         private City? _city;

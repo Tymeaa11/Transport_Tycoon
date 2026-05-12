@@ -59,9 +59,9 @@ namespace VolcanicTransport_Tests.WorldTests
             {
                 Coordinate center = city.CenterCoordinate;
                 Coordinate[] roadCoords = [
-                    center + Coordinate.North, 
+                    center + Coordinate.North,
                     center + Coordinate.South,
-                    center + Coordinate.East, 
+                    center + Coordinate.East,
                     center + Coordinate.West, center
                 ];
 

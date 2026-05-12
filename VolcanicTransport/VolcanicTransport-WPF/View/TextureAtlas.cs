@@ -62,13 +62,13 @@ namespace VolcanicTransport_WPF.View
             FactoryBuildingTextures[0, 1] = GetTile(factAtlas, 1, 0);
             FactoryBuildingTextures[1, 1] = GetTile(factAtlas, 1, 1);
 
-            var straight =  GetTile(atlas, 1, 0);
-            var curved =    GetTile(atlas, 1, 1);
+            var straight = GetTile(atlas, 1, 0);
+            var curved = GetTile(atlas, 1, 1);
             var xjunction = GetTile(atlas, 1, 2);
             var tjunction = GetTile(atlas, 1, 3);
-            var end =       GetTile(atlas, 1, 4);
-            var lonely =    GetTile(atlas, 1, 5);
-            var invalid =   GetTile(atlas, 2, 6);
+            var end = GetTile(atlas, 1, 4);
+            var lonely = GetTile(atlas, 1, 5);
+            var invalid = GetTile(atlas, 2, 6);
 
             RoadTextures[RoadType.STRAIGHT_NS] = new ImageWithRotation(straight, 0);
             RoadTextures[RoadType.STRAIGHT_EW] = new ImageWithRotation(straight, 90);

@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VolcanicTransport.Model;
+﻿using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 using GameWorld = VolcanicTransport.Model.World.World;
@@ -118,7 +112,7 @@ namespace VolcanicTransport_Tests.EconomyTests
         {
             var origin = new Coordinate(5, 5);
             var factory = new SulfurProducer("TestSulfur", origin);
-            var station = new FactoryStation(origin+2, "FactoryStation", factory);
+            var station = new FactoryStation(origin + 2, "FactoryStation", factory);
 
             SimulateProduction(factory, 60.0);
             int currentFactoryLoad = factory.FinalProductBuffer.CurrentLoad;
@@ -192,7 +186,7 @@ namespace VolcanicTransport_Tests.EconomyTests
 
             people = station.GetWaitingPassengers(1000);
             boarded = station.Boarding(miniBus);
-            Assert.AreEqual(miniBus.Capacity-people, boarded, "A minibuszra csak 12 ember férhet fel.");
+            Assert.AreEqual(miniBus.Capacity - people, boarded, "A minibuszra csak 12 ember férhet fel.");
             Assert.AreEqual(miniBus.Capacity, miniBus.CurrentLoad, "A busznak tele kellene lennie.");
         }
 

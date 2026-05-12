@@ -188,7 +188,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void StartJourney_StationAsFirstRoad_MarksStationOccupied()
         {
             var st = TestStation.PlaceStation(16, 10);
-            var r2  = PlaceRoad(17, 10);
+            var r2 = PlaceRoad(17, 10);
             var bus = new Bus("SJ4");
 
             bus.StartJourney([st, r2]);

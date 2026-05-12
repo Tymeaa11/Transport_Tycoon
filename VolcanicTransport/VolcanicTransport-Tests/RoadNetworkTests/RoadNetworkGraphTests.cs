@@ -1,6 +1,5 @@
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
-using VolcanicTransport.Model.World.Roadnetwork;
 using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.RoadnetworkTests
@@ -232,7 +231,7 @@ namespace VolcanicTransport_Tests.RoadnetworkTests
             var jBCoord = new Coordinate(14, 65);
 
             PlaceRoad(new Coordinate(10, 64)); PlaceRoad(new Coordinate(10, 66));
-            PlaceRoad(new Coordinate(14, 64)); PlaceRoad(new Coordinate(14, 66)); 
+            PlaceRoad(new Coordinate(14, 64)); PlaceRoad(new Coordinate(14, 66));
 
             var r1 = PlaceRoad(new Coordinate(11, 65));
             var r2 = PlaceRoad(new Coordinate(12, 65));

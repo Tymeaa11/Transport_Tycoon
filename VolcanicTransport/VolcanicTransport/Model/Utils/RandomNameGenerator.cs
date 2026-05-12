@@ -2,7 +2,7 @@ using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.Utils
 {
-    
+
     public class RandomNameGenerator
     {
         private static readonly Dictionary<Type, NameSet> names = [];

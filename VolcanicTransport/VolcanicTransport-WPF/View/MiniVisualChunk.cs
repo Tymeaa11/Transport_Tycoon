@@ -3,7 +3,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.World;
-using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport_WPF.ViewModel;
 
 namespace VolcanicTransport_WPF.View
@@ -83,7 +82,7 @@ namespace VolcanicTransport_WPF.View
                 {
                     // Draw the tile based on FieldType / Surface
                     Brush brush = f.Surface != null ? SurfaceBrushProvider.GetBrush(f.Surface.GetType()) : FieldBrushProvider.GetBrush(f.Type);
-                   
+
                     double fieldX = x * GameSettings.MiniFieldSize;
                     double fieldY = y * GameSettings.MiniFieldSize;
 

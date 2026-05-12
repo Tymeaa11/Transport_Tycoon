@@ -1,11 +1,10 @@
 using VolcanicTransport.Model;
+using VolcanicTransport.Model.Persistance;
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using VolcanicTransport.Model.TerrainGeneration.Layers;
 using GameWorld = VolcanicTransport.Model.World.World;
-using VolcanicTransport.Model.Persistance;
 
 namespace VolcanicTransport_Tests.Misc
 {
@@ -348,7 +347,7 @@ namespace VolcanicTransport_Tests.Misc
 
             int sum = 0;
             m.ReadEach((x, y, v) => sum += v);
-            Assert.AreEqual(0+1+2+3+4+5+6+7+8, sum);
+            Assert.AreEqual(0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8, sum);
         }
 
         [TestMethod]

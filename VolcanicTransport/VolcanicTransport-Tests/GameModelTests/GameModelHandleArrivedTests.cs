@@ -1,10 +1,7 @@
 ﻿using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
-using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.GameModelTests
 {

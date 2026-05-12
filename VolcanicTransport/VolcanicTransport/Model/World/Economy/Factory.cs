@@ -12,12 +12,12 @@ namespace VolcanicTransport.Model.World.Economy
     [JsonDerivedType(typeof(ConcreteFactory), "concrete")]
     [JsonDerivedType(typeof(CondensatorFactory), "condensator")]
     public abstract class Factory(
-            string name, 
-            ProductType baseProduct, 
-            Product finalProduct, 
-            ProductBuffer baseProductBuffer, 
-            ProductBuffer finalProductBuffer, 
-            Coordinate originCoordinate, 
+            string name,
+            ProductType baseProduct,
+            Product finalProduct,
+            ProductBuffer baseProductBuffer,
+            ProductBuffer finalProductBuffer,
+            Coordinate originCoordinate,
             double productionAccumulator = 0
         )
     {
