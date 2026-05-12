@@ -13,10 +13,11 @@ namespace VolcanicTransport_WPF.ViewModel
 {
     public class GameViewModel : ViewModelBase
     {
+        private int BorderOffset = 20;
         public static GameModel GameModelInstance { get => GameModel.Instance; }
         public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
-        public int MinimapBorderSize => GameSettings.WorldSizeInFields + 20; //used to size minimap border
+        public int MinimapBorderSize => GameSettings.WorldSizeInFields + BorderOffset; //used to size minimap border
         public int MinimapSize => GameSettings.WorldSizeInFields; //used to size minimap
         public Camera Camera { get; }
         public CameraToMinimap MinimapSelector { get; }
