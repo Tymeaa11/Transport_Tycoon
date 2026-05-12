@@ -206,7 +206,10 @@ namespace VolcanicTransport.Model.Persistance
                     hasReference.RestoreReference(coordinate);
 
                 if (surface is Station station)
+                {
                     world.Stations.Add(station);
+                    station.IsReserved = false;
+                }
             }
 
             foreach (var (_, surface) in surfaces)
