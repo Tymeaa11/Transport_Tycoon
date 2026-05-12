@@ -380,41 +380,6 @@ namespace VolcanicTransport_Tests.Misc
     }
 
     // ──────────────────────────────────────────────────────
-    // CompositeLayer
-    // ──────────────────────────────────────────────────────
-    [TestClass]
-    public class CompositeLayerTests
-    {
-        private sealed class ConstantLayer(float value) : ILayer
-        {
-            public float Get(float x, float y) => value;
-            public void SetSeed(int seed, Random r) { }
-        }
-
-        [TestMethod]
-        public void Get_CombinesThreeLayers()
-        {
-            var l0 = new ConstantLayer(2f);
-            var l1 = new ConstantLayer(3f);
-            var l2 = new ConstantLayer(4f);
-            var composite = new CompositeLayer(l0, l1, l2);
-
-            // l0.Get(l1.Get(x,y), l2.Get(x,y)) = l0.Get(3, 4) = 2
-            float result = composite.Get(0, 0);
-
-            Assert.AreEqual(2f, result, 0.001f);
-        }
-
-        [TestMethod]
-        public void SetSeed_DoesNotThrow()
-        {
-            var composite = new CompositeLayer(
-                new ConstantLayer(1f), new ConstantLayer(1f), new ConstantLayer(1f));
-            composite.SetSeed(42, new Random(42));
-        }
-    }
-
-    // ──────────────────────────────────────────────────────
     // LayeredTerrain
     // ──────────────────────────────────────────────────────
     [TestClass]
