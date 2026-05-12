@@ -220,6 +220,12 @@ public static class GameSettings
 
     public const double MushroomPricePerUnit = 200;
 
+    public const double SellRefundRate = 0.5;
+
+    public const double MonthlyExpenseCycleSeconds = 600.0;
+
+    public const double MonthlyVehicleMaintenanceCost = 500.0;
+
 
 
     #endregion

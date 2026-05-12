@@ -210,7 +210,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             Model.BuyVehicle(v);
             double before = Model.PlayerMoney;
             Model.SellVehicle(v);
-            Assert.AreEqual(before + v.Price * 0.5, Model.PlayerMoney, 0.001);
+            Assert.AreEqual(before + v.Price * GameSettings.SellRefundRate, Model.PlayerMoney, 0.001);
         }
 
         [TestMethod]

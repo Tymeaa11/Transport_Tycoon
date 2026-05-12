@@ -11,17 +11,20 @@ namespace VolcanicTransport.Model.World.Economy
         #region Fields
         private Factory? _factoryReference;
 
+        private Factory FactoryRef => _factoryReference
+            ?? throw new InvalidOperationException($"RestoreReference() not yet called for FactoryBuilding '{FactoryName}'.");
+
         public string FactoryName { get; private set; }
         [JsonIgnore]
-        public ProductType BaseProduct => _factoryReference!.BaseProduct;
+        public ProductType BaseProduct => FactoryRef.BaseProduct;
         [JsonIgnore]
-        public ProductType FinalProduct => _factoryReference!.FinalProduct.ProductType;
+        public ProductType FinalProduct => FactoryRef.FinalProduct.ProductType;
         [JsonIgnore]
-        public int BaseProductNeed => _factoryReference!.BaseProductBuffer.MaxCapacity;
+        public int BaseProductNeed => FactoryRef.BaseProductBuffer.MaxCapacity;
         [JsonIgnore]
-        public int BaseProductAmount => _factoryReference!.BaseProductBuffer.CurrentLoad;
+        public int BaseProductAmount => FactoryRef.BaseProductBuffer.CurrentLoad;
         [JsonIgnore]
-        public int FinalProductAmount => _factoryReference!.FinalProductBuffer.CurrentLoad;
+        public int FinalProductAmount => FactoryRef.FinalProductBuffer.CurrentLoad;
         #endregion
         #region Constructors
         public FactoryBuilding(Factory factory)

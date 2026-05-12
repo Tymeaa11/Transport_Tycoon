@@ -40,7 +40,6 @@ namespace VolcanicTransport.Model.Persistance
             foreach (var vehicle in surfaceData.Vehicles)
             {
                 world.AddVehicle(vehicle);
-                world.VehicleManager.AddVehicle(vehicle);
                 vehicle.RestoreReference(default);
                 vehicle.ArrivedAtStation += vehicleArrived;
             }

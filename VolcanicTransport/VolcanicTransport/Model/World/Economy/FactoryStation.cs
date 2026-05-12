@@ -14,18 +14,21 @@ namespace VolcanicTransport.Model.World.Economy
 
         [JsonIgnore]
         private Factory? _factory;
+        private Factory FactoryRef => _factory
+            ?? throw new InvalidOperationException($"RestoreReference() not yet called for FactoryStation '{FactoryName}'.");
+
         [JsonIgnore]
-        public ProductType GetFactoryNeeds => _factory!.BaseProduct;
+        public ProductType GetFactoryNeeds => FactoryRef.BaseProduct;
         [JsonIgnore]
-        public ProductType GetFactoryFinishedProduct => _factory!.FinalProduct.ProductType;
+        public ProductType GetFactoryFinishedProduct => FactoryRef.FinalProduct.ProductType;
         [JsonIgnore]
-        public int GetFactoryFinishedProductAmount => _factory!.FinalProductBuffer.CurrentLoad;
+        public int GetFactoryFinishedProductAmount => FactoryRef.FinalProductBuffer.CurrentLoad;
         [JsonIgnore]
-        public int GetFactoryBaseProductAmount => _factory!.BaseProductBuffer.CurrentLoad;
+        public int GetFactoryBaseProductAmount => FactoryRef.BaseProductBuffer.CurrentLoad;
         [JsonIgnore]
-        public int GetFactoryNeedsAmount => _factory!.BaseProductBuffer.MaxCapacity;
+        public int GetFactoryNeedsAmount => FactoryRef.BaseProductBuffer.MaxCapacity;
         [JsonIgnore]
-        public double PricePerBaseProduct => GameSettings.GetPrice(_factory!.BaseProduct);
+        public double PricePerBaseProduct => GameSettings.GetPrice(FactoryRef.BaseProduct);
         #endregion
 
         #region Constructors
@@ -50,33 +53,33 @@ namespace VolcanicTransport.Model.World.Economy
         #endregion
 
         #region Methods
-        public float GetFactoryEfficiency(float time) 
-            => _factory!.FinalProduct.GetFactoryEfficiency(time); // 0-1
-        
-        public int LoadProduct(Vehicle vehicle) // adott-e árut a járműnek
+        public float GetFactoryEfficiency(float time)
+            => FactoryRef.FinalProduct.GetFactoryEfficiency(time);
+
+        public int LoadProduct(Vehicle vehicle)
         {
-            if (vehicle == null || (vehicle.CurrentLoad > 0 && vehicle.CurrentType != _factory!.FinalProduct.ProductType))
+            if (vehicle == null || (vehicle.CurrentLoad > 0 && vehicle.CurrentType != FactoryRef.FinalProduct.ProductType))
             {
                 return 0;
             }
 
-            int amountFilled = _factory!.FinalProductBuffer.FillVehicle(vehicle);
+            int amountFilled = FactoryRef.FinalProductBuffer.FillVehicle(vehicle);
 
             return amountFilled;
         }
 
-        public override int UnLoadProductFromVehicle(Vehicle vehicle) // kapott-e árut a járműtől
+        public override int UnLoadProductFromVehicle(Vehicle vehicle)
         {
-            if (vehicle == null || vehicle.CurrentType != _factory!.BaseProduct)
+            if (vehicle == null || vehicle.CurrentType != FactoryRef.BaseProduct)
             {
                 return 0;
             }
 
-            int amountNeededForFactory = _factory.BaseProductBuffer.AmountNeeded();
+            int amountNeededForFactory = FactoryRef.BaseProductBuffer.AmountNeeded();
 
             if (amountNeededForFactory == 0) { return 0; }
 
-            int provided = _factory.BaseProductBuffer.ReceiveProduct(vehicle, amountNeededForFactory);
+            int provided = FactoryRef.BaseProductBuffer.ReceiveProduct(vehicle, amountNeededForFactory);
 
             return provided;
         }
