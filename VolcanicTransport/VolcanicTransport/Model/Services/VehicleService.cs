@@ -83,11 +83,8 @@ namespace VolcanicTransport.Model.Services
                     path = Pathfinder.Instance.FindPath(startNode, endNode) ?? [];
             }
 
-            if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
-                path.Insert(0, firstStation);
-
-            if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
-                path.Add(secondStation);
+            if (path.Count == 0)
+            return false ;
 
             newVehicle.StartJourney(path, false, firstStation);
             return BuyVehicle(newVehicle);

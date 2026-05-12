@@ -112,7 +112,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public void StartJourney(List<Road> path, bool alreadyOnRoad = true, Station? currentStation = null)
         {
-            //if (route == null) return;
             if (path == null || path.Count == 0) return;
 
             if (CurrentRoad != null)
