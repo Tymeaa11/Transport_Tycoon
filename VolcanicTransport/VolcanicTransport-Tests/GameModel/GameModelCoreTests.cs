@@ -1,4 +1,5 @@
 using VolcanicTransport.Model;
+using VolcanicTransport.Model.Services;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
@@ -154,6 +155,48 @@ namespace VolcanicTransport_Tests.GameModelTests
             Model.Update(0.1);
             Model.GameAdvanced -= handler;
             Assert.IsTrue(fired);
+        }
+
+        [TestMethod]
+        public void GetMushroomCosts_FieldWithNoSurface_ReturnsZero()
+        {
+            var field = new Field { Surface = null };
+            var result = EconomyService.GetMushroomCosts(field);
+            Assert.AreEqual(0.0, result, "Cost should be 0 if there is no surface.");
+        }
+
+        [TestMethod]
+        public void GetMushroomCosts_FieldWithRoadSurface_ReturnsZero()
+        {
+            var field = new Field { Surface = new Road(new Coordinate(0, 0)) };
+            var result = EconomyService.GetMushroomCosts(field);
+            Assert.AreEqual(0.0, result, "Cost should be 0 if the surface is not a Mushroom.");
+        }
+
+        [TestMethod]
+        public void GetMushroomCosts_SproutMushroom_ReturnsBasePrice()
+        {
+            var coord = new Coordinate(0, 0);
+            var field = new Field
+            {
+                Surface = new Mushroom(coord, MushroomGrowthStage.SPROUT)
+            };
+            var result = EconomyService.GetMushroomCosts(field);
+            // (0 + 1) * 100 = 100
+            Assert.AreEqual(GameSettings.MushroomPricePerUnit, result, "Sprout stage cost calculation failed.");
+        }
+
+        [TestMethod]
+        public void GetMushroomCosts_AdultMushroom_ReturnsCorrectMultiplier()
+        {
+            var coord = new Coordinate(0, 0);
+            var field = new Field
+            {
+                Surface = new Mushroom(coord, MushroomGrowthStage.ADULT)
+            };
+            var result = EconomyService.GetMushroomCosts(field);
+            // (2 + 1) * 100 = 300
+            Assert.AreEqual(3 * GameSettings.MushroomPricePerUnit, result, "Adult stage cost calculation failed.");
         }
 
 
