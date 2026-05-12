@@ -18,10 +18,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         public static void ClassSetup(TestContext _) => GameModel.InitialiseNewGame(4, 66);
 
         private static City MakeCity(string name, int x, int y)
-            => new City(name, new Coordinate(x, y), [new Product(ProductType.HUMAN, 0, 100, 5)]);
+            => new(name, new Coordinate(x, y), [new Product(ProductType.HUMAN, 0, 100, 5)]);
 
         private static ConcreteFactory MakeConcrete(string name, int x, int y)
-            => new ConcreteFactory(name, new Coordinate(x, y));
+            => new(name, new Coordinate(x, y));
 
         [TestMethod]
         public void HandleVehicleArrived_Bus_WithPassengers_AddsOrKeepsMoney()
@@ -46,7 +46,6 @@ namespace VolcanicTransport_Tests.GameModelTests
 
             var bus = new Bus("EmptyBus");
             Model.HandleVehicleArrived(null, new VehicleArrivedEventArgs(bus, station));
-            Assert.IsTrue(true);
         }
 
         [TestMethod]
@@ -57,7 +56,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var bus = new Bus("EventBus");
 
             bool fired = false;
-            EventHandler<VehicleArrivedEventArgs> h = (_, _) => fired = true;
+            void h(object? _, VehicleArrivedEventArgs __) => fired = true;
             Model.VehicleArrivedAtStation += h;
             Model.HandleVehicleArrived(null, new VehicleArrivedEventArgs(bus, station));
             Model.VehicleArrivedAtStation -= h;
@@ -88,7 +87,6 @@ namespace VolcanicTransport_Tests.GameModelTests
             truck.Load(5, ProductType.ASH);
 
             Model.HandleVehicleArrived(null, new VehicleArrivedEventArgs(truck, station));
-            Assert.IsTrue(true);
         }
 
         [TestMethod]
@@ -125,7 +123,6 @@ namespace VolcanicTransport_Tests.GameModelTests
             truck.Load(5, ProductType.ASH);
 
             Model.HandleVehicleArrived(null, new VehicleArrivedEventArgs(truck, station));
-            Assert.IsTrue(true);
         }
     }
 }

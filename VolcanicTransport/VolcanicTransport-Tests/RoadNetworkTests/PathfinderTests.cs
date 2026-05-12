@@ -2,7 +2,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+namespace VolcanicTransport_Tests.RoadnetworkTests
 {
     [TestClass]
     public class PathfinderTests

@@ -1,21 +1,25 @@
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Roadnetwork;
+using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+
+namespace VolcanicTransport_Tests.VehicleTests
 {
     [TestClass]
     [DoNotParallelize]
     public class VehicleManagerTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
+
+        public static VehicleManager VManager => GameWorld.Instance.VehicleManager;
 
 
         [TestMethod]
         public void GetVehiclesOnField_UnregisteredCoord_ReturnsEmptyList()
         {
-            var result = World.Instance.VehicleManager.GetVehiclesOnField(new Coordinate(1, 1));
+            var result = VManager.GetVehiclesOnField(new Coordinate(1, 1));
 
             Assert.AreEqual(0, result.Count);
         }
@@ -26,13 +30,13 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var bus = new Bus("VM1");
             var coord = new Coordinate(100, 100);
 
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus, coord);
+            VManager.RegisterVehicleOnField(bus, coord);
 
             CollectionAssert.Contains(
-                (System.Collections.ICollection)World.Instance.VehicleManager.GetVehiclesOnField(coord),
+                (System.Collections.ICollection)VManager.GetVehiclesOnField(coord),
                 bus);
 
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus, coord);
+            VManager.UnregisterVehicleFromField(bus, coord);
         }
 
         [TestMethod]
@@ -41,10 +45,10 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var bus = new Bus("VM2");
             var coord = new Coordinate(101, 100);
 
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus, coord);
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus, coord);
+            VManager.RegisterVehicleOnField(bus, coord);
+            VManager.UnregisterVehicleFromField(bus, coord);
 
-            Assert.AreEqual(0, World.Instance.VehicleManager.GetVehiclesOnField(coord).Count);
+            Assert.AreEqual(0, VManager.GetVehiclesOnField(coord).Count);
         }
 
         [TestMethod]
@@ -53,9 +57,9 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var bus = new Bus("VM3");
             var coord = new Coordinate(102, 100);
 
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus, coord);
+            VManager.UnregisterVehicleFromField(bus, coord);
 
-            Assert.AreEqual(0, World.Instance.VehicleManager.GetVehiclesOnField(coord).Count);
+            Assert.AreEqual(0, VManager.GetVehiclesOnField(coord).Count);
         }
 
 
@@ -65,12 +69,12 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var bus = new Bus("VM4");
             var coord = new Coordinate(103, 100);
 
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus, coord);
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus, coord);
+            VManager.RegisterVehicleOnField(bus, coord);
+            VManager.RegisterVehicleOnField(bus, coord);
 
-            Assert.AreEqual(1, World.Instance.VehicleManager.GetVehiclesOnField(coord).Count);
+            Assert.AreEqual(1, VManager.GetVehiclesOnField(coord).Count);
 
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus, coord);
+            VManager.UnregisterVehicleFromField(bus, coord);
         }
 
 
@@ -81,16 +85,16 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var bus2 = new Bus("VM5b");
             var coord = new Coordinate(104, 100);
 
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus1, coord);
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus2, coord);
+            VManager.RegisterVehicleOnField(bus1, coord);
+            VManager.RegisterVehicleOnField(bus2, coord);
 
-            var vehicles = World.Instance.VehicleManager.GetVehiclesOnField(coord);
+            var vehicles = VManager.GetVehiclesOnField(coord);
             Assert.AreEqual(2, vehicles.Count);
             CollectionAssert.Contains((System.Collections.ICollection)vehicles, bus1);
             CollectionAssert.Contains((System.Collections.ICollection)vehicles, bus2);
 
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus1, coord);
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus2, coord);
+            VManager.UnregisterVehicleFromField(bus1, coord);
+            VManager.UnregisterVehicleFromField(bus2, coord);
         }
 
         [TestMethod]
@@ -100,16 +104,16 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var bus2 = new Bus("VM6b");
             var coord = new Coordinate(105, 100);
 
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus1, coord);
-            World.Instance.VehicleManager.RegisterVehicleOnField(bus2, coord);
+            VManager.RegisterVehicleOnField(bus1, coord);
+            VManager.RegisterVehicleOnField(bus2, coord);
 
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus1, coord);
+            VManager.UnregisterVehicleFromField(bus1, coord);
 
-            var vehicles = World.Instance.VehicleManager.GetVehiclesOnField(coord);
+            var vehicles = VManager.GetVehiclesOnField(coord);
             Assert.AreEqual(1, vehicles.Count);
             CollectionAssert.Contains((System.Collections.ICollection)vehicles, bus2);
 
-            World.Instance.VehicleManager.UnregisterVehicleFromField(bus2, coord);
+            VManager.UnregisterVehicleFromField(bus2, coord);
         }
     }
 }

@@ -1,7 +1,7 @@
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+namespace VolcanicTransport_Tests.VehicleTests
 {
     [TestClass]
     public class VehicleCargoTests

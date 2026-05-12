@@ -4,7 +4,7 @@ using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.Utils
+namespace VolcanicTransport_Tests.World
 {
     [TestClass]
     [DoNotParallelize]

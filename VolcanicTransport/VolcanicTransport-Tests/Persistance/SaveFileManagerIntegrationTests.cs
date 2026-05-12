@@ -5,7 +5,7 @@ using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.GameModelTests
+namespace VolcanicTransport_Tests.Persistance
 {
     [TestClass]
     [DoNotParallelize]
@@ -66,7 +66,7 @@ namespace VolcanicTransport_Tests.GameModelTests
                 GameModel.InitialiseLoadedGame(tempFile);
 
                 var field = GameModel.WorldInstance.GetField(mushroomCoord.Value);
-                Assert.IsInstanceOfType(field!.Surface, typeof(Mushroom));
+                Assert.IsInstanceOfType<Mushroom>(field!.Surface);
             }
             finally
             {
@@ -173,7 +173,6 @@ namespace VolcanicTransport_Tests.GameModelTests
             var station = new CityStation(city, new Coordinate(2, 2), "SLStop");
             var field = w.GetField(new Coordinate(2, 2));
             if (field == null) return;
-            var originalSurface = field.Surface;
             field.Surface = station;
             w.Stations.Add(station);
 
@@ -183,7 +182,7 @@ namespace VolcanicTransport_Tests.GameModelTests
                 GameModel.InitialiseLoadedGame(tempFile);
 
                 var loadedField = GameModel.WorldInstance.GetField(new Coordinate(2, 2));
-                Assert.IsInstanceOfType(loadedField!.Surface, typeof(CityStation));
+                Assert.IsInstanceOfType<CityStation>(loadedField!.Surface);
             }
             finally
             {
@@ -287,9 +286,9 @@ namespace VolcanicTransport_Tests.GameModelTests
                 {
                     var c = new Coordinate(x, y);
                     var f = world.GetField(c);
-                    if (f != null && f.Surface == null && f.Type == VolcanicTransport.Model.World.FieldType.LOW_LANDS)
+                    if (f != null && f.Surface == null && f.Type == FieldType.LOW_LANDS)
                     {
-                        var road = new VolcanicTransport.Model.World.Road(c);
+                        var road = new Road(c);
                         f.Surface = road;
                         roadCoord = c;
                     }
@@ -297,8 +296,7 @@ namespace VolcanicTransport_Tests.GameModelTests
 
             if (roadCoord == null) return;
 
-            var road2 = world.GetField(roadCoord.Value)!.Surface as VolcanicTransport.Model.World.Road;
-            if (road2 == null) return;
+            if (world.GetField(roadCoord.Value)!.Surface is not Road road2) return;
 
             var bus = new Bus("GridClean");
             Model.BuyVehicle(bus);

@@ -4,6 +4,8 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 
+using GameWorld = VolcanicTransport.Model.World.World;
+
 namespace VolcanicTransport_Tests.WorldTests
 {
     [TestClass]
@@ -11,7 +13,9 @@ namespace VolcanicTransport_Tests.WorldTests
     public class FactoryBuildingTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
+
+        public static GameWorld WInstance => GameWorld.Instance;
 
         private static SulfurProducer MakeFactory(string name = "SulfurFactory", int x = 3, int y = 3)
             => new SulfurProducer(name, new Coordinate(x, y));
@@ -99,7 +103,7 @@ namespace VolcanicTransport_Tests.WorldTests
         public void RestoreReference_FindsCorrectFactory()
         {
             var factory = MakeFactory("RestoreFactory", 6, 6);
-            World.Instance.Factories.Add(factory);
+            WInstance.Factories.Add(factory);
 
             var building = new FactoryBuilding("RestoreFactory");
             var coord = new Coordinate(6, 6);
@@ -107,7 +111,7 @@ namespace VolcanicTransport_Tests.WorldTests
 
             Assert.AreEqual(factory.FinalProduct.ProductType, building.FinalProduct);
 
-            World.Instance.Factories.Remove(factory);
+            WInstance.Factories.Remove(factory);
         }
     }
 
@@ -115,6 +119,8 @@ namespace VolcanicTransport_Tests.WorldTests
     [DoNotParallelize]
     public class CheckIfFactoryStateIsPreservedTests
     {
+
+        public static GameWorld WInstance => GameWorld.Instance;
         private string? _tempFile;
 
         [TestInitialize]
@@ -134,7 +140,7 @@ namespace VolcanicTransport_Tests.WorldTests
         [TestMethod]
         public void CheckIfFactoryStateIsPeserved_ProductTypeAndName()
         {
-            var world = World.Instance;
+            var world = WInstance;
 
             if (world.Factories.Count == 0) return;
 
@@ -145,7 +151,7 @@ namespace VolcanicTransport_Tests.WorldTests
             GameModel.Instance.SaveGame(_tempFile!);
             GameModel.InitialiseLoadedGame(_tempFile!);
 
-            var restored = World.Instance.Factories.FirstOrDefault(f => f.Name == originalName);
+            var restored = WInstance.Factories.FirstOrDefault(f => f.Name == originalName);
             Assert.IsNotNull(restored, "A gyár nem található betöltés után.");
             Assert.AreEqual(originalFinalProduct, restored.FinalProduct.ProductType,
                 "A gyár végterméke megváltozott betöltés után.");
@@ -154,17 +160,17 @@ namespace VolcanicTransport_Tests.WorldTests
         [TestMethod]
         public void CheckIfFactoryStateIsPeserved_FactoryCount()
         {
-            int countBefore = World.Instance.Factories.Count;
+            int countBefore = WInstance.Factories.Count;
             GameModel.Instance.SaveGame(_tempFile!);
             GameModel.InitialiseLoadedGame(_tempFile!);
-            Assert.AreEqual(countBefore, World.Instance.Factories.Count,
+            Assert.AreEqual(countBefore, WInstance.Factories.Count,
                 "Gyárak száma megváltozott betöltés után.");
         }
 
         [TestMethod]
         public void CheckIfFactoryStateIsPeserved_FactoryBuildingLinkRestored()
         {
-            var world = World.Instance;
+            var world = WInstance;
             if (world.Factories.Count == 0) return;
 
             var factory = world.Factories[0];
@@ -180,7 +186,7 @@ namespace VolcanicTransport_Tests.WorldTests
             GameModel.Instance.SaveGame(_tempFile!);
             GameModel.InitialiseLoadedGame(_tempFile!);
 
-            var loadedField = World.Instance.GetField(coord);
+            var loadedField = WInstance.GetField(coord);
             var loadedBuilding = loadedField?.Surface as FactoryBuilding;
 
             Assert.IsNotNull(loadedBuilding, "A gyárépület nem töltődött be.");

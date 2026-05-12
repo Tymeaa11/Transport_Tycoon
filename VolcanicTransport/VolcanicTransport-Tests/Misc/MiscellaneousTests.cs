@@ -49,8 +49,10 @@ namespace VolcanicTransport_Tests.Misc
         [TestMethod]
         public void ChunkCoordinate_CanBeSet()
         {
-            var args = new ChunkUpdatedEventArgs(new Coordinate(0, 0));
-            args.ChunkCoordinate = new Coordinate(5, 5);
+            var args = new ChunkUpdatedEventArgs(new Coordinate(0, 0))
+            {
+                ChunkCoordinate = new Coordinate(5, 5)
+            };
             Assert.AreEqual(new Coordinate(5, 5), args.ChunkCoordinate);
         }
     }
@@ -205,8 +207,8 @@ namespace VolcanicTransport_Tests.Misc
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
-        private static ProductBuffer EmptyBuffer(ProductType t) => new ProductBuffer(t, 100);
-        private static Product FinalProd(ProductType t) => new Product(t, 0, 100);
+        private static ProductBuffer EmptyBuffer(ProductType t) => new(t, 100);
+        private static Product FinalProd(ProductType t) => new(t, 0, 100);
 
         [TestMethod]
         public void AshProducer_JsonConstructor_SetsName()
@@ -303,8 +305,10 @@ namespace VolcanicTransport_Tests.Misc
         [TestMethod]
         public void WorldUpdate_TransitionsMovingVehicleWithNoPath_ToWaiting()
         {
-            var bus = new Bus("WVT3");
-            bus.State = VehicleState.Moving;
+            var bus = new Bus("WVT3")
+            {
+                State = VehicleState.Moving
+            };
             GameWorld.Instance.AddVehicle(bus);
 
             GameWorld.Instance.Update(1.0);
@@ -406,7 +410,7 @@ namespace VolcanicTransport_Tests.Misc
         public void AddLayer_Array_AddsAll()
         {
             var t = new LayeredTerrain();
-            t.AddLayer(new ILayer[] { new ConstLayer(1f), new ConstLayer(1f) });
+            t.AddLayer([new ConstLayer(1f), new ConstLayer(1f)]);
 
             Assert.AreEqual(2f, t.Get(0, 0), 0.001f);
         }

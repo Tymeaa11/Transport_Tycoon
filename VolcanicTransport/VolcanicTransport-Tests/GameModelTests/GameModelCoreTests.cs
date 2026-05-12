@@ -4,6 +4,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.GameModelTests
 {
@@ -13,7 +14,7 @@ namespace VolcanicTransport_Tests.GameModelTests
     public class GameModelCoreTests
     {
         private static GameModel Model => GameModel.Instance;
-        private static World World => World.Instance;
+        private static GameWorld World => GameWorld.Instance;
 
         [ClassInitialize]
         public static void ClassSetup(TestContext _)
@@ -305,7 +306,7 @@ namespace VolcanicTransport_Tests.GameModelTests
     public class GameModelPlacementTests
     {
         private static GameModel Model => GameModel.Instance;
-        private static World World => World.Instance;
+        private static GameWorld World => GameWorld.Instance;
 
         [ClassInitialize]
         public static void ClassSetup(TestContext _)
@@ -411,7 +412,7 @@ namespace VolcanicTransport_Tests.GameModelTests
     public class GameModelVehicleArrivedTests
     {
         private static GameModel Model => GameModel.Instance;
-        private static World World => World.Instance;
+        private static GameWorld World => GameWorld.Instance;
 
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameModel.InitialiseNewGame(4, 7);

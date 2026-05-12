@@ -4,14 +4,16 @@ using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+using GameWorld = VolcanicTransport.Model.World.World;
+
+namespace VolcanicTransport_Tests.VehicleTests
 {
     [TestClass]
     [DoNotParallelize]
     public class VehicleTypeTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
 
         [TestMethod]
@@ -188,7 +190,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
     public class RouteEdgeCaseTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
         private static Station MakeStation(int x, int y)
             => new SimpleTestStation(new Coordinate(x, y));
@@ -250,7 +252,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
         [TestMethod]
         public void RestoreReference_RestoredRoute_StopsAreRelinked()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
             var coord = new Coordinate(50, 50);
             var station = MakeStation(50, 50);
             world.GetField(coord)!.Surface = station;

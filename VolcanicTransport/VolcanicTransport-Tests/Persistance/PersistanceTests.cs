@@ -6,6 +6,8 @@ using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
+using GameWorld = VolcanicTransport.Model.World.World;
+
 namespace VolcanicTransport_Tests.Persistance
 {
     [TestClass]
@@ -23,7 +25,7 @@ namespace VolcanicTransport_Tests.Persistance
             _saveManager = new SaveFileManager(new Zip2FileSaveFormat());
             _testPath = Path.Combine(Path.GetTempPath(), $"persistence_test_{Guid.NewGuid()}.zip");
 
-            World.Initialise(WorldSize, Seed);
+            GameWorld.Initialise(WorldSize, Seed);
         }
 
         [TestCleanup]
@@ -35,7 +37,7 @@ namespace VolcanicTransport_Tests.Persistance
         private GameData SaveAndLoad(GameData data)
         {
             _saveManager.SaveGame(data, _testPath);
-            World.Initialise(WorldSize, Seed);
+            GameWorld.Initialise(WorldSize, Seed);
             return _saveManager.LoadGame(_testPath, (s, e) => { });
         }
 
@@ -44,7 +46,7 @@ namespace VolcanicTransport_Tests.Persistance
         [TestMethod]
         public void TestGameStateMetadata()
         {
-            var original = new GameData(World.Instance, true, 420.69, 75000.0);
+            var original = new GameData(GameWorld.Instance, true, 420.69, 75000.0);
             var loaded = SaveAndLoad(original);
 
             Assert.AreEqual(original.PlayerMoney, loaded.PlayerMoney, 0.001);
@@ -55,7 +57,7 @@ namespace VolcanicTransport_Tests.Persistance
         [TestMethod]
         public void TestBinaryMapBitmasks()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
             Coordinate roadCoord = new(1, 1);
             Coordinate mushCoord = new(2, 2);
             Coordinate heightCoord = new(3, 3);
@@ -68,12 +70,12 @@ namespace VolcanicTransport_Tests.Persistance
 
             SaveAndLoad(new GameData(world, false, 0, 0));
 
-            var loadedRoad = World.Instance.GetField(roadCoord)!.Surface as Road;
-            var loadedMush = World.Instance.GetField(mushCoord)!.Surface as Mushroom;
+            var loadedRoad = GameWorld.Instance.GetField(roadCoord)!.Surface as Road;
+            var loadedMush = GameWorld.Instance.GetField(mushCoord)!.Surface as Mushroom;
 
             Assert.IsTrue(loadedRoad!.IsReserved, "Road reservation bit lost in binary save.");
             Assert.AreEqual(MushroomGrowthStage.ADULT, loadedMush!.GrowthStage, "Mushroom stage bits corrupted.");
-            Assert.AreEqual(FieldType.HIGH_MOUNTAINS, World.Instance.GetField(heightCoord)!.Type, "Terrain height corrupted.");
+            Assert.AreEqual(FieldType.HIGH_MOUNTAINS, GameWorld.Instance.GetField(heightCoord)!.Type, "Terrain height corrupted.");
         }
 
         #endregion
@@ -83,7 +85,7 @@ namespace VolcanicTransport_Tests.Persistance
         [TestMethod]
         public void TestCityAndBuildingReferenceRestoration()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
             var city = new City("Metropolis", new Coordinate(10, 10));
             world.Cities.Add(city);
 
@@ -98,11 +100,11 @@ namespace VolcanicTransport_Tests.Persistance
 
             SaveAndLoad(new GameData(world, false, 0, 0));
 
-            var loadedBuilding = World.Instance.GetField(buildingCoord)!.Surface as CityBuilding;
+            var loadedBuilding = GameWorld.Instance.GetField(buildingCoord)!.Surface as CityBuilding;
             Assert.IsNotNull(loadedBuilding);
 
-            Assert.IsTrue(World.Instance.Cities.Count == 1);
-            Assert.IsTrue(World.Instance.Cities[0].Name == city.Name);
+            Assert.IsTrue(GameWorld.Instance.Cities.Count == 1);
+            Assert.IsTrue(GameWorld.Instance.Cities[0].Name == city.Name);
 
             Assert.AreEqual("Metropolis", loadedBuilding.CityName);
         }
@@ -110,7 +112,7 @@ namespace VolcanicTransport_Tests.Persistance
         [TestMethod]
         public void TestPolymorphicFactoryRestoration()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
             var sulfur = new SulfurProducer("Sulfur Mine", new Coordinate(5, 5));
             var ash = new AshProducer("Ash Plant", new Coordinate(15, 15));
 
@@ -119,18 +121,18 @@ namespace VolcanicTransport_Tests.Persistance
 
             SaveAndLoad(new GameData(world, false, 0, 0));
 
-            var loadedSulfur = World.Instance.Factories.FirstOrDefault(f => f.Name == "Sulfur Mine");
-            var loadedAsh = World.Instance.Factories.FirstOrDefault(f => f.Name == "Ash Plant");
+            var loadedSulfur = GameWorld.Instance.Factories.FirstOrDefault(f => f.Name == "Sulfur Mine");
+            var loadedAsh = GameWorld.Instance.Factories.FirstOrDefault(f => f.Name == "Ash Plant");
 
-            Assert.IsInstanceOfType(loadedSulfur, typeof(SulfurProducer), "SulfurProducer lost its specific type.");
-            Assert.IsInstanceOfType(loadedAsh, typeof(AshProducer), "AshProducer lost its specific type.");
+            Assert.IsInstanceOfType<SulfurProducer>(loadedSulfur, "SulfurProducer lost its specific type.");
+            Assert.IsInstanceOfType<AshProducer>(loadedAsh, "AshProducer lost its specific type.");
             Assert.AreEqual(ProductType.SULFUR, loadedSulfur!.FinalProduct.ProductType);
         }
 
         [TestMethod]
         public void TestStationAndFactoryConnection()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
             var factory = new ConcreteFactory("C-Fac", new Coordinate(20, 20));
             world.Factories.Add(factory);
 
@@ -141,8 +143,9 @@ namespace VolcanicTransport_Tests.Persistance
 
             SaveAndLoad(new GameData(world, false, 0, 0));
 
-            var loadedStation = World.Instance.Stations.First() as FactoryStation;
-            Assert.AreEqual("C-Fac", loadedStation?.FactoryName);
+            var loadedStation = GameWorld.Instance.Stations.First() as FactoryStation;
+            Assert.IsNotNull(loadedStation);
+            Assert.AreEqual("C-Fac", loadedStation.FactoryName);
         }
 
         #endregion
@@ -152,7 +155,7 @@ namespace VolcanicTransport_Tests.Persistance
         [TestMethod]
         public void TestVehicleAndRouteComplexRestoration()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
 
             var city = new City("Town", new Coordinate(0, 0));
             var s1 = new CityStation(city, new Coordinate(1, 1), "Stop A");
@@ -176,8 +179,8 @@ namespace VolcanicTransport_Tests.Persistance
 
             SaveAndLoad(new GameData(world, false, 0, 0));
 
-            var loadedBus = World.Instance.Vehicles.First();
-            var loadedRoute = World.Instance.SavedRoutes.First();
+            var loadedBus = GameWorld.Instance.Vehicles[0];
+            var loadedRoute = GameWorld.Instance.SavedRoutes[0];
 
 
             Assert.AreEqual("Bus-99", loadedBus.Name);
@@ -188,7 +191,7 @@ namespace VolcanicTransport_Tests.Persistance
             Assert.AreEqual("Express", loadedBus.Route.Name);
             Assert.AreEqual(2, loadedBus.Route.Stops.Count);
 
-            Assert.AreSame(World.Instance.Stations[0], loadedBus.Route.Stops[0], "Route stops not pointing to restored Station instances.");
+            Assert.AreSame(GameWorld.Instance.Stations[0], loadedBus.Route.Stops[0], "Route stops not pointing to restored Station instances.");
         }
 
         #endregion
@@ -198,7 +201,7 @@ namespace VolcanicTransport_Tests.Persistance
         [TestMethod]
         public void TestBridgePersistence()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
             Coordinate bridgeCoord = new(10, 10);
 
             var bridge = new SteelBridge(bridgeCoord, RoadType.STRAIGHT_NS, FieldType.HIGH_LANDS);
@@ -206,7 +209,7 @@ namespace VolcanicTransport_Tests.Persistance
 
             SaveAndLoad(new GameData(world, false, 0, 0));
 
-            var loadedBridge = World.Instance.GetField(bridgeCoord)!.Surface as SteelBridge;
+            var loadedBridge = GameWorld.Instance.GetField(bridgeCoord)!.Surface as SteelBridge;
             Assert.IsNotNull(loadedBridge);
             Assert.AreEqual(RoadType.STRAIGHT_NS, loadedBridge.RoadType);
             Assert.AreEqual(FieldType.HIGH_LANDS, loadedBridge.Elevation);

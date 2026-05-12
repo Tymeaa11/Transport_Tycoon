@@ -4,7 +4,9 @@ using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+using GameWorld = VolcanicTransport.Model.World.World;
+
+namespace VolcanicTransport_Tests.VehicleTests
 {
     file class TestStation(Coordinate coord) : Station(
         coord, "TestStation",
@@ -19,7 +21,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
     public class RouteTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
         private static Station MakeStation(int x, int y)
             => new TestStation(new Coordinate(x, y));
@@ -106,16 +108,16 @@ namespace VolcanicTransport_Tests.Roadnetwork
     public class VehicleJourneyTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
         [TestInitialize]
-        public void ResetGraph() => World.Instance.Roadnetwork.NodeMap.Clear();
+        public void ResetGraph() => GameWorld.Instance.Roadnetwork.NodeMap.Clear();
 
         private static Road PlaceRoad(int x, int y)
         {
             var coord = new Coordinate(x, y);
             var road = new Road(coord);
-            World.Instance.GetField(coord)!.Surface = road;
+            GameWorld.Instance.GetField(coord)!.Surface = road;
             return road;
         }
 
@@ -123,12 +125,12 @@ namespace VolcanicTransport_Tests.Roadnetwork
         {
             var coord = new Coordinate(x, y);
             var station = new TestStation(coord);
-            World.Instance.GetField(coord)!.Surface = station;
+            GameWorld.Instance.GetField(coord)!.Surface = station;
             return station;
         }
 
         private static IReadOnlyList<Vehicle> VehiclesAt(int x, int y)
-            => World.Instance.VehicleManager.GetVehiclesOnField(new Coordinate(x, y));
+            => GameWorld.Instance.VehicleManager.GetVehiclesOnField(new Coordinate(x, y));
 
         [TestMethod]
         public void StartJourney_EmptyPath_DoesNotSetCurrentRoad()

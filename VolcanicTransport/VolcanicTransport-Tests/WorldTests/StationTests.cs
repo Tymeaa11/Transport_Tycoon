@@ -4,6 +4,8 @@ using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
+using GameWorld = VolcanicTransport.Model.World.World;
+
 namespace VolcanicTransport_Tests.WorldTests
 {
     [TestClass]
@@ -11,7 +13,7 @@ namespace VolcanicTransport_Tests.WorldTests
     public class CityStationTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(8, 55);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(8, 55);
 
         private static City MakeCity(string name = "TestCity", int x = 10, int y = 10)
             => new City(name, new Coordinate(x, y));
@@ -93,7 +95,7 @@ namespace VolcanicTransport_Tests.WorldTests
         public void RestoreReference_FindsCity()
         {
             var city = new City("RestoreCity", new Coordinate(21, 21));
-            World.Instance.Cities.Add(city);
+            GameWorld.Instance.Cities.Add(city);
 
             var buf = new ProductBuffer(ProductType.HUMAN, 50);
             var dem = new Product(ProductType.HUMAN, 0, 50, 5);
@@ -101,7 +103,7 @@ namespace VolcanicTransport_Tests.WorldTests
             station.RestoreReference(new Coordinate(21, 21));
 
             Assert.AreEqual(city.ProductTypes.Count, station.GetCityProductNeeds.Count);
-            World.Instance.Cities.Remove(city);
+            GameWorld.Instance.Cities.Remove(city);
         }
     }
 
@@ -110,7 +112,7 @@ namespace VolcanicTransport_Tests.WorldTests
     public class FactoryStationTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(8, 66);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(8, 66);
 
         private static Factory MakeFactory()
             => new SulfurProducer("TestFactory", new Coordinate(3, 3));
@@ -194,7 +196,7 @@ namespace VolcanicTransport_Tests.WorldTests
         public void RestoreReference_FindsFactory()
         {
             var factory = new SulfurProducer("RestoreFactoryXYZ", new Coordinate(31, 31));
-            World.Instance.Factories.Add(factory);
+            GameWorld.Instance.Factories.Add(factory);
 
             var buf = new ProductBuffer(ProductType.HUMAN, 50);
             var dem = new Product(ProductType.HUMAN, 0, 50, 5);
@@ -202,7 +204,7 @@ namespace VolcanicTransport_Tests.WorldTests
             station.RestoreReference(new Coordinate(31, 31));
 
             Assert.AreEqual(ProductType.SULFUR, station.GetFactoryFinishedProduct);
-            World.Instance.Factories.Remove(factory);
+            GameWorld.Instance.Factories.Remove(factory);
         }
     }
 }

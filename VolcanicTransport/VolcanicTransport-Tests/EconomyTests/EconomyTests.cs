@@ -8,19 +8,20 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
+using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.Utils
+namespace VolcanicTransport_Tests.EconomyTests
 {
     [TestClass]
     [DoNotParallelize]
     public class EconomyTests
     {
-        public static World _world => World.Instance;
+        public static GameWorld World => GameWorld.Instance;
 
         [TestInitialize]
         public void Setup()
         {
-            World.Initialise(8, 123);
+            GameWorld.Initialise(8, 123);
         }
 
         #region ProductBuffer Tests
@@ -211,7 +212,7 @@ namespace VolcanicTransport_Tests.Utils
 
         #endregion
 
-        private void SimulateProduction(Factory factory, double seconds, float currentTime = 0)
+        private static void SimulateProduction(Factory factory, double seconds, float currentTime = 0)
         {
             double dt = 0.1;
             for (double t = 0; t < seconds; t += dt)
