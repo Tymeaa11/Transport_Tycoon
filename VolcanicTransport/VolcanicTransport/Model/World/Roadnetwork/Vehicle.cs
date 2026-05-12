@@ -1,48 +1,96 @@
-using System.ComponentModel;
 using System.Numerics;
+using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Persistance;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public abstract class Vehicle(string name, float maxSpeed, int capacity, int price, List<ProductType> allType)
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(Bus), "bus")]
+    [JsonDerivedType(typeof(MiniBus), "mini_bus")]
+    [JsonDerivedType(typeof(TankerTruck), "tanker_truck")]
+    [JsonDerivedType(typeof(CargoTruck), "cargo_truck")]
+    [JsonDerivedType(typeof(MiniCargoTruck), "mini_cargo_truck")]
+    [JsonDerivedType(typeof(MiniTankerTruck), "mini_tanker_truck")]
+    public abstract class Vehicle(string name, GameSettings.VehicleData vehicleData) : IContainsReference, IHasSavedState
     {
+        protected Vehicle(string name, GameSettings.VehicleData vehicleData, ProductType currentType,
+                    int currentLoad, int currentStopIndex, VehicleState state, float posX, float posY,
+                    float angle, PathDirection currentEntry, PathDirection currentExit,
+                    double waitTimer, int currentPathIndex) : this(name, vehicleData)
+        {
+            CurrentType = currentType;
+            CurrentLoad = currentLoad;
+            CurrentStopIndex = currentStopIndex;
+            State = state;
+            PosX = posX; PosY = posY;
+            Angle = angle;
+            CurrentEntry = currentEntry;
+            CurrentExit = currentExit;
+            this.waitTimer = waitTimer;
+            this.currentPathIndex = currentPathIndex;
+        }
 
-        public Vehicle(string name, GameSettings.VehicleData vehicleData)
-        : this(name, vehicleData.MaxSpeed, vehicleData.Capacity, vehicleData.Price, vehicleData.productTypes) { }
+        [JsonInclude]
+        public List<Coordinate>? SavedPathCoordinates { get; set; }
+
+        [JsonInclude]
+        public string? RouteName { get; set; }
+
+        [JsonInclude] public double WaitTimer => waitTimer;
+        [JsonInclude] public int CurrentPathIndex => currentPathIndex;
+
+        [JsonInclude]
+        public float PosX { 
+            get => Position.X; 
+            set => Position = new Vector2(value, Position.Y); 
+        }
+        [JsonInclude]
+        public float PosY { 
+            get => Position.Y; 
+            set => Position = new Vector2(Position.X, value); 
+        }
+
+
+        [JsonIgnore]
+        private readonly GameSettings.VehicleData vehicleData = vehicleData;
+
+        [JsonIgnore]
+        public List<ProductType> AllType => vehicleData.ProductTypes;
+
+        [JsonIgnore]
+        public int Price => vehicleData.Price;
+
+        [JsonIgnore]
+        public float MaxSpeed => vehicleData.MaxSpeed;
+
+        [JsonIgnore]
+        public int Capacity => vehicleData.Capacity;
+
+        [JsonIgnore]
+        protected int MaintenanceCost => (int)(Price * 0.05);
+
 
         public string Name { get; } = name;
-        public List<ProductType> AllType { get { return allType; } }
-
-        protected ProductType currentType = ProductType.NONE;
-        public ProductType CurrentType
-        {
-            get { return currentType; }
-        }
+        public ProductType CurrentType { get; protected set; } = ProductType.NONE;
         public int CurrentLoad { get; protected set; } = 0;
-        public int Price { get; } = price;
-        protected Route? route = null;
 
-        public Route? Route { get { return route; } set { route = value; } }
+        [JsonIgnore]
+        public Route? Route { get; set; }
         public Route? PendingRoute { get; set; } = null;
-
-        protected float currentSpeed = 0;
-        protected float maxSpeed = maxSpeed;
-        protected int capacity = capacity;
+        public float CurrentSpeed { get; protected set; } = 0;
 
         protected double waitTimer = 0;
         protected const double LOAD_TIME = 20.0;
 
         public int CurrentStopIndex { get; set; } = 1;
 
-        public float MaxSpeed { get { return maxSpeed; } }
-        public int Capacity { get { return capacity; } }
-
-        protected int maintenanceCost = (int)(price * 0.05);
         protected bool active = false;
-        public VehicleState State { get; protected set; } = VehicleState.Waiting;
+        public VehicleState State { get; set; } = VehicleState.Waiting;
 
         protected List<Road> currentPath = [];
         protected int currentPathIndex;
+        [JsonIgnore]
         public Road? CurrentRoad { get; protected set; }
 
         protected RoadEdge? currentEdge = null;
@@ -51,8 +99,12 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         protected readonly List<Vector2> currentWaypoints = [];
         protected int currentWaypointIndex = 0;
 
+        [JsonIgnore]
         public Vector2 Position { get; protected set; }
-        public float Angle { get; protected set; }
+        public float Angle { get; set; }
+
+        public PathDirection CurrentEntry { get; protected set; }
+        public PathDirection CurrentExit { get; protected set; }
 
         public event EventHandler? StateUpdated;
         public event EventHandler? RouteChanged;
@@ -63,16 +115,34 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             //if (route == null) return;
             if (path == null || path.Count == 0) return;
 
+            if (CurrentRoad != null)
+            {
+                World.Instance.VehicleManager.UnregisterVehicleFromField(this, CurrentRoad.Coordinate);
+
+                if (CurrentRoad is Station oldStation) oldStation.IsOccupied = false;
+            }
+
             currentPath = path;
             currentPathIndex = 0;
             CurrentRoad = currentPath[0];
 
-            currentSpeed = maxSpeed;
+            CurrentEntry = PathDirection.Start;
+            CurrentExit = currentPath.Count > 1 ? GetRelativeDirection(CurrentRoad.Coordinate, currentPath[1].Coordinate) : PathDirection.End;
+            World.Instance.VehicleManager.RegisterVehicleOnField(this, CurrentRoad.Coordinate);
+
+            if (CurrentRoad is Station startStation)
+            {
+                startStation.IsOccupied = true;
+            }
+
+            CurrentSpeed = MaxSpeed;
+            StateUpdated?.Invoke(this, EventArgs.Empty);
 
             LoadWaypointsForField();
 
             if (alreadyOnRoad)
             {
+
 
                 if (currentWaypoints.Count > 0)
                 {
@@ -84,7 +154,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     System.Diagnostics.Debug.WriteLine($"FIGYELMEZTETÉS: Nincs Waypoint adat ehhez az úthoz! Busz lerakva a {Position} pixelre.");
                 }
             }
-            else if (currentStation != null) {
+            else if (currentStation != null)
+            {
 
                 float stationCenterX = (currentStation.Coordinate.X * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
                 float stationCenterY = (currentStation.Coordinate.Y * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
@@ -103,7 +174,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         {
             if (State == VehicleState.Loading)
             {
-                currentSpeed = 0;
+                CurrentSpeed = 0;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
                 waitTimer += deltaTime;
                 if (waitTimer >= LOAD_TIME)
                 {
@@ -111,17 +183,59 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     if (currentPathIndex + 1 < currentPath.Count)
                     {
                         State = VehicleState.Moving;
-                        currentSpeed = maxSpeed;
+                        CurrentSpeed = MaxSpeed;
+                        StateUpdated?.Invoke(this, EventArgs.Empty);
                     }
                     else HandleRouteCycle();
                 }
                 return;
             }
 
-            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0) return;
+            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0)
+            {
+                State = VehicleState.Waiting;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
+                return;
+            }
 
-            currentSpeed = maxSpeed;
-            float distanceToTravel = (currentSpeed / 3.6f) * (float)deltaTime;
+            CurrentSpeed = MaxSpeed;
+
+            if (CurrentRoad is Bridge bridge)
+            {
+                CurrentSpeed = Math.Min(MaxSpeed, bridge.SpeedLimit);
+            }
+
+            else if (currentPathIndex + 1 < currentPath.Count && null != CurrentRoad)
+            {
+                Road nextRoad = currentPath[currentPathIndex + 1];
+                var currentField = World.Instance.GetField(CurrentRoad.Coordinate);
+                var nextField = World.Instance.GetField(nextRoad.Coordinate);
+
+                if (currentField != null && nextField != null)
+                {
+
+                    if (nextField.GetHeightDifference(currentField) == -1)
+                    {
+                        CurrentSpeed *= 0.4f;
+                    }
+                    
+                }
+            }
+
+            Vehicle? ahead = GetVehicleAhead();
+            if (ahead != null)
+            {
+                float dist = Vector2.Distance(Position, ahead.Position);
+                float safeFollowDistance = GameSettings.FieldSize * 1.0f;
+
+                if (dist <= safeFollowDistance)
+                {
+                    CurrentSpeed = Math.Min(CurrentSpeed, ahead.CurrentSpeed);
+                }
+            }
+
+            StateUpdated?.Invoke(this, EventArgs.Empty);
+            float distanceToTravel = (CurrentSpeed / 3.6f) * (float)deltaTime;
 
             int safetyCounter = 0;
             while (distanceToTravel > 0 && safetyCounter < 10)
@@ -175,12 +289,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 PendingRoute = null;
                 CurrentStopIndex = 0;
                 System.Diagnostics.Debug.WriteLine($"{Name} elolvasta az új menetrendet! Váltás a {Route.Stops[0].Coordinate} állomásra.");
+                State = VehicleState.Moving;
             }
             else
             {
                 if (Route == null || Route.Stops.Count < 2)
                 {
                     State = VehicleState.Waiting;
+                    StateUpdated?.Invoke(this, EventArgs.Empty);
                     System.Diagnostics.Debug.WriteLine($"{Name} várakozik további megállókra...");
                     return;
                 }
@@ -188,6 +304,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             }
 
             Station targetStation = Route.Stops[CurrentStopIndex];
+
+            if (CurrentRoad != null && CurrentRoad.Coordinate == targetStation.Coordinate)
+            {
+                System.Diagnostics.Debug.WriteLine($"{Name} már a célállomáson van, ugrás a következőre!");
+                CurrentStopIndex = (CurrentStopIndex + 1) % Route.Stops.Count;
+                targetStation = Route.Stops[CurrentStopIndex];
+            }
+
             System.Diagnostics.Debug.WriteLine($"{Name} tervezés a következő pontra: -> {targetStation.Coordinate}");
 
             var graph = World.Instance.Roadnetwork;
@@ -202,14 +326,22 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     .FirstOrDefault();
             }
 
-    
+
 
             if (startNode != null && targetNode != null)
             {
-                List<Road>? newPath = Pathfinder.FindPath(startNode, targetNode);
+                List<Road>? newPath = Pathfinder.Instance.FindPath(startNode, targetNode);
 
                 if (newPath != null && newPath.Count > 0)
                 {
+                    if (newPath.Last().Coordinate != targetStation.Coordinate)
+                    {
+                        if (World.Instance.GetField(targetStation.Coordinate)?.Surface is Road destRoad)
+                        {
+                            newPath.Add(destRoad);
+                        }
+                    }
+
                     Station? currentStation = World.Instance.GetField(CurrentRoad!.Coordinate)?.Surface as Station;
                     StartJourney(newPath, false, currentStation);
                 }
@@ -224,6 +356,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 State = VehicleState.Waiting;
                 System.Diagnostics.Debug.WriteLine($"[HIBA] A gráf nem találja a megállót vagy a busz jelenlegi helyét!");
             }
+            StateUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         public void TryStartNextRoute()
@@ -239,9 +372,9 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             if (currentPathIndex + 1 >= currentPath.Count)
             {
                 State = VehicleState.Loading;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
                 waitTimer = 0;
-                if (CurrentRoad != null)
-                    ReleaseJunctionLock(CurrentRoad);
+
 
                 if (Route != null && Route.Stops.Count > 0)
                 {
@@ -250,23 +383,43 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 }
                 return false;
             }
-            Road nextRoad = currentPath[currentPathIndex + 1];
-            bool isNextJunction = IsFieldJunction(nextRoad);
 
-            if (isNextJunction)
+            Road nextRoad = currentPath[currentPathIndex + 1];
+            PathDirection nextEntry = GetRelativeDirection(nextRoad.Coordinate, CurrentRoad!.Coordinate);
+            Road? roadAfterNext = (currentPathIndex + 2 < currentPath.Count) ? currentPath[currentPathIndex + 2] : null;
+            PathDirection nextExit = roadAfterNext == null ? PathDirection.End : GetRelativeDirection(nextRoad.Coordinate, roadAfterNext.Coordinate);
+
+            if (nextRoad is Station nextStation && nextStation.IsOccupied) return false;
+
+            var vehiclesOnNext = World.Instance.VehicleManager.GetVehiclesOnField(nextRoad.Coordinate);
+            foreach (var other in vehiclesOnNext)
             {
-                if (nextRoad.IsReserved)
+                if (other.CurrentEntry == nextEntry) return false;
+
+                if (IsFieldJunction(nextRoad))
                 {
-                    return false;
+                    if (PathsCross(nextEntry, nextExit, other.CurrentEntry, other.CurrentExit)) return false;
                 }
-                nextRoad.IsReserved = true;
+                else
+                {
+                    if (vehiclesOnNext.Count >= 2) return false;
+                }
             }
 
-            if (CurrentRoad == null) throw new Exception();
-            ReleaseJunctionLock(CurrentRoad);
+            if (CurrentRoad is Station oldStation) oldStation.IsOccupied = false;
+            World.Instance.VehicleManager.UnregisterVehicleFromField(this, CurrentRoad.Coordinate);
 
             CurrentRoad = nextRoad;
             currentPathIndex++;
+            CurrentEntry = nextEntry;
+            CurrentExit = nextExit;
+
+            World.Instance.VehicleManager.RegisterVehicleOnField(this, CurrentRoad.Coordinate);
+
+            if (CurrentRoad is Station enteredStation && currentPathIndex == currentPath.Count - 1)
+            {
+                enteredStation.IsOccupied = true;
+            }
 
             LoadWaypointsForField();
             if (currentWaypoints.Count > 0)
@@ -325,9 +478,56 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         private Vehicle? GetVehicleAhead()
         {
-            //TODO// globális járműkezelő
+            if (currentPathIndex + 1 < currentPath.Count)
+            {
+                Road nextRoad = currentPath[currentPathIndex + 1];
+                PathDirection ourNextEntry = GetRelativeDirection(nextRoad.Coordinate, CurrentRoad!.Coordinate);
+
+                var vehiclesNext = World.Instance.VehicleManager.GetVehiclesOnField(nextRoad.Coordinate);
+                foreach (var other in vehiclesNext)
+                {
+                    if (other.CurrentEntry == ourNextEntry)
+                    {
+                        return other;
+                    }
+                }
+            }
             return null;
         }
+
+        private int GetDirectionIndex(PathDirection dir)
+        {
+            return dir switch
+            {
+                PathDirection.North => 0,
+                PathDirection.East => 1,
+                PathDirection.South => 2,
+                PathDirection.West => 3,
+                _ => -1
+            };
+        }
+
+        private bool PathsCross(PathDirection entry1, PathDirection exit1, PathDirection entry2, PathDirection exit2)
+        {
+            if (exit1 == exit2 && exit1 != PathDirection.End && exit1 != PathDirection.Start) return true;
+            if (entry1 == entry2) return true;
+
+            int a1 = GetDirectionIndex(entry1);
+            int b1 = GetDirectionIndex(exit1);
+            int a2 = GetDirectionIndex(entry2);
+            int b2 = GetDirectionIndex(exit2);
+
+            if (a1 == -1 || b1 == -1 || a2 == -1 || b2 == -1) return false;
+            if (a1 == b2 || b1 == a2) return false;
+
+            int p1 = Math.Min(a1, b1);
+            int p2 = Math.Max(a1, b1);
+            int q1 = Math.Min(a2, b2);
+            int q2 = Math.Max(a2, b2);
+
+            return p1 < q1 && q1 < p2 && p2 < q2;
+        }
+
         private void ReleaseJunctionLock(Road road)
         {
             if (IsFieldJunction(road))
@@ -344,12 +544,13 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public int Load(int amount, ProductType type)
         {
-            int spaceLeft = capacity - CurrentLoad;
+            int spaceLeft = Capacity - CurrentLoad;
             int taken = Math.Min(amount, spaceLeft);
             CurrentLoad += taken;
-            if (currentType == ProductType.NONE)
+            if (taken > 0 && CurrentType == ProductType.NONE)
             {
-                currentType = type;
+                CurrentType = type;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
             }
             return taken;
         }
@@ -360,15 +561,22 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             CurrentLoad -= provided;
             if (CurrentLoad == 0)
             {
-                currentType = ProductType.NONE;
+                CurrentType = ProductType.NONE;
+                StateUpdated?.Invoke(this, EventArgs.Empty);
             }
             return provided;
         }
 
         public void ClearRoute()
         {
+            if (CurrentRoad != null)
+            {
+                if (CurrentRoad is Station station) station.IsOccupied = false;
+                World.Instance.VehicleManager.UnregisterVehicleFromField(this, CurrentRoad.Coordinate);
+            }
+
             State = VehicleState.Waiting;
-            currentSpeed = 0;
+            CurrentSpeed = 0;
             currentPath.Clear();
             currentWaypoints.Clear();
             Route = null;
@@ -396,16 +604,51 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             RouteChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public class VehicleArrivedEventArgs : EventArgs
+        public void RestoreReference(Coordinate coordinate)
         {
-            public Vehicle Vehicle { get; }
-            public Station Station { get; }
+            var world = World.Instance;
 
-            public VehicleArrivedEventArgs(Vehicle vehicle, Station station)
+            if (!string.IsNullOrEmpty(RouteName))
             {
-                Vehicle = vehicle;
-                Station = station;
+                Route = world.SavedRoutes.FirstOrDefault(r => r.Name == RouteName);
+            }
+
+            if (SavedPathCoordinates != null)
+            {
+                currentPath.Clear();
+                foreach (var coord in SavedPathCoordinates)
+                {
+                    if (world.GetField(coord)?.Surface is Road road)
+                    {
+                        currentPath.Add(road);
+                    }
+                }
+            }
+
+            if (currentPath.Count > 0 && currentPathIndex < currentPath.Count)
+            {
+                CurrentRoad = currentPath[currentPathIndex];
+            }
+
+            if (CurrentRoad != null)
+            {
+                world.VehicleManager.RegisterVehicleOnField(this, CurrentRoad.Coordinate);
+                LoadWaypointsForField();
             }
         }
+
+        public void PrepareForSave()
+        {
+            SavedPathCoordinates = [.. currentPath.Select(r => r.Coordinate)];
+            RouteName = Route?.Name;
+        }
+    }
+    public class VehicleTemplate
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Price { get; set; }
+        public string PriceDisplay => $"{Price} $";
+        public string CargoDescription { get; set; } = string.Empty;
+        public string InternalType { get; set; } = string.Empty;
     }
 }

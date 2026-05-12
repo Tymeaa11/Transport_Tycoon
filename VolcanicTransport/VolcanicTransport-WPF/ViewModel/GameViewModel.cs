@@ -1,9 +1,10 @@
-﻿using System.Collections.ObjectModel;
+﻿using Microsoft.Win32;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Text;
-using System.Timers;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Threading;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -16,12 +17,35 @@ namespace VolcanicTransport_WPF.ViewModel
     public class GameViewModel : ViewModelBase
     {
         public static GameModel GameModelInstance { get => GameModel.Instance; }
-        private bool _isPausedView;
+        public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
+        public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
+        public int MinimapBorderSize => GameSettings.WorldSizeInFields + 20; //used to size minimap border
+        public int MinimapSize => GameSettings.WorldSizeInFields; //used to size minimap
+        public Camera Camera { get; }
+        public CameraToMinimap MinimapSelector { get; }
+        public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
+
 
         #region Events
         public event EventHandler? ExitToMenuRequested;
+        public event EventHandler? SaveGameRequested;
+        public event EventHandler? LoadGameRequested;
+
+        private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(CurrentMoney));
+        }
+
+        private void On_UpdateChunk(object? sender, ChunkUpdatedEventArgs e)
+        {
+            if (ChunkMap.ContainsKey(e.ChunkCoordinate))
+                ChunkMap[e.ChunkCoordinate].TriggerRerender();
+        }
+
         #endregion
 
+        #region Pause
+        private bool _isPausedView;
         public bool IsPausedView
         {
             get => _isPausedView;
@@ -42,25 +66,32 @@ namespace VolcanicTransport_WPF.ViewModel
         }
         private void RefreshTimescaleProperties()
         {
-            OnPropertyChanged(nameof(IsTimescale0));
-            OnPropertyChanged(nameof(IsTimescale1));
-            OnPropertyChanged(nameof(IsTimescale2));
-            OnPropertyChanged(nameof(IsTimescale4));
+            OnPropertyChanged(nameof(IsTimeScale0));
+            OnPropertyChanged(nameof(IsTimeScale1));
+            OnPropertyChanged(nameof(IsTimeScale2));
+            OnPropertyChanged(nameof(IsTimeScale4));
         }
+        #endregion
 
         #region Chunks
-        public ObservableCollection<Chunk> LoadedChunks { get; } = [];
+        public ObservableCollection<ChunkViewModel> LoadedChunks { get; }
+        public Dictionary<Coordinate, ChunkViewModel> ChunkMap { get; }
 
+        private double _lastWidth;
+        private double _lastHeight;
         public void SetViewDimensions(double width, double height)
         {
             _lastWidth = width;
             _lastHeight = height;
-            UpdateVisibleChunks(width, height);
+            UpdateVisibleChunks();
+            Camera.HalfScreenDimensions = new Vector(width * 0.5, height * 0.5);
         }
 
-        public void UpdateVisibleChunks(double width, double height)
+
+
+        public void UpdateVisibleChunks()
         {
-            Rect bounds = Camera.GetVisibleWorldBounds(width, height);
+            Rect bounds = Camera.GetVisibleWorldBounds();
 
             // Get visible chunk coordinates (+1 buffer)
             int chunkPX = GameSettings.ChunkSize * GameSettings.FieldSize;
@@ -77,24 +108,12 @@ namespace VolcanicTransport_WPF.ViewModel
                     if (x >= 0 && x < WorldSizeInChunks.X && y >= 0 && y < WorldSizeInChunks.Y)
                         visibleCoords.Add(new Coordinate(x, y));
 
-
-            // 1. Remove if outside
-            var toRemove = LoadedChunks.Where(c => !visibleCoords.Contains(c.Coordinate)).ToList();
-            foreach (var chunk in toRemove) LoadedChunks.Remove(chunk);
-
-            // 2. Add if became visible
-            foreach (var coord in visibleCoords)
-                if (!LoadedChunks.Any(c => c.Coordinate.Equals(coord)))
-                {
-                    var chunk = GameModel.WorldInstance.GetChunk(coord);
-                    if (chunk != null) LoadedChunks.Add(chunk);
-                }
+            // Set visibility based on whether the coordinate is in the visible set
+            foreach (var kvp in ChunkMap)
+                kvp.Value.IsVisible = visibleCoords.Contains(kvp.Key);
         }
 
         #endregion
-
-        public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
-        public Camera Camera { get; }
 
         #region Commands
         public DelegateCommand SetBuildModeRoadCommand { get; private set; }
@@ -102,16 +121,21 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand SetBuildModeBridgeCommand { get; private set; }
         public DelegateCommand SetBuildModeLowerCommand { get; private set; }
         public DelegateCommand SetBuildModeHeightenCommand { get; private set; }
-        public DelegateCommand SetTimescale0Command { get; private set; }
-        public DelegateCommand SetTimescale1Command { get; private set; }
-        public DelegateCommand SetTimescale2Command { get; private set; }
-        public DelegateCommand SetTimescale4Command { get; private set; }
+        public DelegateCommand SetTimeScale0Command { get; private set; }
+        public DelegateCommand SetTimeScale1Command { get; private set; }
+        public DelegateCommand SetTimeScale2Command { get; private set; }
+        public DelegateCommand SetTimeScale4Command { get; private set; }
         public DelegateCommand TogglePauseCommand { get; private set; }
         public DelegateCommand ResumeCommand { get; private set; }
         public DelegateCommand QuitToMainMenuCommand { get; private set; }
-        public DelegateCommand ReGenerateWithRandomSeed { get; private set; }
-        public DelegateCommand BuyVehicleCommand { get; private set; }
+        public DelegateCommand OpenPurchasePanelCommand { get; private set; }
+        public DelegateCommand ClosePurchasePanelCommand { get; private set; }
+        public DelegateCommand ConfirmPurchaseCommand { get; private set; }
         public DelegateCommand AddStopCommand { get; }
+        public DelegateCommand SaveGameCommand {  get; private set; }
+        public DelegateCommand LoadGameCommand {  get; private set; }
+        public DelegateCommand ToggleVehiclePanelCommand { get; private set; }
+        public DelegateCommand SellVehicleCommand { get; private set; }
         #endregion
 
         #region FieldClicked
@@ -121,153 +145,141 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void OnFieldClicked(Coordinate coord)
         {
-            System.Diagnostics.Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
-            Field? f = GameModel.WorldInstance.GetField(coord);
-            if (f == null) return;
+            if (IsPausedView) return;
+            Debug.WriteLine($"Field clicked at: {coord.X}, {coord.Y}");
 
-            if (CurrentBuildMode == BuildMode.SELECT_STATION)
+            //Camera.PrintDebug();
+
+            //foreach (var cvm in LoadedChunks)
+            //    System.Diagnostics.Debug.WriteLine($"CVM {cvm.Chunk.Coordinate}, {cvm.IsVisible}");
+            //System.Diagnostics.Debug.WriteLine("\n");
+
+            Field? field = GameModel.WorldInstance.GetField(coord);
+            if (field == null) return;
+
+            switch (CurrentBuildMode)
             {
-                System.Diagnostics.Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {f.Surface?.GetType().Name}");
-                if (f.Surface is Station clickedStation)
-                {
-                    if (SelectedVehicle != null)
-                    {
-                        var v = SelectedVehicle.GetVehicle;
-                        if (v != null)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Station megvan, küldöm a modellnek!");
-                            GameModel.AddStopToVehicle(v, clickedStation);
-                        }
-                    }
-                    CurrentBuildMode = BuildMode.NONE;
-                }
-                return;
-            }
+                case BuildMode.SELECT_STATION:
+                    OnBuildModeSelectStation(field);
+                    break;
 
-            if (CurrentBuildMode == BuildMode.BUY_VEHICLE)
-            {
-                if (f.Surface is Station clickedStation)
-                {
-                    if (_firstSelectedStation == null)
-                    {
-                        // 1. KATTINTÁS: Eltároljuk a start állomást
-                        _firstSelectedStation = clickedStation;
-                        System.Diagnostics.Debug.WriteLine($"1. állomás rögzítve: {clickedStation.Coordinate}. Kattints a célra!");
-                    }
-                    else
-                    {
-                        // 2. KATTINTÁS: Megvan a cél állomás
-                        Station secondSelectedStation = clickedStation;
-
-                        if (_firstSelectedStation == secondSelectedStation)
-                        {
-                            System.Diagnostics.Debug.WriteLine("A cél nem lehet ugyanaz, mint a start!");
-                            return;
-                        }
-
-                        var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
-                        RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == _firstSelectedStation.Coordinate);
-                        RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondSelectedStation.Coordinate);
-
-                        if (startNode != null && endNode != null)
-                        {
-                            if (SelectedVehicle != null)
-                            {
-                                Vehicle v = SelectedVehicle.GetVehicle;
-
-                                Route newRoute = new Route();
-                                newRoute.AddStop(_firstSelectedStation);
-                                newRoute.AddStop(secondSelectedStation);
-
-                                v.AssignNewRoute(newRoute);
-
-                                System.Diagnostics.Debug.WriteLine($"[{v.Name}] Új menetrend fiókba téve! Amint beér a megállóba, irányt vált.");
-                            }
-                            else
-                            {
-                                List<Road>? path = Pathfinder.FindPath(startNode, endNode);
-
-                                if (path != null && path.Count > 0)
-                                {
-                                    var nameDialog = new VolcanicTransport_WPF.View.VehicleNameWindow();
-                                    nameDialog.Owner = System.Windows.Application.Current.MainWindow;
-
-                                    if (nameDialog.ShowDialog() == true)
-                                    {                                        
-                                        string chosenName = nameDialog.VehicleName;
-                                        string? chosenType = nameDialog.SelectedType;
-
-                                        Vehicle newVehicle = chosenType switch
-                                        {
-                                            "CargoTruck" => new CargoTruck(chosenName),
-                                            "TankerTruck" => new TankerTruck(chosenName),
-                                            "MiniBus" => new MiniBus(chosenName),
-                                            _ => new Bus(chosenName)
-                                        };
-
-                                        Route initialRoute = new Route();
-                                        initialRoute.AddStop(_firstSelectedStation);
-                                        initialRoute.AddStop(secondSelectedStation);
-                                        newVehicle.Route = initialRoute;
-                                        newVehicle.CurrentStopIndex = 1;
-
-                                        newVehicle.StartJourney(path, false, _firstSelectedStation);
-                                        GameModelInstance.BuyVehicle(newVehicle);
-                                        System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType})");
-                                    } else
-                                    {
-                                        System.Diagnostics.Debug.WriteLine("Vásárlás megszakítva.");
-                                    }
-                                }
-                                else
-                                {
-                                    System.Diagnostics.Debug.WriteLine("Nincs összefüggő aszfalt a két állomás között!");
-                                }
-                            }
-
-                            _firstSelectedStation = null;
-                            CurrentBuildMode = BuildMode.NONE;
-                        }
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("Kérlek egy állomásra kattints!");
-                }
-            }
-
-
-            if (f.IsBuildable())
-            {
-                switch (CurrentBuildMode)
-                {
-                    case BuildMode.ROAD:
+                case BuildMode.ROAD:
+                    if (field.IsBuildable()) 
                         GameModelInstance.PlaceRoad(coord);
-                        break;
+                    break;
 
-                    case BuildMode.STATION:
+                case BuildMode.STATION:
+                    if (field.IsBuildable()) 
                         GameModelInstance.PlaceStation(coord);
-                        break;
+                    break;
 
-                    case BuildMode.BUY_VEHICLE:
-                        break;
-                }
-            }
+                case BuildMode.HEIGHTEN:
+                    GameModelInstance.HeightenField(coord);
+                    break;
 
-            if (CurrentBuildMode == BuildMode.HEIGHTEN)
-            {
-                GameModelInstance.HeightenField(coord);
-            }
+                case BuildMode.LOWER:
+                    GameModelInstance.LowerField(coord);
+                    break;
+                case BuildMode.EDIT_GLOBAL_ROUTE:
+                    if (field.Surface is Station clickedGlobalStation && SelectedSavedRoute != null)
+                    {
+                        SelectedSavedRoute.AddStop(clickedGlobalStation);
+                        System.Diagnostics.Debug.WriteLine($"Állomás hozzáadva a {SelectedSavedRoute.Name} járathoz!");
+                    }
+                    break;
 
-            if (CurrentBuildMode == BuildMode.LOWER)
-            {
-                GameModelInstance.LowerField(coord);
+                case BuildMode.BRIDGE:
+                    OnBuildModeBridge(coord);
+                    break;
+
+                default:
+                    // Handle BuildMode.NONE or unhandled cases
+                    break;
             }
         }
 
+        private void OnBuildModeBridge(Coordinate coordinate)
+        {
+            if (IsPausedView || IsPurchasePanelVisible) return;
+            if (_bridgeStartCoord == null)
+            {
+                _bridgeStartCoord = coordinate;
+                Debug.WriteLine($"Híd 1. pontja lerakva: {coordinate}. Kattints legfeljebb {SelectedBridgeType.Length} mezővel arrébb a túlpartra!");
+            }
+            else
+            {
+                bool success = GameModelInstance.PlaceBridge(_bridgeStartCoord.Value, coordinate, SelectedBridgeType);
+                Debug.WriteLine(success ? "Híd felépítve!" : "Hibás hídelhelyezés! Ellenőrizd a partot, a magasságot és a hosszt.");
+
+                _bridgeStartCoord = null;
+            }
+            return;
+        }
+
+        private void OnBuildModeSelectStation(Field field)
+        {
+            if (IsPausedView || IsPurchasePanelVisible) return;
+            Debug.WriteLine($"SELECT_STATION mód aktív. Mező felülete: {field.Surface?.GetType().Name}");
+            if (field.Surface is Station clickedStation)
+            {
+                if (SelectedVehicle != null)
+                {
+                    var v = SelectedVehicle.GetVehicle;
+                    if (v != null)
+                    {
+                        Debug.WriteLine("Station megvan, küldöm a modellnek!");
+                        GameModel.AddStopToVehicle(v, clickedStation);
+                    }
+                }
+                CurrentBuildMode = BuildMode.NONE;
+            }
+        }
+
+        public ObservableCollection<Route> SavedRoutes { get; } = [];
+
+        private Route? _selectedSavedRoute;
+        public Route? SelectedSavedRoute
+        {
+            get => _selectedSavedRoute;
+            set { _selectedSavedRoute = value; OnPropertyChanged(); }
+        }
+
+        private string _newRouteName = "Új Járat 1";
+        public string NewRouteName
+        {
+            get => _newRouteName;
+            set { _newRouteName = value; OnPropertyChanged(); }
+        }
+
+        public DelegateCommand SaveCurrentRouteCommand { get; private set; }
+        public DelegateCommand AssignSavedRouteCommand { get; private set; }
+
+        private bool _isTimetablePanelVisible = false;
+        public bool IsTimetablePanelVisible
+        {
+            get => _isTimetablePanelVisible;
+            set { _isTimetablePanelVisible = value; OnPropertyChanged(); }
+        }
+
+        public DelegateCommand ToggleTimetablePanelCommand { get; private set; }
+        public DelegateCommand CreateGlobalRouteCommand { get; private set; }
+        public DelegateCommand EditGlobalRouteCommand { get; private set; }
+
+
         #endregion
 
-        #region Hovered field & Tooltips
+        #region Minimap
+        public void MinimapTeleport(Vector vector)
+        {
+            if (IsPausedView || IsPurchasePanelVisible) return;
+            Debug.WriteLine($"Minimap clicked at: {vector.X}, {vector.Y}");
+            Camera.Position = -vector * GameSettings.FieldSize * Camera.Scale;
+
+        }
+        #endregion
+
+        #region Hovered field & Inspector
+
 
         private bool _isInspectorVisible;
         public bool IsInspectorVisible
@@ -282,121 +294,7 @@ namespace VolcanicTransport_WPF.ViewModel
             get => _inspectorText;
             set { _inspectorText = value; OnPropertyChanged(); }
         }
-        private Point _lastMousePosition;
-        public void UpdateHoveredCoordinateAndTooltips(Point mouseXY)
-        {
-            _lastMousePosition = mouseXY;
-            HoveredCoordinate = Camera.ScreenToField(mouseXY);
-            UpdateBuildability();
-            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
-            if (_hoveredField?.Surface != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"Surface type: {_hoveredField.Surface.GetType().Name}");
-            }
-
-            var cornerSb = new StringBuilder();
-            cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
-            if (_hoveredField != null)
-            {
-                cornerSb.Append($"| {_hoveredField.Type}");
-                if (_hoveredField.Surface is Mushroom m) cornerSb.Append($" | M({m.GrowthStage})");
-            }
-            ToolTipText = cornerSb.ToString();
-
-            StringBuilder inspectorSb = new StringBuilder();
-            if (_hoveredField?.Surface is Station)
-            {
-                inspectorSb.Append(_hoveredField.Surface switch
-                {
-                    FactoryStation fs => GetFactoryStationInfo(fs),
-                    CityStation cs => GetCityStationInfo(cs),
-                    _ => ""
-                });
-
-                InspectorText = inspectorSb.ToString();
-                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-            }
-            else if (_hoveredField?.Surface is FactoryBuilding fb)
-            {
-                inspectorSb.Append(GetSimpleFactoryInfo(fb));
-                InspectorText = inspectorSb.ToString();
-                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-            }
-            else if (_hoveredField?.Surface is CityBuilding cb)
-            {
-                inspectorSb.Append(GetSimpleCityInfo(cb));
-                InspectorText = inspectorSb.ToString();
-                IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
-            }
-            else
-            {
-                IsInspectorVisible = false;
-                InspectorText = "";
-            }
-        }
-        private string GetSimpleFactoryInfo(FactoryBuilding fb)
-        {
-            StringBuilder info = new StringBuilder();
-            info.AppendLine($"Factory: {fb.Name}");
-
-            if (fb.BaseProduct != ProductType.NONE)
-            {
-                info.AppendLine($"Base product need / amount:  {fb.BaseProduct} {fb.BaseProductAmount}");
-            }
-
-            info.AppendLine($"Finished product / amount: {fb.FinalProduct} {fb.FinalProductAmount}");
-
-            return info.ToString();
-        }
-
-        private string GetSimpleCityInfo(CityBuilding cb)
-        {
-            StringBuilder info = new StringBuilder();
-            info.AppendLine($"City: {cb.Name}");
-            info.AppendLine("Product needs:");
-
-            foreach (ProductType pt in cb.ProductTypes)
-            {
-                info.AppendLine($"  - {pt}");
-            }
-
-            return info.ToString();
-        }
-        private string GetFactoryStationInfo(FactoryStation fs)
-        {
-            StringBuilder info = new StringBuilder();
-
-            info.AppendLine($"Factory Station: {fs.Name}");
-
-            if (fs.GetFactoryNeeds != ProductType.NONE)
-            {
-                info.AppendLine($"Base product need / amount: ({fs.GetFactoryNeeds} / {fs.GetFactoryNeedsAmount})");
-            }
-
-            info.AppendLine($"Finished product / amount: {fs.GetFactoryFinishedProduct} / {fs.GetFactoryFinishedProductAmount}");
-
-            info.AppendLine($"People waiting: {fs.WaitingPassengers}");
-
-            return info.ToString();
-        }
-
-        private string GetCityStationInfo(CityStation cs)
-        {
-            StringBuilder info = new StringBuilder();
-
-            info.AppendLine($"City Station: {cs.Name}");
-            info.AppendLine("Product needs:");
-
-            foreach (ProductType pt in cs.GetCityProductNeeds)
-            {
-                info.AppendLine($"  - {pt}");
-            }
-
-            info.AppendLine($"People waiting: {cs.WaitingPassengers}");
-
-            return info.ToString();
-        }
-        public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
+        private Vector _lastMousePosition;
 
         private Field? _hoveredField;
 
@@ -410,6 +308,24 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged();
             }
         }
+
+        private bool _isBridgeMenuOpen;
+        public bool IsBridgeMenuOpen
+        {
+            get => _isBridgeMenuOpen;
+            set { _isBridgeMenuOpen = value; OnPropertyChanged(); }
+        }
+
+        public GameSettings.BridgeData[] AvailableBridges => GameSettings.BridgeTypes;
+
+        private GameSettings.BridgeData _selectedBridgeType;
+        public GameSettings.BridgeData SelectedBridgeType
+        {
+            get => _selectedBridgeType;
+            set { _selectedBridgeType = value; OnPropertyChanged(); }
+        }
+
+        private Coordinate? _bridgeStartCoord = null;
 
         private string _toolTipText = "";
         public string ToolTipText
@@ -431,6 +347,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void UpdateBuildability()
         {
+            if (IsPausedView || IsPurchasePanelVisible) return;
             IsHoveredFieldBuildable = CurrentBuildMode switch
             {
                 BuildMode.HEIGHTEN => GameModelInstance.IsHeightenable(HoveredCoordinate),
@@ -438,11 +355,51 @@ namespace VolcanicTransport_WPF.ViewModel
                 _ => GameModelInstance.IsBuildable(HoveredCoordinate),
             };
         }
+
+
+        public void UpdateHoveredCoordinateAndTooltips(Vector mouseXY)
+        {
+            if (IsPausedView || IsPurchasePanelVisible) return;
+            _lastMousePosition = mouseXY;
+            Camera.CurrentMousePosition = mouseXY;
+
+            HoveredCoordinate = Camera.ScreenToField(mouseXY);
+            _hoveredField = GameModel.WorldInstance.GetField(HoveredCoordinate);
+
+            UpdateBuildability();
+
+
+            var cornerSb = new StringBuilder();
+            cornerSb.Append($"X:{HoveredCoordinate.X} Y:{HoveredCoordinate.Y} ");
+
+            if (_hoveredField != null)
+            {
+                cornerSb.Append($"| {_hoveredField.Type} ({(int)_hoveredField.Type})");
+
+                string surfaceDetail = _hoveredField.Surface switch
+                {
+                    Mushroom m => $" | M({m.GrowthStage})",
+                    Road r => $" | R({r.RoadType})",
+                    _ => ""
+                };
+
+                cornerSb.Append(surfaceDetail);
+            }
+
+            ToolTipText = cornerSb.ToString();
+
+            InspectorText = (_hoveredField?.Surface is IInspectable inspectable)
+                ? inspectable.Inspect()
+                : "";
+
+            IsInspectorVisible = !string.IsNullOrEmpty(InspectorText);
+        }
+
+
         #endregion
 
-
         #region Vehicles
-        public ObservableCollection<Vehicle> Vehicles => World.Instance.Vehicles;
+        public ObservableCollection<Vehicle> Vehicles { get; } = [];
 
         public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
 
@@ -459,75 +416,240 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged(nameof(IsVehiclePanelVisible));
             }
         }
+        private bool _isPurchasePanelVisible;
+        public bool IsPurchasePanelVisible
+        {
+            get => _isPurchasePanelVisible;
+            set { _isPurchasePanelVisible = value; OnPropertyChanged(); }
+        }
+
+        private VehicleTemplate? _selectedVehicleTemplate;
+        public VehicleTemplate? SelectedVehicleTemplate
+        {
+            get => _selectedVehicleTemplate;
+            set { _selectedVehicleTemplate = value; OnPropertyChanged(); }
+        }
+
+        private string _newVehicleName = "New Vehicle";
+        public string NewVehicleName
+        {
+            get => _newVehicleName;
+            set { _newVehicleName = value; OnPropertyChanged(); }
+        }
+
+        public List<VehicleTemplate> VehicleTemplates { get; } = new()
+        {
+            new() { Name = "Bus", Price = 6000, CargoDescription = "Passengers", InternalType = "Bus" },
+            new() { Name = "Mini Bus", Price = 4000, CargoDescription = "Passengers", InternalType = "MiniBus" },
+            new() { Name = "Cargo Truck", Price = 11000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "CargoTruck" },
+            new() { Name = "Mini Cargo", Price = 8000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "MiniCargoTruck" },
+            new() { Name = "Tanker Truck", Price = 10000, CargoDescription = "Steam, Water, Concrete", InternalType = "TankerTruck" },
+            new() { Name = "Mini Tanker", Price = 7000, CargoDescription = "Steam, Water, Concrete", InternalType = "MiniTankerTruck" }
+        };
 
         private double _accumulator = 0;
         private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
 
-        public bool IsVehiclePanelVisible => SelectedVehicle != null;
+        private bool _isVehiclePanelVisible = false;
+        public bool IsVehiclePanelVisible
+        {
+            get => _isVehiclePanelVisible;
+            set { _isVehiclePanelVisible = value; OnPropertyChanged(); }
+        }
 
         #endregion
 
-        private double _lastWidth;
-        private double _lastHeight;
+
 
         public GameViewModel()
         {
-            Camera = new Camera(Matrix.Identity);
+            Camera = new Camera();
+            MinimapSelector = new CameraToMinimap(Camera);
+            Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
-            Camera.CameraChanged += (s, e) => UpdateVisibleChunks(_lastWidth, _lastHeight);
+            CurrentTimeScale = 1;
 
-            CurrentTimescale = 1;
+            LoadedChunks = [];
+            ChunkMap = [];
 
             FieldClickedCommand = new DelegateCommand(param =>
             {
                 if (param is Coordinate coord)
                     OnFieldClicked(coord);
             });
-            SetBuildModeRoadCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.ROAD));
+            SetBuildModeRoadCommand = new DelegateCommand(
+                _ => OnSetBuildMode(BuildMode.ROAD));
             SetBuildModeStationCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.STATION));
-            SetBuildModeBridgeCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.BRIDGE));
+            SetBuildModeBridgeCommand = new DelegateCommand(_ =>
+            {
+                OnSetBuildMode(BuildMode.BRIDGE);
+                IsBridgeMenuOpen = IsBuildModeBridge;
+                _bridgeStartCoord = null;
+            });
             SetBuildModeLowerCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.LOWER));
             SetBuildModeHeightenCommand = new DelegateCommand(_ => OnSetBuildMode(BuildMode.HEIGHTEN));
-            SetTimescale0Command = new DelegateCommand(_ => OnSetTimescale0X());
-            SetTimescale1Command = new DelegateCommand(_ => OnSetTimescale1X());
-            SetTimescale2Command = new DelegateCommand(_ => OnSetTimescale2X());
-            SetTimescale4Command = new DelegateCommand(_ => OnSetTimescale4X());
-            BuyVehicleCommand = new DelegateCommand(_ =>
+            SetTimeScale0Command = new DelegateCommand(_ => OnSetTimescale0X());
+            SetTimeScale1Command = new DelegateCommand(_ => OnSetTimescale1X());
+            SetTimeScale2Command = new DelegateCommand(_ => OnSetTimescale2X());
+            SetTimeScale4Command = new DelegateCommand(_ => OnSetTimescale4X());
+            
+            OpenPurchasePanelCommand = new DelegateCommand(_ =>
             {
-                SelectedVehicle = null;
-                _firstSelectedStation = null;
-                OnSetBuildMode(BuildMode.BUY_VEHICLE);
+                IsPurchasePanelVisible = true;
+                NewVehicleName = $"Vehicle {Vehicles.Count + 1}";
+            });
+
+            ClosePurchasePanelCommand = new DelegateCommand(_ => IsPurchasePanelVisible = false);
+
+            ConfirmPurchaseCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicleTemplate == null || SelectedSavedRoute == null || SelectedSavedRoute.Stops.Count < 2)
+                {
+                    MessageBox.Show("Please select a vehicle type and a route with at least 2 stops to allow the vehicle to spawn!",
+                                    "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                string chosenName = NewVehicleName;
+                string? chosenType = SelectedVehicleTemplate.InternalType;
+                Route? chosenRoute = SelectedSavedRoute;
+                /*
+                Station firstStation = chosenRoute.Stops[0];
+                Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
+
+                Vehicle newVehicle = chosenType switch
+                {
+                    "CargoTruck" => new CargoTruck(chosenName),
+                    "MiniCargoTruck" => new MiniCargoTruck(chosenName),
+                    "TankerTruck" => new TankerTruck(chosenName),
+                    "MiniTankerTruck" => new MiniTankerTruck(chosenName),
+                    "MiniBus" => new MiniBus(chosenName),
+                    _ => new Bus(chosenName)
+                };
+
+                newVehicle.AssignNewRoute(chosenRoute);
+                newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
+
+                List<Road> path = [];
+                if (secondStation != null)
+                {
+                    var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
+                    RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == firstStation.Coordinate);
+                    RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondStation.Coordinate);
+
+                    if (startNode != null && endNode != null)
+                    {
+                        path = Pathfinder.FindPath(startNode, endNode) ?? [];
+                    }
+                }
+
+                if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
+                {
+                    path.Insert(0, firstStation);
+                }
+                if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
+                {
+                    path.Add(secondStation);
+                }
+
+                newVehicle.StartJourney(path, false, firstStation);
+                GameModelInstance.BuyVehicle(newVehicle);
+
+                System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                */
+                bool success = GameModelInstance.CreateAndStartVehicle(chosenType, chosenName, chosenRoute);
+                if (success)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                }
+                IsPurchasePanelVisible = false;
             });
             TogglePauseCommand = new DelegateCommand(_ => IsPausedView = !IsPausedView);
+            ToggleVehiclePanelCommand = new DelegateCommand(_ =>
+            {
+                IsVehiclePanelVisible = !IsVehiclePanelVisible;
+            });
+            OpenPurchasePanelCommand = new DelegateCommand(_ =>
+            {
+                IsPurchasePanelVisible = true;
+                NewRouteName = "New vehicle";
+            });
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
-            
             QuitToMainMenuCommand = new DelegateCommand(_ =>
             {
                 ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
             });
-            
             AddStopCommand = new DelegateCommand(_ =>
             {
+                if (IsPausedView) return;
                 if (SelectedVehicle != null)
                 {
                     CurrentBuildMode = BuildMode.SELECT_STATION;
-                    System.Diagnostics.Debug.WriteLine("Válassz megállót a térképen!");
-                    System.Diagnostics.Debug.WriteLine($"Siker: Mód átváltva: {CurrentBuildMode}");
+                    Debug.WriteLine("Válassz megállót a térképen!");
+                    Debug.WriteLine($"Siker: Mód átváltva: {CurrentBuildMode}");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
+                    Debug.WriteLine("HIBA: Nincs kijelölt jármű, nem tudok módot váltani!");
+                }
+            });
+            SaveCurrentRouteCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle != null && SelectedVehicle.GetVehicle.Route != null && SelectedVehicle.GetVehicle.Route.Stops.Count > 0)
+                {
+                    var currentRoute = SelectedVehicle.GetVehicle.Route;
+                    currentRoute.Name = NewRouteName;
+
+                    if (!SavedRoutes.Contains(currentRoute))
+                    {
+                        SavedRoutes.Add(currentRoute);
+                        GameModel.WorldInstance.AddRoute(currentRoute);
+                        Debug.WriteLine($"[Járat] '{currentRoute.Name}' elmentve a globális listába!");
+                    }
+
+                    NewRouteName = $"Új Járat {SavedRoutes.Count + 1}";
                 }
             });
 
-            ReGenerateWithRandomSeed = new DelegateCommand(_ =>
+            AssignSavedRouteCommand = new DelegateCommand(_ =>
             {
-                GameModel.WorldInstance.Generate(new Random().Next());
-                LoadedChunks.Clear();
-                GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) => c.RemoveAllUpdateTriggers());
-                UpdateVisibleChunks(_lastWidth, _lastHeight);
-            }
-            );
+                if (SelectedVehicle != null && SelectedSavedRoute != null)
+                {
+                    if (SelectedSavedRoute.Stops.Count < 2)
+                    {
+                        MessageBox.Show("Egy menetrendnek legalább 2 megállót kell tartalmaznia!", "Érvénytelen menetrend", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    SelectedVehicle.GetVehicle.AssignNewRoute(SelectedSavedRoute);
+                    Debug.WriteLine($"[Járat] A(z) '{SelectedVehicle.GetName}' megkapta a '{SelectedSavedRoute.Name}' menetrendet!");
+                }
+            });
+
+            ToggleTimetablePanelCommand = new DelegateCommand(_ =>
+            {
+                IsTimetablePanelVisible = !IsTimetablePanelVisible;
+                if (!IsTimetablePanelVisible && CurrentBuildMode == BuildMode.EDIT_GLOBAL_ROUTE)
+                    CurrentBuildMode = BuildMode.NONE;
+            });
+
+            CreateGlobalRouteCommand = new DelegateCommand(_ =>
+            {
+                var newRoute = new Route { Name = NewRouteName };
+                SavedRoutes.Add(newRoute);
+                GameModel.WorldInstance.AddRoute(newRoute);
+                SelectedSavedRoute = newRoute;
+                NewRouteName = $"Járat {SavedRoutes.Count + 1}";
+            });
+
+            EditGlobalRouteCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedSavedRoute != null)
+                {
+                    CurrentBuildMode = BuildMode.EDIT_GLOBAL_ROUTE;
+                    System.Diagnostics.Debug.WriteLine($"Szerkesztés indul: {SelectedSavedRoute.Name}. Kattints a megállókra!");
+                }
+            });
 
             ClearRouteCommand = new DelegateCommand(_ =>
             {
@@ -537,22 +659,33 @@ namespace VolcanicTransport_WPF.ViewModel
 
                     _firstSelectedStation = null;
                     CurrentBuildMode = BuildMode.BUY_VEHICLE;
-                    System.Diagnostics.Debug.WriteLine($"Menetrend törölve a {SelectedVehicle.GetName} járművön. Válassz új start állomást!");
+                    Debug.WriteLine($"Menetrend törölve a {SelectedVehicle.GetName} járművön. Válassz új start állomást!");
                 }
             });
 
-            //GameModelInstance.moneyChanged += GameModelInstance_moneyChanged;
+            SaveGameCommand = new DelegateCommand(_ => SaveGameRequested?.Invoke(this, EventArgs.Empty));
+            LoadGameCommand = new DelegateCommand(_ => LoadGameRequested?.Invoke(this, EventArgs.Empty));
+            SellVehicleCommand = new DelegateCommand(_ =>
+            {
+                if (SelectedVehicle == null) return;
+                GameModelInstance.SellVehicle(SelectedVehicle.GetVehicle);
+            });
         }
 
-        private void GameModelInstance_moneyChanged(object? sender, EventArgs e)
+        private void InitialiseAfter()
         {
-            OnPropertyChanged(nameof(CurrentMoney));
-        }
+            GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
+            {
+                ChunkViewModel chunkViewModel = new(c);
+                LoadedChunks.Add(chunkViewModel);
+                ChunkMap[new(x, y)] = chunkViewModel;
+            });
 
-        public void Initialise()
-        {
-            int newSeed = new Random().Next(1, 1000000);
-            GameModel.Initialise(8, newSeed);
+            GameModel.WorldInstance.ChunkChanged += On_UpdateChunk;
+
+            Camera.Reset();
+
+            SelectedBridgeType = GameSettings.BridgeTypes[0];
 
             System.Windows.Data.BindingOperations.EnableCollectionSynchronization(Vehicles, _vehiclesLock);
 
@@ -568,10 +701,26 @@ namespace VolcanicTransport_WPF.ViewModel
                     var newModelVehicle = GameModel.WorldInstance.GetLatestVehicle();
                     if (newModelVehicle != null)
                     {
+                        Vehicles.Add(newModelVehicle);
                         var vvm = new VehicleViewModel(newModelVehicle);
                         VehicleViewModels.Add(vvm);
                         SelectedVehicle = vvm;
-                        System.Diagnostics.Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
+                        Debug.WriteLine($"Sikeres vétel! SelectedVehicle neve: {vvm.GetName}");
+                        IsVehiclePanelVisible = true;
+                    }
+                });
+            };
+
+            GameModelInstance.VehicleSold += (s, e) =>
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var vvm = SelectedVehicle;
+                    if (vvm != null)
+                    {
+                        Vehicles.Remove(vvm.GetVehicle);
+                        VehicleViewModels.Remove(vvm);
+                        SelectedVehicle = VehicleViewModels.Count > 0 ? VehicleViewModels[^1] : null;
                     }
                 });
             };
@@ -591,70 +740,149 @@ namespace VolcanicTransport_WPF.ViewModel
             StartGameLoop();
         }
 
+        public void InitialiseNewGame()
+        {
+            GameModel.InitialiseNewGame(GameSettings.DefaultWorldSize, new Random().Next());
+            InitialiseAfter();
+        }
+
+        public void InitialiseLodedGame(string fileName)
+        {
+            GameModel.InitialiseLoadedGame(fileName);
+
+            Vehicles.Clear();
+            VehicleViewModels.Clear();
+            foreach (var vehicle in GameModel.WorldInstance.Vehicles)
+            {
+                Vehicles.Add(vehicle);
+                VehicleViewModels.Add(new VehicleViewModel(vehicle));
+            }
+
+            if (VehicleViewModels.Count > 0)
+                SelectedVehicle = VehicleViewModels[0];
+
+            OnPropertyChanged(nameof(VehicleViewModels));
+
+            SavedRoutes.Clear();
+            foreach (var route in World.Instance.SavedRoutes)
+                SavedRoutes.Add(route);
+
+
+
+            InitialiseAfter();
+            OnSetTimescale0X();
+            IsPausedView = true;
+        }
+
+        public void SaveGame(string fileName)
+        {
+            GameModel.Instance.SaveGame(fileName);
+        }
+
+        #region BuildMode
         private BuildMode currentBuildMode = BuildMode.NONE;
         public BuildMode CurrentBuildMode
         {
             get => currentBuildMode;
             set
             {
-                if (currentBuildMode != value)
-                {
-                    currentBuildMode = value;
-                    OnPropertyChanged(nameof(IsBuildModeRoad));
-                    OnPropertyChanged(nameof(IsBuildModeStation));
-                    OnPropertyChanged(nameof(IsBuildModeBuyVehicle));
-                    OnPropertyChanged(nameof(IsBuildModeSelectStation));
-                    OnPropertyChanged(nameof(IsBuildModeBridge));
-                    OnPropertyChanged(nameof(IsBuildModeLower));
-                    OnPropertyChanged(nameof(IsBuildModeHeighten));
-                }
+                if (currentBuildMode == value) return;
+
+                currentBuildMode = value;
+                OnPropertyChanged(nameof(IsBuildModeRoad));
+                OnPropertyChanged(nameof(IsBuildModeStation));
+                OnPropertyChanged(nameof(IsBuildModeBuyVehicle));
+                OnPropertyChanged(nameof(IsBuildModeSelectStation));
+                OnPropertyChanged(nameof(IsBuildModeBridge));
+                OnPropertyChanged(nameof(IsBuildModeLower));
+                OnPropertyChanged(nameof(IsBuildModeHeighten));
             }
         }
-
-        private int currentTimescale;
-        public int CurrentTimescale
-        {
-            get => currentTimescale;
-            set
-            {
-                if (currentTimescale == value) return;
-
-                currentTimescale = value;
-                OnPropertyChanged(nameof(IsTimescale0));
-                OnPropertyChanged(nameof(IsTimescale1));
-                OnPropertyChanged(nameof(IsTimescale2));
-                OnPropertyChanged(nameof(IsTimescale4));
-
-            }
-        }
+       
         public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
         public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
-
         public bool IsBuildModeSelectStation => CurrentBuildMode == BuildMode.SELECT_STATION;
-
         public bool IsBuildModeBuyVehicle => CurrentBuildMode == BuildMode.BUY_VEHICLE;
         public bool IsBuildModeBridge => CurrentBuildMode == BuildMode.BRIDGE;
         public bool IsBuildModeLower => CurrentBuildMode == BuildMode.LOWER;
         public bool IsBuildModeHeighten => CurrentBuildMode == BuildMode.HEIGHTEN;
+        public bool IsBuildModeEditGlobalRoute => CurrentBuildMode == BuildMode.EDIT_GLOBAL_ROUTE;
 
-        public bool IsTimescale0 => CurrentTimescale == 0 || IsPausedView || GameModelInstance.IsPaused;
-        public bool IsTimescale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 1;
-        public bool IsTimescale2 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 2;
-        public bool IsTimescale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimescale == 4;
-
-        public string CurrentMoney
+        private void OnSetBuildMode(BuildMode mode)
         {
-            get => GameModelInstance.PlayerMoney.ToString("F0") + " $";
+            BuildMode previousMode = CurrentBuildMode;
+
+            CurrentBuildMode = (CurrentBuildMode == mode)
+                ? BuildMode.NONE
+                : mode;
+
+            if (previousMode == BuildMode.ROAD && CurrentBuildMode != BuildMode.ROAD)
+            {
+                Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
+                GameModel.WorldInstance.Roadnetwork.RebuildEdges();
+            }
+
         }
+        #endregion
+
+        #region TimeScale
+        private int currentTimeScale;
+        public int CurrentTimeScale
+        {
+            get => currentTimeScale;
+            set
+            {
+                if (currentTimeScale == value) 
+                    return;
+
+                currentTimeScale = value;
+
+                OnPropertyChanged(nameof(IsTimeScale0));
+                OnPropertyChanged(nameof(IsTimeScale1));
+                OnPropertyChanged(nameof(IsTimeScale2));
+                OnPropertyChanged(nameof(IsTimeScale4));
+            }
+        }
+
+        public bool IsTimeScale0 => CurrentTimeScale == 0 || IsPausedView || GameModelInstance.IsPaused;
+        public bool IsTimeScale1 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 1;
+        public bool IsTimeScale2 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 2;
+        public bool IsTimeScale4 => !IsPausedView && !GameModelInstance.IsPaused && CurrentTimeScale == 4;
+
+        private void OnSetTimescale0X()
+        {
+            CurrentTimeScale = 0;
+            GameModelInstance.Pause();
+        }
+        private void OnSetTimescale1X()
+        {
+            CurrentTimeScale = 1;
+            GameModelInstance.UnPause();
+            GameModelInstance.ChangeTimeSpeed1X();
+        }
+        private void OnSetTimescale2X()
+        {
+            CurrentTimeScale = 2;
+            GameModelInstance.UnPause();
+            GameModelInstance.ChangeTimeSpeed2X();
+        }
+        private void OnSetTimescale4X()
+        {
+            CurrentTimeScale = 4;
+            GameModelInstance.UnPause();
+            GameModelInstance.ChangeTimeSpeed4X();
+        }
+        #endregion
+
+        #region GameLoop
         private readonly object _vehiclesLock = new();
 
-        //private readonly DispatcherTimer _gameLoop;
-        private System.Diagnostics.Stopwatch _stopwatch;
+        private Stopwatch? _stopwatch;
         private TimeSpan _lastRenderTime = TimeSpan.Zero;
 
         public void StartGameLoop()
         {
-            _stopwatch = new System.Diagnostics.Stopwatch();
+            _stopwatch = new Stopwatch();
             _stopwatch.Start();
 
             CompositionTarget.Rendering += OnCompositionTargetRendering;
@@ -662,22 +890,23 @@ namespace VolcanicTransport_WPF.ViewModel
         private const double BASE_SPEED_MULTIPLIER = 10.0;
         private void OnCompositionTargetRendering(object? sender, EventArgs e)
         {
-            TimeSpan currentRenderTime = _stopwatch.Elapsed;
+            TimeSpan currentRenderTime = _stopwatch!.Elapsed;
             double deltaTime = (currentRenderTime - _lastRenderTime).TotalSeconds;
             _lastRenderTime = currentRenderTime;
 
-            if (CurrentTimescale == 0)
+            if (CurrentTimeScale == 0)
             {
                 _accumulator = 0;
             }
 
             if (deltaTime > 0.1) deltaTime = 0.1;
 
-            _accumulator += deltaTime * CurrentTimescale * BASE_SPEED_MULTIPLIER;
+            _accumulator += deltaTime * CurrentTimeScale * BASE_SPEED_MULTIPLIER;
 
             while (_accumulator >= FIXED_DELTA_TIME)
             {
                 GameModelInstance.Update(FIXED_DELTA_TIME);
+
                 _accumulator -= FIXED_DELTA_TIME;
             }
 
@@ -685,58 +914,16 @@ namespace VolcanicTransport_WPF.ViewModel
             {
                 UpdateHoveredCoordinateAndTooltips(_lastMousePosition);
             }
-        }
-        private void OnSetBuildMode(BuildMode mode)
-        {
-            BuildMode previousMode = CurrentBuildMode;
 
-            if (CurrentBuildMode == mode)
-            {
-                CurrentBuildMode = BuildMode.NONE;
-            }
-            else
-            {
-                CurrentBuildMode = mode;
-            }
+            bool isTyping = System.Windows.Input.Keyboard.FocusedElement is System.Windows.Controls.TextBox;
 
-            if (previousMode == BuildMode.ROAD && CurrentBuildMode != BuildMode.ROAD)
+            if (!isTyping)
             {
-                System.Diagnostics.Debug.WriteLine("Útépítés befejezve! Élek (Edges) újraépítése...");
-
-                GameModel.WorldInstance.Roadnetwork.RebuildEdges();
+                Camera.Update(deltaTime);
             }
 
         }
 
-        private void OnSetTimescale0X()
-        {
-            CurrentTimescale = 0;
-            GameModelInstance.Pause();
-
-        }
-
-        private void OnSetTimescale1X()
-        {
-            CurrentTimescale = 1;
-            GameModelInstance.UnPause();
-            GameModelInstance.ChangeTimeSpeed1X();
-        }
-
-        private void OnSetTimescale2X()
-        {
-            CurrentTimescale = 2;
-            GameModelInstance.UnPause();
-            GameModelInstance.ChangeTimeSpeed2X();
-        }
-
-        private void OnSetTimescale4X()
-        {
-            CurrentTimescale = 4;
-            GameModelInstance.UnPause();
-            GameModelInstance.ChangeTimeSpeed4X();
-        }
-
-
-
+        #endregion
     }
 }

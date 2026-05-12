@@ -42,6 +42,12 @@ namespace VolcanicTransport.Model.World
         JUNCTION_NESW = JUNCTION | NORTH | SOUTH | EAST | WEST,
 
         // slope
+
+        SLOPE_N = SLOPE | NORTH,
+        SLOPE_E = SLOPE | EAST,
+        SLOPE_W = SLOPE | WEST,
+        SLOPE_S = SLOPE | SOUTH,
+
         SLOPE_NS = SLOPE | NORTH | SOUTH,
         SLOPE_EW = SLOPE | EAST | WEST
     }

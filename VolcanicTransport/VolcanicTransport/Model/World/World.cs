@@ -1,6 +1,8 @@
-using System.Collections.ObjectModel;
+using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
+using VolcanicTransport.Model.TerrainGeneration.Generators;
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
@@ -22,6 +24,7 @@ namespace VolcanicTransport.Model.World
             }
         }
         public Random SharedRandom { get; private set; } = new();
+        public Perlin SharedPerlin { get; private set; }
 
         public Coordinate SizeInChunks { get; }
         public Coordinate SizeInFields { get; }
@@ -29,12 +32,21 @@ namespace VolcanicTransport.Model.World
         public List<City> Cities { get; } = [];
         public List<Factory> Factories { get; } = [];
         public List<Station> Stations { get; } = [];
-        public ObservableCollection<Vehicle> Vehicles { get; } = []; // TODO REMOVE THIS
 
-        public GameWorldGenerator? GameWorldGenerator { get; set; }
+        private readonly List<Route> _savedRoutes = [];
+        public IReadOnlyList<Route> SavedRoutes => _savedRoutes.AsReadOnly();
+
+        private readonly List<Vehicle> _vehicles = [];
+        public IReadOnlyList<Vehicle> Vehicles => _vehicles.AsReadOnly();
+
+        public IWorldGenerator? GameWorldGenerator { get; set; }
         public SquareMatrixIterator<Chunk> ChunkMatrix { get; private set; }
 
+        public event EventHandler<ChunkUpdatedEventArgs>? ChunkChanged;
+
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
+
+        public VehicleManager VehicleManager { get; } = new();
 
         #endregion
 
@@ -50,13 +62,16 @@ namespace VolcanicTransport.Model.World
             ChunkMatrix = new SquareMatrixIterator<Chunk>(worldSize);
             WorldSeed = seed;
 
+            SharedPerlin = new Perlin(4, 0.5f, seed);
+
             InitialiseWorld();
 
             Roadnetwork = new RoadNetworkGraph();
+            VehicleManager = new VehicleManager();
         }
 
         public static World Instance => _instance ?? throw new WorldNotInitialisedException();
-
+        public static bool IsInitialised() => _instance is not null;
         public static void Initialise(int worldSize, int seed)
             => _instance = new World(worldSize, seed);
         #endregion
@@ -101,9 +116,11 @@ namespace VolcanicTransport.Model.World
             if (GameWorldGenerator == null) throw new NoWorldGeneratorProvidedException();
             ChunkMatrix.ReadEach(
                 (cx, cy, c) => c.FieldMatrix.ReadEach(
-                    (x, y, f) => GameWorldGenerator.GenerateField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
+                    (x, y, f) => GameWorldGenerator.ModifyField(f, cx * GameSettings.ChunkSize + x, cy * GameSettings.ChunkSize + y)));
 
             GameWorldGenerator.GenerateCitiesAndFactories();
+
+            Debug.WriteLine($"Generated {Cities.Count} cities and {Factories.Count} factories");
         }
 
         public void Generate(int seed)
@@ -113,11 +130,17 @@ namespace VolcanicTransport.Model.World
             Generate();
         }
 
+        public void UpdateChunk(Coordinate chunkCoordinate)
+            => ChunkChanged?.Invoke(this, new(chunkCoordinate));
 
 
-        public void AddVehicle(Vehicle v) => Vehicles.Add(v);
-        public void RemoveVehicle(Vehicle v) => Vehicles.Remove(v);
-        public bool HasVehicle(Vehicle v) => Vehicles.Contains(v);
+        public void AddVehicle(Vehicle v) => _vehicles.Add(v);
+        public void RemoveVehicle(Vehicle v) => _vehicles.Remove(v);
+        public bool HasVehicle(Vehicle v) => _vehicles.Contains(v);
+
+        public void AddRoute(Route r) => _savedRoutes.Add(r);
+        public void RemoveRoute(Route r) => _savedRoutes.Remove(r);
+        public bool HasRoute(Route r) => _savedRoutes.Contains(r);
 
         #region Road Placement Logic
 
@@ -126,10 +149,10 @@ namespace VolcanicTransport.Model.World
             List<Coordinate> targets =
             [
                 c,
-                c + Direction.North,
-                c + Direction.South,
-                c + Direction.East,
-                c + Direction.West
+                c + Coordinate.North,
+                c + Coordinate.South,
+                c + Coordinate.East,
+                c + Coordinate.West
             ];
 
             HashSet<Chunk> chunksToRender = [];
@@ -145,9 +168,7 @@ namespace VolcanicTransport.Model.World
             }
 
             foreach (var chunk in chunksToRender)
-            {
-                chunk.TriggerRerender();
-            }
+                UpdateChunk(chunk.Coordinate);
         }
 
         #endregion
@@ -155,12 +176,10 @@ namespace VolcanicTransport.Model.World
 
         public void Update(double gameDt)
         {
-            foreach (var vehicle in Vehicles.ToList())
+            foreach (var vehicle in _vehicles.ToList())
             {
                 vehicle.Update(gameDt);
             }
-
-            // Itt jöhetnének késõbb az épületek frissítései (termelés, stb.)
         }
 
         #endregion

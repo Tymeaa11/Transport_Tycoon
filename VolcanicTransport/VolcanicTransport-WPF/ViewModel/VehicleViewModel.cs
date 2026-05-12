@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using VolcanicTransport.Model.World.Roadnetwork;
+using System.Windows.Media;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -12,7 +8,27 @@ namespace VolcanicTransport_WPF.ViewModel
     {
         private readonly Vehicle _vehicle;
 
-        public ObservableCollection<string> ScheduleList { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> ScheduleList { get; } = [];
+
+        public Brush VehicleColor
+        {
+            get
+            {
+                return _vehicle switch
+                {
+                    MiniBus => Brushes.Khaki,
+                    Bus => Brushes.Gold,
+
+                    MiniTankerTruck => Brushes.LightSkyBlue,
+                    TankerTruck => Brushes.RoyalBlue,
+
+                    MiniCargoTruck => Brushes.LightGreen,
+                    CargoTruck => Brushes.ForestGreen,
+
+                    _ => Brushes.Gray
+                };
+            }
+        }
 
         public VehicleViewModel(Vehicle vehicle)
         {
@@ -23,6 +39,10 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged(nameof(VisualY));
                 OnPropertyChanged(nameof(VisualAngle));
                 OnPropertyChanged(nameof(StateDisplay));
+                OnPropertyChanged(nameof(Type));
+                OnPropertyChanged(nameof(GetCurrentLoad));
+                OnPropertyChanged(nameof(Capacity));
+                OnPropertyChanged(nameof(SpeedDisplay));
             };
             _vehicle.RouteChanged += (sender, args) => RefreshScheduleList();
             RefreshScheduleList();
@@ -43,10 +63,6 @@ namespace VolcanicTransport_WPF.ViewModel
                         string prefix = (i == _vehicle.CurrentStopIndex && _vehicle.PendingRoute == null) ? "➔ " : "   ";
                         ScheduleList.Add($"{prefix}Állomás: {stop.Coordinate.X}, {stop.Coordinate.Y}");
                     }
-                    if (_vehicle.PendingRoute != null)
-                    {
-                        ScheduleList.Insert(0, "[FÜGGŐBEN - Érkezés után aktiválódik]");
-                    }
                 }
                 else
                 {
@@ -65,9 +81,10 @@ namespace VolcanicTransport_WPF.ViewModel
         public Vehicle GetVehicle => _vehicle;
 
         public string Type => _vehicle.CurrentType.ToString();
+        public string Capacity => _vehicle.Capacity.ToString();
 
-        public string GetCapacity => _vehicle.Capacity.ToString();
-        public string SpeedDisplay => (_vehicle.MaxSpeed * 45).ToString() + " km/h";
+        public string GetCurrentLoad => _vehicle.CurrentLoad.ToString();
+        public string SpeedDisplay => (_vehicle.CurrentSpeed).ToString() + " km/h";
 
         public string StateDisplay => _vehicle.State.ToString();
 

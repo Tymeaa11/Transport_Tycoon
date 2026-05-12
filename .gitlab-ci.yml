@@ -24,7 +24,8 @@ test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   image: mcr.microsoft.com/dotnet/sdk:9.0-windowsservercore-ltsc2025
   tags: [windows]
-  before_script:    
+  coverage: '/TOTAL_COVERAGE=(\d+\.\d+)/'
+  before_script:
     # Restore NuGet packages to the local .nuget folder (inside the project directory).
     - dotnet restore VolcanicTransport/VolcanicTransport-Tests --packages .nuget
 
@@ -44,12 +45,8 @@ test-job:   # This job runs in the test stage.
     - $coverage = [float](gc ./report/Cobertura.xml | select -first 1 -skip 2 | %{ $_ -replace '(.*)line-rate="(\d+\.\d+)"(.*)', '$2'}) * 100
     - echo "TOTAL_COVERAGE=$coverage"
 
-
-    
-
   artifacts:
     paths:
-     # - ./*
       - ./VolcanicTransport/*/TestResults/TestResults.xml
       - ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
       - ./report/html/
@@ -74,7 +71,7 @@ pages:
     - mkdir -p public/docs/
     - cp -r doc/html/. public/docs/
     # Add the code coverage web summary as well
-    - mkdir -p public/covergae
+    - mkdir -p public/coverage
     - cp -r report/html/. public/coverage/
   artifacts:
     paths:

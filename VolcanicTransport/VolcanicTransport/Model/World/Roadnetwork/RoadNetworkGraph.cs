@@ -3,7 +3,7 @@ using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public class RoadNetworkGraph
+    public class RoadNetworkGraph : IRoadNetworkGraph
     {
         public Dictionary<KnowsNeighbour, RoadNode> NodeMap { get; private set; } = [];
         public void RegisterNodeIfNeeded(Coordinate coord)
@@ -43,7 +43,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         private void StartTrace(RoadNode startNode, KnowsNeighbour firstStep, KnowsNeighbour startSurface)
         {
-            Trace(startNode, firstStep, startSurface, new List<Road>(), 0, new HashSet<Coordinate>());
+            Trace(startNode, firstStep, startSurface, [], 0, []);
         }
 
         private void Trace(RoadNode startNode, KnowsNeighbour current, KnowsNeighbour cameFrom, List<Road> currentPath, int currentWeight, HashSet<Coordinate> visited)
@@ -53,14 +53,14 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
             if (NodeMap.TryGetValue(current, out RoadNode? targetNode))
             {
-                if (current is Road r && !(current is Station))
+                if (current is Road r && current is not Station)
                 {
                     currentPath.Add(r);
                     currentWeight += r.IsSlope() ? 2 : 1;
                 }
                 else if (current is Station) currentWeight += 1;
 
-                startNode.Edges.Add(new RoadEdge(targetNode, currentWeight, new List<Road>(currentPath)));
+                startNode.Edges.Add(new RoadEdge(targetNode, currentWeight, [.. currentPath]));
                 return;
             }
 
@@ -74,10 +74,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 CheckAndAddAdjacentStation(startNode, currentRoad.East?.Surface, currentPath, currentWeight);
                 CheckAndAddAdjacentStation(startNode, currentRoad.West?.Surface, currentPath, currentWeight);
 
-                if (currentRoad.North?.Surface is Road rN && rN != cameFrom) Trace(startNode, rN, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
-                if (currentRoad.South?.Surface is Road rS && rS != cameFrom) Trace(startNode, rS, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
-                if (currentRoad.East?.Surface is Road rE && rE != cameFrom) Trace(startNode, rE, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
-                if (currentRoad.West?.Surface is Road rW && rW != cameFrom) Trace(startNode, rW, current, new List<Road>(currentPath), currentWeight, new HashSet<Coordinate>(visited));
+                if (currentRoad.North?.Surface is Road rN && rN != cameFrom) Trace(startNode, rN, current, [.. currentPath], currentWeight, [.. visited]);
+                if (currentRoad.South?.Surface is Road rS && rS != cameFrom) Trace(startNode, rS, current, [.. currentPath], currentWeight, [.. visited]);
+                if (currentRoad.East?.Surface is Road rE && rE != cameFrom) Trace(startNode, rE, current, [.. currentPath], currentWeight, [.. visited]);
+                if (currentRoad.West?.Surface is Road rW && rW != cameFrom) Trace(startNode, rW, current, [.. currentPath], currentWeight, [.. visited]);
             }
         }
 
@@ -87,7 +87,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             {
                 if (NodeMap.TryGetValue(st, out RoadNode? stationNode))
                 {
-                    startNode.Edges.Add(new RoadEdge(stationNode, weight + 1, new List<Road>(currentPath)));
+                    startNode.Edges.Add(new RoadEdge(stationNode, weight + 1, [.. currentPath]));
                     System.Diagnostics.Debug.WriteLine($"    [REJTETT ÁLLOMÁS MEGTALÁLVA] Út bejegyezve: {startNode.Coordinate} -> {stationNode.Coordinate}");
                 }
             }

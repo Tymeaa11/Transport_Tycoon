@@ -1,32 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using VolcanicTransport.Model.Utils;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public class VehicleManager
+    public class VehicleManager : IVehicleManager
     {
-        public ObservableCollection<Vehicle> Vehicles { get; } = new ObservableCollection<Vehicle>();
+        private readonly Dictionary<Coordinate, List<Vehicle>> _spatialGrid = [];
 
-        public void AddVehicle(Vehicle vehicle)
+        public IReadOnlyList<Vehicle> GetVehiclesOnField(Coordinate coord)
         {
-            Vehicles.Add(vehicle);
-        }
-
-        public void RemoveVehicle(Vehicle vehicle)
-        {
-            Vehicles.Remove(vehicle);
-        }
-
-        public void Update(double deltaTime)
-        {
-            var currentVehicles = Vehicles.ToList();
-            foreach (var v in currentVehicles)
+            if (_spatialGrid.TryGetValue(coord, out var vehicles))
             {
-                v.Update(deltaTime);
+                return vehicles.AsReadOnly();
+            }
+            return [];
+        }
+
+        public void RegisterVehicleOnField(Vehicle vehicle, Coordinate coord)
+        {
+            if (!_spatialGrid.TryGetValue(coord, out var vehicles))
+            {
+                vehicles = [];
+                _spatialGrid[coord] = vehicles;
+            }
+            if (!vehicles.Contains(vehicle))
+            {
+                vehicles.Add(vehicle);
+            }
+        }
+
+        public void UnregisterVehicleFromField(Vehicle vehicle, Coordinate coord)
+        {
+            if (_spatialGrid.TryGetValue(coord, out var vehicles))
+            {
+                vehicles.Remove(vehicle);
+                if (vehicles.Count == 0)
+                {
+                    _spatialGrid.Remove(coord);
+                }
             }
         }
     }

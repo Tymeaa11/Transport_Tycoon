@@ -12,6 +12,8 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
         public void Generate()
         {
+            RandomNameGenerator.Reset();
+
             // 1. Városok lehelyezése
             for (var i = 0; i < cityCount; i++)
             {
@@ -27,6 +29,7 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 if (pos.HasValue)
                     CreateFactory(pos.Value);
             }
+            World.World.Instance.Roadnetwork.RebuildEdges();
         }
 
         private static Coordinate? FindValidLocation()
@@ -54,13 +57,13 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                         return false;
 
             // Távolság ellenőrzése a már meglévő városoktól/gyáraktól
-            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistance))
-                   && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistance));
+            return World.World.Instance.Cities.All(city => !(center.Distance(city.CenterCoordinate) < GameSettings.MinimumDistanceInFields))
+                   && World.World.Instance.Factories.All(factory => !(center.Distance(factory.OriginCoordinate) < GameSettings.MinimumDistanceInFields));
         }
 
         private static void CreateCity(Coordinate center)
         {
-            var name = "City " + (World.World.Instance.Cities.Count + 1);
+            var name = RandomNameGenerator.NewName(typeof(City), World.World.Instance.SharedRandom.Next());
             City newCity = new(name, center);
             var reference = GetField(center);
             var fields = World.World.Instance.GetArea(center - 1, center + 1);
@@ -73,19 +76,19 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
             newCity.AddField(fields[0]);
 
             fields[2].Surface = new CityBuilding(newCity);
-            newCity.AddField(fields[0]);
+            newCity.AddField(fields[2]);
 
             fields[6].Surface = new CityBuilding(newCity);
-            newCity.AddField(fields[0]);
+            newCity.AddField(fields[6]);
 
             fields[8].Surface = new CityBuilding(newCity);
-            newCity.AddField(fields[0]);
+            newCity.AddField(fields[8]);
 
-            fields[1].Surface = new Road(center + Direction.North);
-            fields[3].Surface = new Road(center + Direction.West);
+            fields[1].Surface = new Road(center + Coordinate.North);
+            fields[3].Surface = new Road(center + Coordinate.West);
             fields[4].Surface = new Road(center);
-            fields[5].Surface = new Road(center + Direction.East);
-            fields[7].Surface = new Road(center + Direction.South);
+            fields[5].Surface = new Road(center + Coordinate.East);
+            fields[7].Surface = new Road(center + Coordinate.South);
 
 
             fields.ForEach(f =>
@@ -93,30 +96,59 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 switch (f.Surface)
                 {
                     case Road r:
-                        r.RoadLayoutChanged += GameModel.OnRoadBecameJunction;
                         r.Update();
                         break;
                 }
             });
 
+            Coordinate[] roadCoords = {
+                center + Coordinate.North,
+                center + Coordinate.West,
+                center,
+                center + Coordinate.East,
+                center + Coordinate.South
+            };
+
+            foreach (var coord in roadCoords)
+            {
+                if (World.World.Instance.GetField(coord)?.Surface is Road r && r.RoadType.HasFlag(RoadType.JUNCTION))
+                {
+                    World.World.Instance.Roadnetwork.RegisterNodeIfNeeded(coord);
+                }
+            }
+
             World.World.Instance.Cities.Add(newCity);
         }
 
-        private static void CreateFactory(Coordinate origin)
+        private readonly List<int> _factoryTypesToGenerate = [];
+
+        private void FillFactoriesToGenerate()
         {
-            var name = "Factory" + World.World.Instance.SharedRandom.Next() + "_" + World.World.Instance.SharedRandom.Next();
-            var factoryType = World.World.Instance.SharedRandom.Next(0, 7);
-            Factory newFactory = factoryType switch
+            _factoryTypesToGenerate.Clear();
+            _factoryTypesToGenerate.AddRange([.. Enumerable.Range(0, 7)]);
+        }
+
+        private void CreateFactory(Coordinate origin)
+        {
+            if (_factoryTypesToGenerate.Count == 0) 
+                FillFactoriesToGenerate();
+
+            var factoryType = World.World.Instance.SharedRandom.Next(0, _factoryTypesToGenerate.Count);
+            Factory newFactory = _factoryTypesToGenerate[factoryType] switch
             {
-                0 => new CondensatorFactory(name, origin),
-                1 => new ConcreteFactory(name, origin),
-                2 => new SulfurProducer(name, origin),
-                3 => new BoneProducer(name, origin),
-                4 => new AshProducer(name, origin),
-                5 => new MushroomProducer(name, origin),
-                6 => new SteamProducer(name, origin),
-                _ => new MushroomProducer(name, origin)
+                0 => new CondensatorFactory(RandomNameGenerator.NewName(typeof(CondensatorFactory),World.World.Instance.SharedRandom.Next()), origin),
+                1 => new ConcreteFactory(RandomNameGenerator.NewName(typeof(ConcreteFactory),World.World.Instance.SharedRandom.Next()), origin),
+                2 => new SulfurProducer(RandomNameGenerator.NewName(typeof(SulfurProducer),World.World.Instance.SharedRandom.Next()), origin),
+                3 => new BoneProducer(RandomNameGenerator.NewName(typeof(BoneProducer),World.World.Instance.SharedRandom.Next()), origin),
+                4 => new AshProducer(RandomNameGenerator.NewName(typeof(AshProducer),World.World.Instance.SharedRandom.Next()), origin),
+                5 => new MushroomProducer(RandomNameGenerator.NewName(typeof(MushroomProducer),World.World.Instance.SharedRandom.Next()), origin),
+                6 => new SteamProducer(RandomNameGenerator.NewName(typeof(SteamProducer),World.World.Instance.SharedRandom.Next()), origin),
+                _ => new MushroomProducer(RandomNameGenerator.NewName(typeof(MushroomProducer),World.World.Instance.SharedRandom.Next()), origin)
             };
+
+            _factoryTypesToGenerate.RemoveAt(factoryType);
+
+            //Debug.WriteLine(newFactory);
 
             var reference = GetField(origin);
 

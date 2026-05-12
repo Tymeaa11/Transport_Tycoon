@@ -31,10 +31,13 @@ namespace VolcanicTransport.Model.World
 
         public void UpdateNeighbourReferences()
         {
-            North = World.Instance.GetField(Coordinate + Direction.North);
-            South = World.Instance.GetField(Coordinate + Direction.South);
-            East = World.Instance.GetField(Coordinate + Direction.East);
-            West = World.Instance.GetField(Coordinate + Direction.West);
+            if (!World.IsInitialised()) 
+                return;
+
+            North = World.Instance.GetField(Coordinate + Coordinate.North);
+            South = World.Instance.GetField(Coordinate + Coordinate.South);
+            East = World.Instance.GetField(Coordinate + Coordinate.East);
+            West = World.Instance.GetField(Coordinate + Coordinate.West);
         }
 
 

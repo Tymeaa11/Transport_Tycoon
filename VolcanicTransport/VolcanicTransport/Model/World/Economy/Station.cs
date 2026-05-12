@@ -1,32 +1,37 @@
-using VolcanicTransport.Model.TerrainGeneration.Layers;
+using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.World.Economy
 {
-    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand) : KnowsNeighbour(coordinate)
+    public abstract class Station(Coordinate coordinate, string name, ProductBuffer passangerBuffer, Product passengerDemand, double passengerAccumulator = 0) : Road(coordinate)
     {
-        protected string name = name;
-        protected ProductBuffer passangerBuffer = passangerBuffer;
+        #region Fields
+        public string StationName { get; protected set; } = name;
+        [JsonInclude]
+        protected ProductBuffer PassengerBuffer = passangerBuffer;
+        [JsonInclude]
         protected Product PassengerDemand = passengerDemand;
+        [JsonIgnore]
+        public int WaitingPassengers => PassengerBuffer.CurrentLoad;
+        public bool IsOccupied { get; set; } = false;
 
-        protected bool isOccupied = false;
-        public bool IsOccupied { get { return isOccupied; } }
-        public string Name { get { return name; } }
-        public int WaitingPassengers => passangerBuffer.CurrentLoad;
+        [JsonInclude]
+        private double passengerAccumulator = passengerAccumulator;
+        #endregion
 
-        private double _passengerAccumulator = 0;
+        #region Methods
         public int GetWaitingPassengers(double deltaTime)
         {
-            _passengerAccumulator += deltaTime * GameSettings.PeopleGrowthRate;
+            passengerAccumulator += deltaTime * GameSettings.PeopleGrowthRate;
 
-            if (_passengerAccumulator >= 1.0)
+            if (passengerAccumulator >= 1.0)
             {
-                int newPeople = (int)_passengerAccumulator;
-                int left = passangerBuffer.AddAmount(newPeople);
-                _passengerAccumulator -= left;
+                int newPeople = (int)passengerAccumulator;
+                int left = PassengerBuffer.AddAmount(newPeople);
+                passengerAccumulator -= left;
             }
-            return passangerBuffer.CurrentLoad;
+            return PassengerBuffer.CurrentLoad;
         }
         public int GetPricePerPassenger(float time)
         {
@@ -40,14 +45,14 @@ namespace VolcanicTransport.Model.World.Economy
                 return 0;
             }
 
-            var waitingPassengers = passangerBuffer.CurrentLoad;
+            var waitingPassengers = PassengerBuffer.CurrentLoad;
 
             if (waitingPassengers == 0)
             {
                 return 0;
             }
 
-            var taken = passangerBuffer.FillVehicle(vehicle);
+            var taken = PassengerBuffer.FillVehicle(vehicle);
 
             return taken;
         }
@@ -59,9 +64,27 @@ namespace VolcanicTransport.Model.World.Economy
                 return 0;
             }
 
-            int amount = vehicle.Unload(20); //most fix de át kell majd írni randomra
+            var rnd = new Random();
+            int leavingCount = 0;
+            int currentPassengers = vehicle.CurrentLoad;
 
-            return amount;
+            for (int i = 0; i < currentPassengers; i++)
+            {
+                if (rnd.NextDouble() < GameSettings.ChanceToUnboard)
+                {
+                    leavingCount++;
+                }
+            }
+
+            int actualUnloaded = vehicle.Unload(leavingCount);
+
+            return actualUnloaded;
         }
+
+        public override void Update()
+        {
+            base.Update();
+        }
+        #endregion
     }
 }

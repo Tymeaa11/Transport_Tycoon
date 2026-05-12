@@ -11,8 +11,17 @@ namespace VolcanicTransport.Model.World.Economy
     [JsonDerivedType(typeof(SulfurProducer), "sulfur")]
     [JsonDerivedType(typeof(ConcreteFactory), "concrete")]
     [JsonDerivedType(typeof(CondensatorFactory), "condensator")]
-    public abstract class Factory(string name, ProductType baseProduct, Product finalProduct, ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer, Coordinate originCoordinate)
+    public abstract class Factory(
+            string name, 
+            ProductType baseProduct, 
+            Product finalProduct, 
+            ProductBuffer baseProductBuffer, 
+            ProductBuffer finalProductBuffer, 
+            Coordinate originCoordinate, 
+            double productionAccumulator = 0
+        )
     {
+        #region Fields
         public string Name { get; } = name;
         public ProductType BaseProduct { get; } = baseProduct;
         public Product FinalProduct { get; } = finalProduct;
@@ -22,7 +31,11 @@ namespace VolcanicTransport.Model.World.Economy
 
         private readonly List<Field> _factoryFields = [];
 
-        private double _productionAccumulator = 0;
+        [JsonInclude]
+        private double productionAccumulator = productionAccumulator;
+        #endregion
+
+        #region Constructors
 
         protected Factory(string name, Coordinate origin, GameSettings.FactoryData factoryData) : this(
             name,
@@ -31,8 +44,11 @@ namespace VolcanicTransport.Model.World.Economy
             new ProductBuffer(factoryData.BaseProduct, factoryData.BaseProductBufferCapacity),
             new ProductBuffer(factoryData.FinalProduct.ProductType, factoryData.FinalProductBufferCapacity), origin
             )
-        { }
-
+        {
+            FinalProduct.NewRandomOffset();
+        }
+        #endregion
+        #region Methods
         public void AddField(Field f)
         {
             _factoryFields.Add(f);
@@ -40,24 +56,40 @@ namespace VolcanicTransport.Model.World.Economy
 
         public void Update(double deltaTime, float totalTime)
         {
+            if (BaseProduct != ProductType.NONE && BaseProductBuffer.CurrentLoad <= 0)
+            {
+                return;
+            }
+
             float efficiency = FinalProduct.GetFactoryEfficiency(totalTime);
 
             double currentProduction = GameSettings.BaseProductionRate * efficiency;
 
-            _productionAccumulator += deltaTime * currentProduction;
+            productionAccumulator += deltaTime * currentProduction;
 
-            if (_productionAccumulator >= 1.0)
+
+            if (productionAccumulator >= 1.0)
             {
-                int producedCount = (int)_productionAccumulator;
+                int producedCount = (int)productionAccumulator;
 
                 int actuallyStored = FinalProductBuffer.AddAmount(producedCount);
 
-                if (actuallyStored > 0 || FinalProductBuffer.CurrentLoad < FinalProductBuffer.MaxCapacity)
+                if (actuallyStored > 0)
                 {
-                    _productionAccumulator -= producedCount;
+                    if (BaseProduct != ProductType.NONE)
+                    {
+                        BaseProductBuffer.DeductAmount(actuallyStored);
+                    }
+
+                    productionAccumulator -= actuallyStored;
+                }
+                else if (FinalProductBuffer.CurrentLoad >= FinalProductBuffer.MaxCapacity)
+                {
+                    productionAccumulator = 0.99;
                 }
             }
         }
+        #endregion
     }
 
     public class AshProducer : Factory
@@ -65,8 +97,8 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonConstructor]
         public AshProducer(string name, ProductType baseProduct, Product finalProduct,
             ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
-            Coordinate originCoordinate)
-            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+            Coordinate originCoordinate, double productionAccumulator)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate, productionAccumulator)
         { }
 
         public AshProducer(string name, Coordinate origin)
@@ -78,8 +110,8 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonConstructor]
         public BoneProducer(string name, ProductType baseProduct, Product finalProduct,
             ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
-            Coordinate originCoordinate)
-            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+            Coordinate originCoordinate, double productionAccumulator)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate, productionAccumulator)
         { }
 
         public BoneProducer(string name, Coordinate origin)
@@ -91,8 +123,8 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonConstructor]
         public MushroomProducer(string name, ProductType baseProduct, Product finalProduct,
             ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
-            Coordinate originCoordinate)
-            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+            Coordinate originCoordinate, double productionAccumulator)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate, productionAccumulator)
         { }
 
         public MushroomProducer(string name, Coordinate origin)
@@ -104,8 +136,8 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonConstructor]
         public SteamProducer(string name, ProductType baseProduct, Product finalProduct,
             ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
-            Coordinate originCoordinate)
-            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+            Coordinate originCoordinate, double productionAccumulator)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate, productionAccumulator)
         { }
 
         public SteamProducer(string name, Coordinate origin)
@@ -117,8 +149,8 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonConstructor]
         public SulfurProducer(string name, ProductType baseProduct, Product finalProduct,
             ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
-            Coordinate originCoordinate)
-            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+            Coordinate originCoordinate, double productionAccumulator)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate, productionAccumulator)
         { }
 
         public SulfurProducer(string name, Coordinate origin)
@@ -130,8 +162,8 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonConstructor]
         public ConcreteFactory(string name, ProductType baseProduct, Product finalProduct,
             ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
-            Coordinate originCoordinate)
-            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+            Coordinate originCoordinate, double productionAccumulator)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate, productionAccumulator)
         { }
 
         public ConcreteFactory(string name, Coordinate origin)
@@ -143,8 +175,8 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonConstructor]
         public CondensatorFactory(string name, ProductType baseProduct, Product finalProduct,
             ProductBuffer baseProductBuffer, ProductBuffer finalProductBuffer,
-            Coordinate originCoordinate)
-            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate)
+            Coordinate originCoordinate, double productionAccumulator)
+            : base(name, baseProduct, finalProduct, baseProductBuffer, finalProductBuffer, originCoordinate, productionAccumulator)
         { }
 
         public CondensatorFactory(string name, Coordinate origin)

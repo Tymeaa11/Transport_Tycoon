@@ -6,105 +6,94 @@ namespace VolcanicTransport.Model.World
     {
         #region Fields
         public bool IsReserved { get; set; } = false;
-        public RoadType RoadType { get; private set; }
+        public virtual RoadType RoadType { get; protected set; }
         #endregion
 
         #region Methods
 
-        public class FieldEventArgs(Coordinate coordinate) : EventArgs
+
+        private (bool hasRoad, int diff) GetNeighborInfo(Field? neighborField, RoadType expectedBridgeDir)
         {
-            public Coordinate Coordinate { get; } = coordinate;
+            if (neighborField?.Surface is Road r)
+            {
+                if (r is Bridge b)
+                {
+                    var thisField = World.Instance.GetField(Coordinate);
+                    if (thisField != null && thisField.Type == b.Elevation && (b.RoadType & expectedBridgeDir) != 0)
+                    {
+                        return (true, 0);
+                    }
+                    return (false, 0);
+                }
+
+                return (true, World.Instance.GetField(Coordinate)?.GetHeightDifference(neighborField) ?? 0);
+            }
+            return (false, 0);
         }
-
-        public event EventHandler<FieldEventArgs>? RoadLayoutChanged;
-
-        protected virtual void OnRoadLayoutChanged(Coordinate coord)
+        public virtual void Update()
         {
-            RoadLayoutChanged?.Invoke(this, new FieldEventArgs(coord));
-        } //TODO feliratkozni az eseményre
-        public void Update()
-        {
-            var heightDiffNorth = 0;
-            var heightDiffSouth = 0;
-            var heightDiffEast = 0;
-            var heightDiffWest = 0;
-
             var thisField = World.Instance.GetField(Coordinate);
+            if (thisField == null) return;
 
-            var roadNorth = North?.Surface is Road;
-            var roadSouth = South?.Surface is Road;
-            var roadEast = East?.Surface is Road;
-            var roadWest = West?.Surface is Road;
+            var (roadNorth, diffN) = GetNeighborInfo(North, RoadType.SOUTH);
+            var (roadSouth, diffS) = GetNeighborInfo(South, RoadType.NORTH);
+            var (roadEast, diffE) = GetNeighborInfo(East, RoadType.WEST);
+            var (roadWest, diffW) = GetNeighborInfo(West, RoadType.EAST);
 
-            RoadType = 0;
+            if (Math.Abs(diffN) > 1 || Math.Abs(diffS) > 1 || Math.Abs(diffE) > 1 || Math.Abs(diffW) > 1)
+            {
+                RoadType = RoadType.INVALID;
+                return;
+            }
+
+            RoadType baseType = 0;
+            if (roadNorth) baseType |= RoadType.NORTH;
+            if (roadSouth) baseType |= RoadType.SOUTH;
+            if (roadEast) baseType |= RoadType.EAST;
+            if (roadWest) baseType |= RoadType.WEST;
+
             var neighbourCount = CountSidesThatSatisfy((n) => n?.Surface is Road);
-            if (roadNorth)
-            {
-                RoadType |= RoadType.NORTH;
-                heightDiffNorth = thisField?.GetHeightDifference(North) ?? 0;
-            }
-            if (roadSouth)
-            {
-                RoadType |= RoadType.SOUTH;
-                heightDiffSouth = thisField?.GetHeightDifference(South) ?? 0;
-            }
-            if (roadEast)
-            {
-                RoadType |= RoadType.EAST;
-                heightDiffEast = thisField?.GetHeightDifference(East) ?? 0;
-            }
-            if (roadWest)
-            {
-                RoadType |= RoadType.WEST;
-                heightDiffWest = thisField?.GetHeightDifference(West) ?? 0;
-            }
+
+            int higherCount = 0;
+            if (roadNorth && diffN == 1) higherCount++;
+            if (roadSouth && diffS == 1) higherCount++;
+            if (roadEast && diffE == 1) higherCount++;
+            if (roadWest && diffW == 1) higherCount++;
 
             switch (neighbourCount)
             {
-                // Lonely road or end piece
                 case 0:
+                    RoadType = RoadType.LONELY;
+                    break;
                 case 1:
-                    return;
+                    RoadType = baseType;
+                    if (higherCount == 1) RoadType |= RoadType.SLOPE;
+                    break;
 
                 // Straight or Curved
                 case 2:
-                    if (roadNorth == roadSouth && roadNorth || roadEast == roadWest && roadEast)
-                        RoadType |= RoadType.STRAIGHT;
+                    bool isStraight = (roadNorth && roadSouth) || (roadEast && roadWest);
+                    if (isStraight)
+                    {
+                        RoadType = baseType | (higherCount == 1 ? RoadType.SLOPE : RoadType.STRAIGHT);
+                    }
                     else
-                        RoadType |= RoadType.CURVED;
+                    {
+                        if (higherCount >= 1)
+                            RoadType = RoadType.INVALID;
+                        else
+                            RoadType = baseType | RoadType.CURVED;
+                    }
                     break;
 
                 // Junction
                 case 3:
                 case 4:
-                    RoadType |= RoadType.JUNCTION;
+                    if (higherCount >= 1)
+                        RoadType = RoadType.INVALID;
+                    else
+                        RoadType = baseType | RoadType.JUNCTION; 
                     break;
-
-            }
-
-            if ((RoadType & RoadType.STRAIGHT) != 0)
-            {
-                RoadType |= RoadType.SLOPE;
-                return;
-            }
-
-            // No neighbor can be higher if curved or junction
-            if (heightDiffNorth < 0 || heightDiffSouth < 0 || heightDiffEast < 0 || heightDiffWest < 0)
-            {
-                RoadType = RoadType.INVALID;
-                return;
-            }
-
-            // heights can differ only by 1 if curved or junction
-            if (heightDiffNorth > 1 || heightDiffSouth > 1 || heightDiffEast > 1 || heightDiffWest > 1)
-            {
-                RoadType = RoadType.INVALID;
-                return;
-            }
-
-            if (neighbourCount >= 3)
-            {
-                OnRoadLayoutChanged(Coordinate);
             }
 
         }
@@ -113,9 +102,9 @@ namespace VolcanicTransport.Model.World
         public bool IsStraight() => (RoadType & RoadType.STRAIGHT) != 0;
         public bool IsCurved() => (RoadType & RoadType.CURVED) != 0;
         public bool IsJunction() => (RoadType & RoadType.JUNCTION) != 0;
-        public bool IsSlope() => (RoadType & RoadType.SLOPE) != 0;
+        public bool IsSlope() => (RoadType & RoadType.TYPE_MASK) == RoadType.SLOPE;
 
-        public event EventHandler? OnPlacementFailed;
+        //public event EventHandler? OnPlacementFailed;
 
         public bool TryUpdateNeighbours()
         {

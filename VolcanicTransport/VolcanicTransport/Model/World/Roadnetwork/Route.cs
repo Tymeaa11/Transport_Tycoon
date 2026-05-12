@@ -1,39 +1,63 @@
+using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
+using VolcanicTransport.Model.Persistance;
+using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 
 namespace VolcanicTransport.Model.World.Roadnetwork
 {
-    public class Route
+    public class Route : IContainsReference, IHasSavedState
     {
-        private readonly List<Station> _stops;
-        public IReadOnlyList<Station> Stops => _stops;
-        private readonly List<Road> _roadToNextStation;
-        //private readonly bool _isLoop;
+        public string Name { get; set; } = "Névtelen járat";
+        [JsonIgnore]
+        public ObservableCollection<Station> Stops { get; } = [];
 
-        public Route()
+        [JsonInclude]
+        public List<string>? SavedStopNames { get; set; }
+
+        public Route() { }
+
+        [JsonConstructor]
+        public Route(string name, List<string>? savedStopNames)
         {
-            _stops = [];
-            _roadToNextStation = [];
-            //_isLoop = false;
+            Name = name;
+            SavedStopNames = savedStopNames;
         }
+
+
         public void AddStop(Station station)
         {
-            if (!_stops.Contains(station)) _stops.Add(station);
+            if (!Stops.Contains(station)) Stops.Add(station);
         }
 
         public Station? GetNextStop(Station current)
         {
-            if (_stops.Count < 2) return null;
-            int index = _stops.IndexOf(current);
-            if (index == -1) return _stops[0];
+            if (Stops.Count < 2) return null;
+            int index = Stops.IndexOf(current);
+            if (index == -1) return Stops[0];
 
-            // Oda-vissza járat vagy körjárat (itt körjáratként kezelem)
-            return _stops[(index + 1) % _stops.Count];
+            return Stops[(index + 1) % Stops.Count];
         }
+        public override string ToString() => Name;
 
-        public List<Road> GetRoadsToNextStation()
+
+        public void RestoreReference(Coordinate _ = default)
         {
-            // TODO
-            return _roadToNextStation; //javítandó
+            if (SavedStopNames == null) return;
+
+            var world = World.Instance;
+            Stops.Clear();
+
+            foreach (var stationName in SavedStopNames)
+            {
+                var station = world.Stations.FirstOrDefault(s => s.StationName == stationName);
+                if (station != null)
+                    Stops.Add(station);
+            }
+        }
+        public void PrepareForSave()
+        {
+            SavedStopNames = [.. Stops.Select(s => s.StationName)];
         }
     }
 }

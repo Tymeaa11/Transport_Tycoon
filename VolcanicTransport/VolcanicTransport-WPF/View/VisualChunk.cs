@@ -1,23 +1,28 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VolcanicTransport.Model;
+using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
+using VolcanicTransport_WPF.ViewModel;
 
 namespace VolcanicTransport_WPF.View
 {
     public class VisualChunk : FrameworkElement
     {
+        private const int Dpi = 96;
 
-        private static readonly int Dpi = 96;
-        private static readonly int FieldSize = GameSettings.FieldSize;
-        private static readonly int HalfFieldSize = FieldSize / 2;
-        private static readonly int ChunkSizeInFields = GameSettings.ChunkSize * FieldSize;
-        private static readonly Rect ChunkBoundries = new(0, 0, ChunkSizeInFields, ChunkSizeInFields);
+        #region Fields
+        private static readonly Rect ChunkBoundries = new(0, 0, GameSettings.ChunkSizeInPixels, GameSettings.ChunkSizeInPixels);
+        protected override int VisualChildrenCount => 1;
+        protected override Visual GetVisualChild(int index) => _visual;
 
         private readonly DrawingVisual _visual;
+        #endregion
 
+        #region Constructor
         public VisualChunk()
         {
             _visual = new DrawingVisual();
@@ -28,36 +33,62 @@ namespace VolcanicTransport_WPF.View
 
             DataContextChanged += (s, e) =>
             {
-                if (e.OldValue is Chunk oldChunk)
+                if (e.OldValue is ChunkViewModel oldCvm)
                 {
-                    oldChunk.Changed -= OnChunkDataChanged;
+                    oldCvm.Rerender -= OnChunkDataChanged;
+                    oldCvm.PropertyChanged -= OnViewModelPropertyChanged;
                 }
 
-                if (e.NewValue is Chunk newChunk)
+                if (e.NewValue is ChunkViewModel cvm)
                 {
-                    newChunk.Changed += OnChunkDataChanged;
-                    Dispatcher.InvokeAsync(() => PreRender(newChunk));
+                    cvm.Rerender += OnChunkDataChanged;
+                    cvm.PropertyChanged += OnViewModelPropertyChanged;
+
+                    SetVisibility(cvm.IsVisible);
+                    PreRender(cvm.Chunk);
                 }
             };
         }
+        #endregion
 
+        #region Events
         private void OnChunkDataChanged(object? sender, EventArgs e)
         {
-            Dispatcher.Invoke(() =>
-            {
-                if (DataContext is Chunk chunkData)
-                {
-
-                    PreRender(chunkData);
-                }
-            });
+            if (Dispatcher.CheckAccess())
+                ExecuteRerender();
+            else
+                Dispatcher.BeginInvoke(ExecuteRerender);
         }
 
-        public void PreRender(Chunk chunkData)
+        private void ExecuteRerender()
+        {
+            if (DataContext is ChunkViewModel cvm)
+            {
+                SetVisibility(cvm.IsVisible);
+                PreRender(cvm.Chunk);
+            }
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ChunkViewModel.IsVisible) && DataContext is ChunkViewModel cvm)
+                SetVisibility(cvm.IsVisible);
+        }
+        #endregion
+
+        #region Methods
+
+        private void SetVisibility(bool b)
+            => Visibility = b ? Visibility.Visible : Visibility.Collapsed;
+
+        private void PreRender(Chunk chunkData)
         {
 
+            System.Diagnostics.Debug.WriteLine($"Generating prerender for {chunkData.Coordinate}");
+
+
             RenderTargetBitmap bakedMap = new(
-                ChunkSizeInFields, ChunkSizeInFields, Dpi, Dpi, PixelFormats.Pbgra32
+                GameSettings.ChunkSizeInPixels, GameSettings.ChunkSizeInPixels, Dpi, Dpi, PixelFormats.Pbgra32
             );
 
             DrawingVisual dv = new();
@@ -67,28 +98,35 @@ namespace VolcanicTransport_WPF.View
                 {
                     // Draw the tile based on FieldType
                     Brush brush = FieldBrushProvider.GetBrush(f.Type);
-                    double fieldX = x * FieldSize;
-                    double fieldY = y * FieldSize;
+                    double fieldX = x * GameSettings.FieldSize;
+                    double fieldY = y * GameSettings.FieldSize;
 
-                    Rect rectangle = new(fieldX, fieldY, FieldSize, FieldSize);
+                    Rect rectangle = new(fieldX, fieldY, GameSettings.FieldSize, GameSettings.FieldSize);
 
                     dc.DrawRectangle(brush, null, rectangle);
 
                     // Draw Surface
                     if (f.Surface != null)
                     {
+                        int globalX = chunkData.Coordinate.X * GameSettings.ChunkSize + x;
+                        int globalY = chunkData.Coordinate.Y * GameSettings.ChunkSize + y;
+                        Coordinate globalCoord = new(globalX, globalY);
+
                         ImageWithRotation imageWithRotation = f.Surface switch
                         {
                             Mushroom m => RenderMushroom(m),
-                            Road r => RenderRoad(r),
+                            BoneBridge r => RenderBoneBridge(r),
+                            StoneBridge r => RenderStoneBridge(r),
+                            SteelBridge r => RenderSteelBridge(r),
                             Station s => RenderStation(),
-                            FactoryBuilding => RenderFactoryBuilding(),
+                            Road r => RenderRoad(r),
+                            FactoryBuilding => RenderFactoryBuilding(globalCoord),
                             CityBuilding => RenderCityBuilding(),
                             _ => RenderInvalid()
                         };
 
-                        double centerX = fieldX + HalfFieldSize;
-                        double centerY = fieldY + HalfFieldSize;
+                        double centerX = fieldX + GameSettings.FieldSizeP2;
+                        double centerY = fieldY + GameSettings.FieldSizeP2;
 
                         dc.PushTransform(new RotateTransform(imageWithRotation.AngleDegrees, centerX, centerY));
                         dc.DrawImage(imageWithRotation.ImageSource, rectangle);
@@ -109,16 +147,38 @@ namespace VolcanicTransport_WPF.View
             => new(TextureAtlas.InvalidTexture, 0);
         private ImageWithRotation RenderMushroom(Mushroom m)
             => new(TextureAtlas.MushroomTextures[(int)m.GrowthStage], 0);
+
+        private ImageWithRotation RenderBoneBridge(BoneBridge r)
+            => TextureAtlas.BoneBridgeTextures[r.RoadType];
+        private ImageWithRotation RenderStoneBridge(StoneBridge r)
+             => TextureAtlas.StoneBridgeTextures[r.RoadType];
+        private ImageWithRotation RenderSteelBridge(SteelBridge r)
+            => TextureAtlas.SteelBridgeTextures[r.RoadType];
+
         private ImageWithRotation RenderRoad(Road r)
             => TextureAtlas.RoadTextures[r.RoadType];
         private ImageWithRotation RenderCityBuilding()
             => new(TextureAtlas.CityBuildingTexture, 0);
-        private ImageWithRotation RenderFactoryBuilding()
-            => new(TextureAtlas.FactoryBuildingTexture, 0);
         private ImageWithRotation RenderStation()
             => new(TextureAtlas.StationTexture, 0);
 
-        protected override int VisualChildrenCount => 1;
-        protected override Visual GetVisualChild(int index) => _visual;
+        private ImageWithRotation RenderFactoryBuilding(Coordinate coord)
+        {
+            bool isLeft = true;
+            bool isTop = true;
+
+            var leftField = GameModel.WorldInstance.GetField(new Coordinate(coord.X - 1, coord.Y));
+            if (leftField?.Surface is FactoryBuilding) isLeft = false;
+
+            var topField = GameModel.WorldInstance.GetField(new Coordinate(coord.X, coord.Y - 1));
+            if (topField?.Surface is FactoryBuilding) isTop = false;
+
+            int tileX = isLeft ? 0 : 1;
+            int tileY = isTop ? 0 : 1;
+
+            return new ImageWithRotation(TextureAtlas.FactoryBuildingTextures[tileX, tileY], 0);
+        }
+        #endregion
+
     }
 }

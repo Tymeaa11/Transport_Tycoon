@@ -1,6 +1,2 @@
-namespace VolcanicTransport.Model.Exceptions
-{
-    public class VehicleStuckException
-    {
-    }
-}
+namespace VolcanicTransport.Model.Exceptions;
+public class VehicleStuckException : Exception { }
