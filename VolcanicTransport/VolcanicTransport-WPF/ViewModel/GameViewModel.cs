@@ -25,6 +25,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public CameraToMinimap MinimapSelector { get; }
         public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
 
+        private bool _isGameOverHandled = false;
+
 
         #region Events
         public event EventHandler? ExitToMenuRequested;
@@ -707,14 +709,15 @@ namespace VolcanicTransport_WPF.ViewModel
 
             GameModelInstance.GameOver += (s, e) =>
             {
+                if (_isGameOverHandled) return;
+                _isGameOverHandled = true;
+
                 CompositionTarget.Rendering -= OnCompositionTargetRendering;
+                GameModelInstance.Pause();
 
-                MessageBox.Show("Csődbe mentél! A játéknak vége.");
+                MessageBox.Show("Game Over! You went bankrupt.");
 
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
-                });
+                ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
             };
 
             StartGameLoop();
