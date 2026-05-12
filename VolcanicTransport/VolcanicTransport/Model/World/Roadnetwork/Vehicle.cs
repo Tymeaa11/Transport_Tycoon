@@ -517,15 +517,17 @@ namespace VolcanicTransport.Model.World.Roadnetwork
             int a2 = GetDirectionIndex(entry2);
             int b2 = GetDirectionIndex(exit2);
 
-            if (a1 == -1 || b1 == -1 || a2 == -1 || b2 == -1) return false;
-            if (a1 == b2 || b1 == a2) return false;
+            if (a1 < 0 || b1 < 0 || a2 < 0 || b2 < 0) return false;
 
-            int p1 = Math.Min(a1, b1);
-            int p2 = Math.Max(a1, b1);
-            int q1 = Math.Min(a2, b2);
-            int q2 = Math.Max(a2, b2);
+            bool path1IsRight = (a1 + 3) % 4 == b1;
+            bool path2IsRight = (a2 + 3) % 4 == b2;
+            if (path1IsRight || path2IsRight) return false;
 
-            return p1 < q1 && q1 < p2 && p2 < q2;
+            bool path1IsStraight = (a1 + 2) % 4 == b1;
+            bool path2IsStraight = (a2 + 2) % 4 == b2;
+            if (path1IsStraight && path2IsStraight && a1 == b2 && b1 == a2) return false;
+
+            return true;
         }
 
         private void ReleaseJunctionLock(Road road)

@@ -53,7 +53,7 @@ namespace VolcanicTransport.Model.Services
             if (chosenRoute == null || chosenRoute.Stops.Count < 2)
                 return false;
 
-            Vehicle newVehicle = vehicleType switch
+                Vehicle newVehicle = vehicleType switch
             {
                 "CargoTruck" => new CargoTruck(vehicleName),
                 "MiniCargoTruck" => new MiniCargoTruck(vehicleName),
@@ -62,6 +62,9 @@ namespace VolcanicTransport.Model.Services
                 "MiniBus" => new MiniBus(vehicleName),
                 _ => new Bus(vehicleName)
             };
+
+            if (_economy.PlayerMoney<newVehicle.Price)
+                return false;
 
             newVehicle.AssignNewRoute(chosenRoute);
 
