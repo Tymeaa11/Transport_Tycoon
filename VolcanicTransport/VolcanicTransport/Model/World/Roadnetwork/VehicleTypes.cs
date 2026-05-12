@@ -1,4 +1,3 @@
-using System.Numerics;
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.World.Economy;
 

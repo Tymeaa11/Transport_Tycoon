@@ -41,14 +41,16 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         [JsonInclude] public int CurrentPathIndex => currentPathIndex;
 
         [JsonInclude]
-        public float PosX { 
-            get => Position.X; 
-            set => Position = new Vector2(value, Position.Y); 
+        public float PosX
+        {
+            get => Position.X;
+            set => Position = new Vector2(value, Position.Y);
         }
         [JsonInclude]
-        public float PosY { 
-            get => Position.Y; 
-            set => Position = new Vector2(Position.X, value); 
+        public float PosY
+        {
+            get => Position.Y;
+            set => Position = new Vector2(Position.X, value);
         }
 
 
@@ -218,7 +220,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                     {
                         CurrentSpeed *= 0.4f;
                     }
-                    
+
                 }
             }
 

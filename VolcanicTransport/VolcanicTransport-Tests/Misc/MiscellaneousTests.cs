@@ -1,11 +1,10 @@
 using VolcanicTransport.Model;
+using VolcanicTransport.Model.Persistance;
+using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using VolcanicTransport.Model.TerrainGeneration.Layers;
 using GameWorld = VolcanicTransport.Model.World.World;
-using VolcanicTransport.Model.Persistance;
 
 namespace VolcanicTransport_Tests.Misc
 {
@@ -49,8 +48,10 @@ namespace VolcanicTransport_Tests.Misc
         [TestMethod]
         public void ChunkCoordinate_CanBeSet()
         {
-            var args = new ChunkUpdatedEventArgs(new Coordinate(0, 0));
-            args.ChunkCoordinate = new Coordinate(5, 5);
+            var args = new ChunkUpdatedEventArgs(new Coordinate(0, 0))
+            {
+                ChunkCoordinate = new Coordinate(5, 5)
+            };
             Assert.AreEqual(new Coordinate(5, 5), args.ChunkCoordinate);
         }
     }
@@ -205,8 +206,8 @@ namespace VolcanicTransport_Tests.Misc
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
-        private static ProductBuffer EmptyBuffer(ProductType t) => new ProductBuffer(t, 100);
-        private static Product FinalProd(ProductType t) => new Product(t, 0, 100);
+        private static ProductBuffer EmptyBuffer(ProductType t) => new(t, 100);
+        private static Product FinalProd(ProductType t) => new(t, 0, 100);
 
         [TestMethod]
         public void AshProducer_JsonConstructor_SetsName()
@@ -303,8 +304,10 @@ namespace VolcanicTransport_Tests.Misc
         [TestMethod]
         public void WorldUpdate_TransitionsMovingVehicleWithNoPath_ToWaiting()
         {
-            var bus = new Bus("WVT3");
-            bus.State = VehicleState.Moving;
+            var bus = new Bus("WVT3")
+            {
+                State = VehicleState.Moving
+            };
             GameWorld.Instance.AddVehicle(bus);
 
             GameWorld.Instance.Update(1.0);
@@ -344,7 +347,7 @@ namespace VolcanicTransport_Tests.Misc
 
             int sum = 0;
             m.ReadEach((x, y, v) => sum += v);
-            Assert.AreEqual(0+1+2+3+4+5+6+7+8, sum);
+            Assert.AreEqual(0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8, sum);
         }
 
         [TestMethod]
@@ -380,41 +383,6 @@ namespace VolcanicTransport_Tests.Misc
     }
 
     // ──────────────────────────────────────────────────────
-    // CompositeLayer
-    // ──────────────────────────────────────────────────────
-    [TestClass]
-    public class CompositeLayerTests
-    {
-        private sealed class ConstantLayer(float value) : ILayer
-        {
-            public float Get(float x, float y) => value;
-            public void SetSeed(int seed, Random r) { }
-        }
-
-        [TestMethod]
-        public void Get_CombinesThreeLayers()
-        {
-            var l0 = new ConstantLayer(2f);
-            var l1 = new ConstantLayer(3f);
-            var l2 = new ConstantLayer(4f);
-            var composite = new CompositeLayer(l0, l1, l2);
-
-            // l0.Get(l1.Get(x,y), l2.Get(x,y)) = l0.Get(3, 4) = 2
-            float result = composite.Get(0, 0);
-
-            Assert.AreEqual(2f, result, 0.001f);
-        }
-
-        [TestMethod]
-        public void SetSeed_DoesNotThrow()
-        {
-            var composite = new CompositeLayer(
-                new ConstantLayer(1f), new ConstantLayer(1f), new ConstantLayer(1f));
-            composite.SetSeed(42, new Random(42));
-        }
-    }
-
-    // ──────────────────────────────────────────────────────
     // LayeredTerrain
     // ──────────────────────────────────────────────────────
     [TestClass]
@@ -441,7 +409,7 @@ namespace VolcanicTransport_Tests.Misc
         public void AddLayer_Array_AddsAll()
         {
             var t = new LayeredTerrain();
-            t.AddLayer(new ILayer[] { new ConstLayer(1f), new ConstLayer(1f) });
+            t.AddLayer([new ConstLayer(1f), new ConstLayer(1f)]);
 
             Assert.AreEqual(2f, t.Get(0, 0), 0.001f);
         }

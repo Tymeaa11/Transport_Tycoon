@@ -1,6 +1,7 @@
-using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
+
+using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.WorldTests
 {
@@ -9,7 +10,7 @@ namespace VolcanicTransport_Tests.WorldTests
     public class BridgeTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
         [TestMethod]
         public void BoneBridge_RoadType_MatchesConstructorArgument()

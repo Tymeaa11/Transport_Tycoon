@@ -1,8 +1,8 @@
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
-using VolcanicTransport.Model.World.Roadnetwork;
+using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+namespace VolcanicTransport_Tests.RoadnetworkTests
 {
     [TestClass]
     [DoNotParallelize]
@@ -11,27 +11,27 @@ namespace VolcanicTransport_Tests.Roadnetwork
         [ClassInitialize]
         public static void ClassSetup(TestContext _)
         {
-            World.Initialise(4, 0);
+            GameWorld.Initialise(4, 0);
         }
 
         [TestInitialize]
         public void ResetGraph()
         {
-            World.Instance.Roadnetwork.NodeMap.Clear();
+            GameWorld.Instance.Roadnetwork.NodeMap.Clear();
         }
 
 
-        private static VolcanicTransport.Model.World.Road PlaceRoad(Coordinate coord)
+        private static Road PlaceRoad(Coordinate coord)
         {
-            var road = new VolcanicTransport.Model.World.Road(coord);
-            World.Instance.GetField(coord)!.Surface = road;
+            var road = new Road(coord);
+            GameWorld.Instance.GetField(coord)!.Surface = road;
             return road;
         }
 
         private static void SetFieldType(Coordinate coord, FieldType type)
-            => World.Instance.GetField(coord)!.SetFieldTypeTo(type);
+            => GameWorld.Instance.GetField(coord)!.SetFieldTypeTo(type);
 
-        private static (VolcanicTransport.Model.World.Road jA, VolcanicTransport.Model.World.Road conn, VolcanicTransport.Model.World.Road jB)
+        private static (Road jA, Road conn, Road jB)
             BuildTwoJunctions(Coordinate jACoord, Coordinate jBCoord)
         {
             var connCoord = new Coordinate(jACoord.X + 1, jACoord.Y);
@@ -62,9 +62,9 @@ namespace VolcanicTransport_Tests.Roadnetwork
 
             Assert.IsTrue(jA.IsJunction(), "A road típusát Update() után JUNCTION-nek kell lennie.");
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
 
-            Assert.IsTrue(World.Instance.Roadnetwork.NodeMap.ContainsKey(jA),
+            Assert.IsTrue(GameWorld.Instance.Roadnetwork.NodeMap.ContainsKey(jA),
                 "A junction csomópontként kell megjelenjen a NodeMap-ben.");
         }
 
@@ -79,9 +79,9 @@ namespace VolcanicTransport_Tests.Roadnetwork
 
             Assert.IsTrue(straight.IsStraight());
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(coord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(coord);
 
-            Assert.IsFalse(World.Instance.Roadnetwork.NodeMap.ContainsKey(straight),
+            Assert.IsFalse(GameWorld.Instance.Roadnetwork.NodeMap.ContainsKey(straight),
                 "Egyenes útszakasz nem kerülhet be a gráfba csomópontként.");
         }
 
@@ -92,10 +92,10 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var jBCoord = new Coordinate(32, 50);
             var (jA, _, _) = BuildTwoJunctions(jACoord, jBCoord);
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
 
-            int count = World.Instance.Roadnetwork.NodeMap.Count(kvp => kvp.Key == jA);
+            int count = GameWorld.Instance.Roadnetwork.NodeMap.Count(kvp => kvp.Key == jA);
             Assert.AreEqual(1, count, "Ugyanaz a csomópont nem adható hozzá kétszer.");
         }
 
@@ -106,11 +106,11 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var jBCoord = new Coordinate(42, 50);
             var (jA, _, jB) = BuildTwoJunctions(jACoord, jBCoord);
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
 
-            var nodeA = World.Instance.Roadnetwork.NodeMap[jA];
-            var nodeB = World.Instance.Roadnetwork.NodeMap[jB];
+            var nodeA = GameWorld.Instance.Roadnetwork.NodeMap[jA];
+            var nodeB = GameWorld.Instance.Roadnetwork.NodeMap[jB];
 
             Assert.IsTrue(nodeA.Edges.Any(e => e.TargetNode == nodeB),
                 "A jA csomópontból kell él vezessen jB felé.");
@@ -125,10 +125,10 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var jBCoord = new Coordinate(52, 50);
             var (jA, conn, jB) = BuildTwoJunctions(jACoord, jBCoord);
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
 
-            var nodeA = World.Instance.Roadnetwork.NodeMap[jA];
+            var nodeA = GameWorld.Instance.Roadnetwork.NodeMap[jA];
             var edgeToB = nodeA.Edges.First(e => e.TargetNode.Coordinate == jBCoord);
 
             CollectionAssert.Contains(edgeToB.Path, conn,
@@ -141,9 +141,9 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var flatJACoord = new Coordinate(60, 50);
             var flatJBCoord = new Coordinate(62, 50);
             var (flatJA, _, flatJB) = BuildTwoJunctions(flatJACoord, flatJBCoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(flatJACoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(flatJBCoord);
-            var flatNodeA = World.Instance.Roadnetwork.NodeMap[flatJA];
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(flatJACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(flatJBCoord);
+            var flatNodeA = GameWorld.Instance.Roadnetwork.NodeMap[flatJA];
             var flatEdge = flatNodeA.Edges.First(e => e.TargetNode.Coordinate == flatJBCoord);
             int flatWeight = flatEdge.Weight;
 
@@ -153,13 +153,13 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var slopeJBCoord = new Coordinate(72, 50);
             var (slopeJA, slopeConn, slopeJB) = BuildTwoJunctions(slopeJACoord, slopeJBCoord);
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(slopeJACoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(slopeJBCoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(slopeJACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(slopeJBCoord);
 
             Assert.IsTrue(slopeConn.IsSlope(),
                 "Az összekötő útszakasznak meredeknek (SLOPE) kell lennie.");
 
-            var slopeNodeA = World.Instance.Roadnetwork.NodeMap[slopeJA];
+            var slopeNodeA = GameWorld.Instance.Roadnetwork.NodeMap[slopeJA];
             var slopeEdge = slopeNodeA.Edges.First(e => e.TargetNode.Coordinate == slopeJBCoord);
 
             Assert.IsTrue(slopeEdge.Weight > flatWeight,
@@ -176,10 +176,10 @@ namespace VolcanicTransport_Tests.Roadnetwork
             junction.Update();
             Assert.IsTrue(junction.IsJunction());
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(new Coordinate(10, 70));
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(new Coordinate(10, 70));
 
-            Assert.AreEqual(1, World.Instance.Roadnetwork.NodeMap.Count);
-            var node = World.Instance.Roadnetwork.NodeMap[junction];
+            Assert.AreEqual(1, GameWorld.Instance.Roadnetwork.NodeMap.Count);
+            var node = GameWorld.Instance.Roadnetwork.NodeMap[junction];
             Assert.AreEqual(0, node.Edges.Count,
                 "1 csomópont esetén nem épülnek élek (RebuildEdges korai kilépés).");
         }
@@ -207,13 +207,13 @@ namespace VolcanicTransport_Tests.Roadnetwork
 
             Assert.IsTrue(jA.IsJunction()); Assert.IsTrue(jB.IsJunction()); Assert.IsTrue(jC.IsJunction());
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jCCoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jCCoord);
 
-            var nodeA = World.Instance.Roadnetwork.NodeMap[jA];
-            var nodeB = World.Instance.Roadnetwork.NodeMap[jB];
-            var nodeC = World.Instance.Roadnetwork.NodeMap[jC];
+            var nodeA = GameWorld.Instance.Roadnetwork.NodeMap[jA];
+            var nodeB = GameWorld.Instance.Roadnetwork.NodeMap[jB];
+            var nodeC = GameWorld.Instance.Roadnetwork.NodeMap[jC];
 
             Assert.IsTrue(nodeA.Edges.Any(e => e.TargetNode.Coordinate == jBCoord), "jA → jB él hiányzik.");
             Assert.IsTrue(nodeB.Edges.Any(e => e.TargetNode.Coordinate == jACoord), "jB → jA él hiányzik.");
@@ -231,7 +231,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var jBCoord = new Coordinate(14, 65);
 
             PlaceRoad(new Coordinate(10, 64)); PlaceRoad(new Coordinate(10, 66));
-            PlaceRoad(new Coordinate(14, 64)); PlaceRoad(new Coordinate(14, 66)); 
+            PlaceRoad(new Coordinate(14, 64)); PlaceRoad(new Coordinate(14, 66));
 
             var r1 = PlaceRoad(new Coordinate(11, 65));
             var r2 = PlaceRoad(new Coordinate(12, 65));
@@ -241,10 +241,10 @@ namespace VolcanicTransport_Tests.Roadnetwork
 
             jA.Update(); jB.Update(); r1.Update(); r2.Update(); r3.Update();
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jACoord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(jBCoord);
 
-            var nodeA = World.Instance.Roadnetwork.NodeMap[jA];
+            var nodeA = GameWorld.Instance.Roadnetwork.NodeMap[jA];
             var edgeToJB = nodeA.Edges.First(e => e.TargetNode.Coordinate == jBCoord);
 
             CollectionAssert.IsSubsetOf(new List<Road> { r1, r2, r3 }, edgeToJB.Path,
@@ -263,9 +263,9 @@ namespace VolcanicTransport_Tests.Roadnetwork
             curved.Update();
             Assert.IsTrue(curved.IsCurved());
 
-            World.Instance.Roadnetwork.RegisterNodeIfNeeded(coord);
+            GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(coord);
 
-            Assert.IsFalse(World.Instance.Roadnetwork.NodeMap.ContainsKey(curved),
+            Assert.IsFalse(GameWorld.Instance.Roadnetwork.NodeMap.ContainsKey(curved),
                 "Kanyar típusú út nem kerülhet be a gráfba csomópontként.");
         }
     }

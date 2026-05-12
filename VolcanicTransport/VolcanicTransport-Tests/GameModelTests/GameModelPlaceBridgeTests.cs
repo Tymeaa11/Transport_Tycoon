@@ -66,7 +66,7 @@ namespace VolcanicTransport_Tests.GameModelTests
                 if (start != null) break;
             }
 
-            if (start == null) return;
+            if (start == null || end == null) return;
 
             bool result = Model.PlaceBridge(start.Value, end.Value, GameSettings.BridgeTypes[0]);
             Assert.IsFalse(result);

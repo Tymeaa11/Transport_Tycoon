@@ -2,7 +2,7 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+namespace VolcanicTransport_Tests.RoadnetworkTests
 {
     [TestClass]
     public class PathfinderTests
@@ -149,7 +149,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
             var d = CreateNode(9, 0);
             var rAB1 = CreateRoad(1, 0); var rAB2 = CreateRoad(2, 0);
             var rBC1 = CreateRoad(4, 0); var rBC2 = CreateRoad(5, 0);
-            var rCA  = CreateRoad(3, 1);
+            var rCA = CreateRoad(3, 1);
             var rCD1 = CreateRoad(7, 0); var rCD2 = CreateRoad(8, 0);
 
             a.Edges.Add(new RoadEdge(b, 2, [rAB1, rAB2]));
@@ -188,7 +188,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
         public void FindPath_StartNodeIsStation_CanReachTarget()
         {
             var start = CreateNode(0, 0, isStation: true);
-            var end   = CreateNode(3, 0);
+            var end = CreateNode(3, 0);
             var r1 = CreateRoad(1, 0); var r2 = CreateRoad(2, 0);
             start.Edges.Add(new RoadEdge(end, 2, [r1, r2]));
 

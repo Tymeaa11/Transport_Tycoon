@@ -1,7 +1,5 @@
-﻿using Microsoft.Win32;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Media;
@@ -10,7 +8,6 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using VolcanicTransport_WPF.View;
 
 namespace VolcanicTransport_WPF.ViewModel
 {
@@ -132,8 +129,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public DelegateCommand ClosePurchasePanelCommand { get; private set; }
         public DelegateCommand ConfirmPurchaseCommand { get; private set; }
         public DelegateCommand AddStopCommand { get; }
-        public DelegateCommand SaveGameCommand {  get; private set; }
-        public DelegateCommand LoadGameCommand {  get; private set; }
+        public DelegateCommand SaveGameCommand { get; private set; }
+        public DelegateCommand LoadGameCommand { get; private set; }
         public DelegateCommand ToggleVehiclePanelCommand { get; private set; }
         public DelegateCommand SellVehicleCommand { get; private set; }
         #endregion
@@ -164,12 +161,12 @@ namespace VolcanicTransport_WPF.ViewModel
                     break;
 
                 case BuildMode.ROAD:
-                    if (field.IsBuildable()) 
+                    if (field.IsBuildable())
                         GameModelInstance.PlaceRoad(coord);
                     break;
 
                 case BuildMode.STATION:
-                    if (field.IsBuildable()) 
+                    if (field.IsBuildable())
                         GameModelInstance.PlaceStation(coord);
                     break;
 
@@ -437,15 +434,15 @@ namespace VolcanicTransport_WPF.ViewModel
             set { _newVehicleName = value; OnPropertyChanged(); }
         }
 
-        public List<VehicleTemplate> VehicleTemplates { get; } = new()
-        {
+        public List<VehicleTemplate> VehicleTemplates { get; } =
+        [
             new() { Name = "Bus", Price = 6000, CargoDescription = "Passengers", InternalType = "Bus" },
             new() { Name = "Mini Bus", Price = 4000, CargoDescription = "Passengers", InternalType = "MiniBus" },
             new() { Name = "Cargo Truck", Price = 11000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "CargoTruck" },
             new() { Name = "Mini Cargo", Price = 8000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "MiniCargoTruck" },
             new() { Name = "Tanker Truck", Price = 10000, CargoDescription = "Steam, Water, Concrete", InternalType = "TankerTruck" },
             new() { Name = "Mini Tanker", Price = 7000, CargoDescription = "Steam, Water, Concrete", InternalType = "MiniTankerTruck" }
-        };
+        ];
 
         private double _accumulator = 0;
         private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)
@@ -492,7 +489,7 @@ namespace VolcanicTransport_WPF.ViewModel
             SetTimeScale1Command = new DelegateCommand(_ => OnSetTimescale1X());
             SetTimeScale2Command = new DelegateCommand(_ => OnSetTimescale2X());
             SetTimeScale4Command = new DelegateCommand(_ => OnSetTimescale4X());
-            
+
             OpenPurchasePanelCommand = new DelegateCommand(_ =>
             {
                 IsPurchasePanelVisible = true;
@@ -798,7 +795,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged(nameof(IsBuildModeHeighten));
             }
         }
-       
+
         public bool IsBuildModeRoad => CurrentBuildMode == BuildMode.ROAD;
         public bool IsBuildModeStation => CurrentBuildMode == BuildMode.STATION;
         public bool IsBuildModeSelectStation => CurrentBuildMode == BuildMode.SELECT_STATION;
@@ -832,7 +829,7 @@ namespace VolcanicTransport_WPF.ViewModel
             get => currentTimeScale;
             set
             {
-                if (currentTimeScale == value) 
+                if (currentTimeScale == value)
                     return;
 
                 currentTimeScale = value;

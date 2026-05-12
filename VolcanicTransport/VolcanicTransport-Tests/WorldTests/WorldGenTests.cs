@@ -4,19 +4,20 @@ using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
+using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.Utils
+namespace VolcanicTransport_Tests.WorldTests
 {
     [TestClass]
     [DoNotParallelize]
     public class WorldGenTests
     {
-        public static World World => World.Instance;
+        public static GameWorld World => GameWorld.Instance;
 
         [ClassInitialize]
         public static void ClassSetup(TestContext _)
         {
-            World.Initialise(8, 123);
+            GameWorld.Initialise(8, 123);
 
             World.GameWorldGenerator = new GameWorldGenerator(
                 new TerrainHeightGenerator(),
@@ -58,9 +59,9 @@ namespace VolcanicTransport_Tests.Utils
             {
                 Coordinate center = city.CenterCoordinate;
                 Coordinate[] roadCoords = [
-                    center + Coordinate.North, 
+                    center + Coordinate.North,
                     center + Coordinate.South,
-                    center + Coordinate.East, 
+                    center + Coordinate.East,
                     center + Coordinate.West, center
                 ];
 

@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.TerrainGeneration;
-using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;

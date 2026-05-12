@@ -1,6 +1,3 @@
-using System.IO.Compression;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Exceptions;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
@@ -55,7 +52,7 @@ namespace VolcanicTransport.Model.Persistance
             foreach (var vehicle in game.World.Vehicles)
                 vehicle.PrepareForSave();
 
-            foreach (var r in game.World.SavedRoutes) 
+            foreach (var r in game.World.SavedRoutes)
                 r.PrepareForSave();
 
             var saveData = new SurfaceSaveData(
@@ -71,7 +68,7 @@ namespace VolcanicTransport.Model.Persistance
                 GetSurfaceElements()
             );
 
-            SaveFormat.SaveSurfaceSaveData( saveData );
+            SaveFormat.SaveSurfaceSaveData(saveData);
 
             SaveFormat.Dispose();
         }
@@ -153,7 +150,7 @@ namespace VolcanicTransport.Model.Persistance
 
                         _ => field.Surface
                     };
-                        
+
                 })
             );
         }
@@ -177,7 +174,7 @@ namespace VolcanicTransport.Model.Persistance
                         case Bridge:
                             surfaces.Add(new SurfaceEntry(coordinate, field.Surface));
                             break;
-                        
+
 
                         case Mushroom: // stored in binary data, skip
                         case Road:
@@ -200,7 +197,7 @@ namespace VolcanicTransport.Model.Persistance
             {
                 var field = world.GetField(coordinate);
 
-                if (field is null || field.Surface is not null) 
+                if (field is null || field.Surface is not null)
                     throw new PersistanceException();
 
                 field.Surface = surface;

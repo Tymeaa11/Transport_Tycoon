@@ -4,7 +4,7 @@ using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
 using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.Utils
+namespace VolcanicTransport_Tests.WorldTests
 {
     [TestClass]
     [DoNotParallelize]
@@ -23,7 +23,6 @@ namespace VolcanicTransport_Tests.Utils
             );
             var field = GameWorld.Instance.GetField(new Coordinate(0, 0));
             gen.ModifyField(field!, 0, 0);
-            Assert.IsTrue(true);
         }
 
         [TestMethod]
@@ -35,7 +34,6 @@ namespace VolcanicTransport_Tests.Utils
                 new FactoryAndCityGenerator(1, 1)
             );
             gen.SetSeed(42, new Random(42));
-            Assert.IsTrue(true);
         }
 
         [TestMethod]
@@ -59,7 +57,6 @@ namespace VolcanicTransport_Tests.Utils
             });
 
             gen.GenerateCitiesAndFactories();
-            Assert.IsTrue(true);
         }
     }
 }

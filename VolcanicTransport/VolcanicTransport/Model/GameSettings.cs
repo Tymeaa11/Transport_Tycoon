@@ -232,9 +232,9 @@ public static class GameSettings
 
     #region Bridges
     public readonly record struct BridgeData(
-        int Length, 
+        int Length,
         float MaxSpeed,
-        double Price, 
+        double Price,
         string Name,
         int Tier
     );

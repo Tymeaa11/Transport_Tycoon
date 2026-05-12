@@ -3,7 +3,6 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.GameModelTests
@@ -309,8 +308,8 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             var bus = new Bus("AddStop_Bus");
             var route = new Route();
-            var s1 = MakePlainStation(new Coordinate(70, 70));
-            var s2 = MakePlainStation(new Coordinate(71, 70));
+            var s1 = PlainStation.MakePlainStation(new Coordinate(70, 70));
+            var s2 = PlainStation.MakePlainStation(new Coordinate(71, 70));
             route.AddStop(s1);
             bus.Route = route;
             bus.State = VehicleState.Waiting;
@@ -329,7 +328,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             var bus = new Bus("DStop_Bus");
             var route = new Route();
-            var s1 = MakePlainStation(new Coordinate(72, 70));
+            var s1 = PlainStation.MakePlainStation(new Coordinate(72, 70));
             route.AddStop(s1);
             bus.Route = route;
 
@@ -338,17 +337,6 @@ namespace VolcanicTransport_Tests.GameModelTests
             Assert.AreEqual(1, bus.Route.Stops.Count);
         }
 
-        private static Station MakePlainStation(Coordinate coord)
-        {
-            var f = W.GetField(coord);
-            var s = new PlainStation(coord);
-            if (f != null)
-            {
-                f.SetFieldTypeTo(FieldType.LOW_LANDS);
-                f.Surface = s;
-            }
-            return s;
-        }
     }
 
     file class PlainStation(Coordinate coord) : Station(
@@ -357,5 +345,17 @@ namespace VolcanicTransport_Tests.GameModelTests
         new Product(ProductType.HUMAN, 0, 10))
     {
         public override int UnLoadProductFromVehicle(Vehicle vehicle) => 0;
+
+        public static PlainStation MakePlainStation(Coordinate coord)
+        {
+            var f = GameWorld.Instance.GetField(coord);
+            var s = new PlainStation(coord);
+            if (f != null)
+            {
+                f.SetFieldTypeTo(FieldType.LOW_LANDS);
+                f.Surface = s;
+            }
+            return s;
+        }
     }
 }

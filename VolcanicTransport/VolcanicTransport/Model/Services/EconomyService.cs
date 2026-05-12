@@ -1,18 +1,14 @@
 using System.Diagnostics;
+using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.Services
 {
-    public class EconomyService
+    public class EconomyService(double startingMoney)
     {
-        public double PlayerMoney { get; private set; }
+        public double PlayerMoney { get; private set; } = startingMoney;
 
         public event EventHandler? MoneyChanged;
         public event EventHandler? GameOver;
-
-        public EconomyService(double startingMoney)
-        {
-            PlayerMoney = startingMoney;
-        }
 
         public bool TryPurchase(double amount)
         {
@@ -44,6 +40,13 @@ namespace VolcanicTransport.Model.Services
 
             Debug.WriteLine($"Havi kiadások levonva: -{totalExpense}$ (Járművek száma: {vehicleCount})");
             return able;
+        }
+
+        public static double GetMushroomCosts(Field field)
+        {
+            if (field.Surface is not Mushroom mushroom) return 0d;
+            var stage = (double)mushroom.GrowthStage + 1;
+            return stage * GameSettings.MushroomPricePerUnit;
         }
     }
 }

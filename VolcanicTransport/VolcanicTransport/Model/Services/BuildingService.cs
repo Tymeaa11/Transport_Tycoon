@@ -1,36 +1,24 @@
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
-using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.Services
 {
-    public class BuildingService
+    public class BuildingService(Func<World.World> getWorld, EconomyService economy)
     {
-        private readonly Func<World.World> _getWorld;
-        private readonly EconomyService _economy;
+        private readonly Func<World.World> _getWorld = getWorld;
+        private readonly EconomyService _economy = economy;
 
         private World.World WorldInstance => _getWorld();
 
         public event EventHandler? OnPlacementFailed;
         public event EventHandler? RoadBought;
 
-        public BuildingService(Func<World.World> getWorld, EconomyService economy)
-        {
-            _getWorld = getWorld;
-            _economy = economy;
-        }
-
         public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
         public bool IsHeightenable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsHeightenable() ?? false;
         public bool IsLowerable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsLowerable() ?? false;
 
-        private static double GetMushroomCosts(Field field)
-        {
-            if (field.Surface is not Mushroom mushroom) return 0d;
-            var stage = (double)mushroom.GrowthStage + 1;
-            return stage * GameSettings.MushroomPricePerUnit;
-        }
+
 
         private void CheckAndRegisterJunctions(Coordinate centerCoord)
         {
@@ -80,7 +68,7 @@ namespace VolcanicTransport.Model.Services
             var field = WorldInstance.GetField(coord);
             if (field == null) return;
 
-            roadPrice += GetMushroomCosts(field);
+            roadPrice += EconomyService.GetMushroomCosts(field);
 
             if (!_economy.TryPurchase(roadPrice)) return;
 
@@ -246,7 +234,7 @@ namespace VolcanicTransport.Model.Services
 
             if (!hasValidNearRoad) return false;
 
-            stationCost += GetMushroomCosts(field);
+            stationCost += EconomyService.GetMushroomCosts(field);
 
             var city = WorldInstance.Cities.FirstOrDefault(c => c.CenterCoordinate.Distance(coord) <= 4);
             var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 4);
@@ -290,7 +278,7 @@ namespace VolcanicTransport.Model.Services
 
             if (!((deltaHeight == -1 && field.IsLowerable()) || (deltaHeight == 1 && field.IsHeightenable()))) return;
 
-            terraformationPrice += GetMushroomCosts(field);
+            terraformationPrice += EconomyService.GetMushroomCosts(field);
             var newFieldType = (FieldType)((int)field.Type + deltaHeight);
 
             if (newFieldType > FieldType.HIGH_MOUNTAINS) return;

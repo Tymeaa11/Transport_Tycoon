@@ -1,33 +1,21 @@
 using System.Diagnostics;
-using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.Services
 {
-    public class VehicleService
+    public class VehicleService(Func<World.World> getWorld, EconomyService economy)
     {
-        private readonly Func<World.World> _getWorld;
-        private readonly EconomyService _economy;
-        private readonly Func<double> _getTime;
-
-        private World.World WorldInstance => _getWorld();
+        private World.World WorldInstance => getWorld();
 
         public event EventHandler? VehicleBought;
         public event EventHandler? VehicleSold;
         public event EventHandler<VehicleArrivedEventArgs>? VehicleArrivedAtStation;
 
-        public VehicleService(Func<World.World> getWorld, EconomyService economy, Func<double> getTime)
-        {
-            _getWorld = getWorld;
-            _economy = economy;
-            _getTime = getTime;
-        }
-
         public bool BuyVehicle(Vehicle v)
         {
-            if (_economy.TryPurchase(v.Price))
+            if (economy.TryPurchase(v.Price))
             {
                 v.ArrivedAtStation += HandleVehicleArrived;
                 WorldInstance.AddVehicle(v);
@@ -43,7 +31,7 @@ namespace VolcanicTransport.Model.Services
 
             v.ArrivedAtStation -= HandleVehicleArrived;
             v.ClearRoute();
-            _economy.AddMoney(v.Price * GameSettings.SellRefundRate);
+            economy.AddMoney(v.Price * GameSettings.SellRefundRate);
             WorldInstance.RemoveVehicle(v);
             VehicleSold?.Invoke(this, EventArgs.Empty);
         }
@@ -120,7 +108,7 @@ namespace VolcanicTransport.Model.Services
                 int accepted = station.UnLoadProductFromVehicle(vehicle);
                 if (accepted != 0)
                 {
-                    _economy.AddMoney(accepted * GameSettings.GetPrice(productType));
+                    economy.AddMoney(accepted * GameSettings.GetPrice(productType));
                     Debug.WriteLine($"{accepted} egység leadva, pénz hozzáadva.");
                 }
                 if (station is FactoryStation fs)
@@ -134,7 +122,7 @@ namespace VolcanicTransport.Model.Services
                 int amount = station.UnBoarding(vehicle);
                 if (amount != 0)
                 {
-                    _economy.AddMoney(amount * GameSettings.GetPrice(productType));
+                    economy.AddMoney(amount * GameSettings.GetPrice(productType));
                     Debug.WriteLine($"{amount} ember leszállt.");
                 }
                 if (vehicle.Capacity > vehicle.CurrentLoad)
