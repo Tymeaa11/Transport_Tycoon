@@ -3,14 +3,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using VolcanicTransport.Model;
 using VolcanicTransport.Model.World;
-using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport_WPF.ViewModel;
 
 namespace VolcanicTransport_WPF.View
 {
     public class MiniVisualChunk : FrameworkElement
     {
-        private const int Dpi = 24; // contains magic
+        private const int Dpi = 24;
 
         #region Fields
         private static readonly Rect MiniChunkBoundries = new(0, 0, GameSettings.MiniChunkSizeInPixels, GameSettings.MiniChunkSizeInPixels);
@@ -83,7 +82,7 @@ namespace VolcanicTransport_WPF.View
                 {
                     // Draw the tile based on FieldType / Surface
                     Brush brush = f.Surface != null ? SurfaceBrushProvider.GetBrush(f.Surface.GetType()) : FieldBrushProvider.GetBrush(f.Type);
-                   
+
                     double fieldX = x * GameSettings.MiniFieldSize;
                     double fieldY = y * GameSettings.MiniFieldSize;
 

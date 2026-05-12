@@ -1,7 +1,8 @@
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
+using GameWorld = VolcanicTransport.Model.World.World;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+namespace VolcanicTransport_Tests.RoadnetworkTests
 {
 
     [TestClass]
@@ -11,19 +12,19 @@ namespace VolcanicTransport_Tests.Roadnetwork
         [ClassInitialize]
         public static void ClassSetup(TestContext _)
         {
-            World.Initialise(4, 0);
+            GameWorld.Initialise(4, 0);
         }
 
 
-        private static VolcanicTransport.Model.World.Road PlaceRoad(Coordinate coord)
+        private static Road PlaceRoad(Coordinate coord)
         {
-            var road = new VolcanicTransport.Model.World.Road(coord);
-            World.Instance.GetField(coord)!.Surface = road;
+            var road = new Road(coord);
+            GameWorld.Instance.GetField(coord)!.Surface = road;
             return road;
         }
 
         private static void SetFieldType(Coordinate coord, FieldType type)
-            => World.Instance.GetField(coord)!.SetFieldTypeTo(type);
+            => GameWorld.Instance.GetField(coord)!.SetFieldTypeTo(type);
 
         [TestMethod]
         public void Update_NoNeighbors_IsLonely()

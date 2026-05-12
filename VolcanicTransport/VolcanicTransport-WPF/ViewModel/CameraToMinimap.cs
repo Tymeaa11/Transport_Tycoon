@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using VolcanicTransport.Model;
 
 namespace VolcanicTransport_WPF.ViewModel
@@ -33,7 +28,7 @@ namespace VolcanicTransport_WPF.ViewModel
             OnPropertyChanged(nameof(Height));
         }
 
-        private int Cap(int x) => int.Clamp(x,0,GameSettings.WorldSizeInFields);
+        private int Cap(int x) => int.Clamp(x, 0, GameSettings.WorldSizeInFields);
 
     }
 }

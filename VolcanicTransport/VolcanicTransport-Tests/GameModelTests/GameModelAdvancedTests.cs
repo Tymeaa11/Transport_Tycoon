@@ -3,7 +3,6 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.GameModelTests
@@ -45,7 +44,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var added = GameWorld.Instance.GetLatestVehicle();
             if (added != null)
             {
-                Assert.IsInstanceOfType(added, typeof(CargoTruck));
+                Assert.IsInstanceOfType<CargoTruck>(added);
                 GameWorld.Instance.RemoveVehicle(added);
             }
         }
@@ -58,7 +57,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var added = GameWorld.Instance.GetLatestVehicle();
             if (added != null)
             {
-                Assert.IsInstanceOfType(added, typeof(TankerTruck));
+                Assert.IsInstanceOfType<TankerTruck>(added);
                 GameWorld.Instance.RemoveVehicle(added);
             }
         }
@@ -71,7 +70,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var added = GameWorld.Instance.GetLatestVehicle();
             if (added != null)
             {
-                Assert.IsInstanceOfType(added, typeof(MiniBus));
+                Assert.IsInstanceOfType<MiniBus>(added);
                 GameWorld.Instance.RemoveVehicle(added);
             }
         }
@@ -84,7 +83,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var added = GameWorld.Instance.GetLatestVehicle();
             if (added != null)
             {
-                Assert.IsInstanceOfType(added, typeof(Bus));
+                Assert.IsInstanceOfType<Bus>(added);
                 GameWorld.Instance.RemoveVehicle(added);
             }
         }
@@ -208,7 +207,6 @@ namespace VolcanicTransport_Tests.GameModelTests
             var coord = FindEmptyFlat();
             if (coord == null) return;
             Model.PlaceRoad(coord.Value);
-            Assert.IsTrue(true);
         }
 
         [TestMethod]
@@ -228,7 +226,7 @@ namespace VolcanicTransport_Tests.GameModelTests
                     if (fe == null || fe.Surface != null || fe.Type != FieldType.LOW_LANDS) continue;
 
                     bool fired = false;
-                    EventHandler h = (_, _) => fired = true;
+                    void h(object? _, EventArgs __) => fired = true;
                     Model.RoadBought += h;
                     Model.PlaceRoad(c);
                     Model.RoadBought -= h;
@@ -298,9 +296,11 @@ namespace VolcanicTransport_Tests.GameModelTests
             if (lava == null) return;
 
             bool fired = false;
-            EventHandler h = (_, _) => fired = true;
+            void h(object? _, EventArgs __) => fired = true;
+            Model.RoadBought += h;
             Model.PlaceRoad(lava.Value);
-            Assert.IsTrue(true);
+            Model.RoadBought -= h;
+            Assert.IsFalse(fired);
         }
     }
     [TestClass]
@@ -348,7 +348,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             GameWorld.Instance.AddVehicle(v);
 
             bool fired = false;
-            EventHandler h = (_, _) => fired = true;
+            void h(object? _, EventArgs __) => fired = true;
             Model.GameOver += h;
 
             Model.UnPause();
@@ -374,8 +374,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void AddStopToVehicle_DuplicateStop_NotAddedAgain()
         {
             var route = new Route();
-            var bus = new Bus("DS1");
-            bus.Route = route;
+            var bus = new Bus("DS1")
+            {
+                Route = route
+            };
             var s = new AdvStation(new Coordinate(5, 5));
             GameWorld.Instance.GetField(new Coordinate(5, 5))!.Surface = s;
             GameWorld.Instance.Roadnetwork.RegisterNodeIfNeeded(new Coordinate(5, 5));
@@ -390,8 +392,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void AddStopToVehicle_WaitingVehicle_FiresRouteChanged()
         {
             var route = new Route();
-            var bus = new Bus("RC1");
-            bus.Route = route;
+            var bus = new Bus("RC1")
+            {
+                Route = route
+            };
             var s = new AdvStation(new Coordinate(6, 6));
             GameWorld.Instance.GetField(new Coordinate(6, 6))!.Surface = s;
 

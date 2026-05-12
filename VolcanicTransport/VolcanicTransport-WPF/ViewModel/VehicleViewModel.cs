@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
-using VolcanicTransport.Model.World.Roadnetwork;
 using System.Windows.Media;
+using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport_WPF.ViewModel
 {

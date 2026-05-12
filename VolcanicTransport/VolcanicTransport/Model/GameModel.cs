@@ -4,7 +4,6 @@ using VolcanicTransport.Model.Services;
 using VolcanicTransport.Model.TerrainGeneration;
 using VolcanicTransport.Model.TerrainGeneration.Generators;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -111,7 +110,7 @@ namespace VolcanicTransport.Model
             _economy = new EconomyService(GameSettings.StartingMoney);
             _building = new BuildingService(() => WorldInstance, _economy);
             _timer = new TimerService(() => WorldInstance, _economy);
-            _vehicles = new VehicleService(() => WorldInstance, _economy, () => _timer.Time);
+            _vehicles = new VehicleService(() => WorldInstance, _economy);
             _saveLoad = new SaveLoadService(
                 new SaveFileManager(new Zip2FileSaveFormat()),
                 _vehicles.HandleVehicleArrived);

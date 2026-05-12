@@ -1,6 +1,7 @@
 ﻿using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
+
+using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.WorldTests
 {
@@ -9,10 +10,10 @@ namespace VolcanicTransport_Tests.WorldTests
     public class CityBuildingTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
         private static City MakeCity(string name = "Szolnok", int x = 5, int y = 5)
-            => new City(name, new Coordinate(x, y));
+            => new(name, new Coordinate(x, y));
 
         [TestMethod]
         public void Constructor_WithCity_SetsCityName()
@@ -76,7 +77,7 @@ namespace VolcanicTransport_Tests.WorldTests
         public void RestoreReference_FindsCorrectCity()
         {
             var city = MakeCity("RestoreCity", 10, 10);
-            World.Instance.Cities.Add(city);
+            GameWorld.Instance.Cities.Add(city);
 
             var building = new CityBuilding("RestoreCity");
             var coord = new Coordinate(10, 10);
@@ -84,7 +85,7 @@ namespace VolcanicTransport_Tests.WorldTests
 
             Assert.AreEqual(city.ProductTypes.Count, building.ProductTypes.Count);
 
-            World.Instance.Cities.Remove(city);
+            GameWorld.Instance.Cities.Remove(city);
         }
     }
 }

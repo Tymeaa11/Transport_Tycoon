@@ -33,7 +33,7 @@ namespace VolcanicTransport.Model.World.Economy
 
         #region Constructors
         public FactoryStation(Coordinate coordinate, string stationName, Factory factory) :
-        base (
+        base(
             coordinate,
             stationName,
             new ProductBuffer(ProductType.HUMAN, 50),
@@ -84,7 +84,7 @@ namespace VolcanicTransport.Model.World.Economy
             return provided;
         }
 
-        
+
         public string Inspect()
         {
             var info = new StringBuilder();

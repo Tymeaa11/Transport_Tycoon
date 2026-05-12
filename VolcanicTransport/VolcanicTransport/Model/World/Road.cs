@@ -92,7 +92,7 @@ namespace VolcanicTransport.Model.World
                     if (higherCount >= 1)
                         RoadType = RoadType.INVALID;
                     else
-                        RoadType = baseType | RoadType.JUNCTION; 
+                        RoadType = baseType | RoadType.JUNCTION;
                     break;
             }
 

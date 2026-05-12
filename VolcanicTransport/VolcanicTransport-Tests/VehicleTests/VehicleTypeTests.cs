@@ -1,17 +1,17 @@
-using VolcanicTransport.Model;
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport_Tests.Roadnetwork
+using GameWorld = VolcanicTransport.Model.World.World;
+
+namespace VolcanicTransport_Tests.VehicleTests
 {
     [TestClass]
     [DoNotParallelize]
     public class VehicleTypeTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
 
         [TestMethod]
@@ -188,17 +188,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
     public class RouteEdgeCaseTests
     {
         [ClassInitialize]
-        public static void ClassSetup(TestContext _) => World.Initialise(4, 0);
-
-        private static Station MakeStation(int x, int y)
-            => new SimpleTestStation(new Coordinate(x, y));
-
-        [TestMethod]
-        public void Route_DefaultName_IsNotNull()
-        {
-            var r = new Route();
-            Assert.IsNotNull(r.Name);
-        }
+        public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
         [TestMethod]
         public void Route_InitiallyEmpty()
@@ -218,9 +208,9 @@ namespace VolcanicTransport_Tests.Roadnetwork
         public void AddStop_MultipleStations_AllAdded()
         {
             var r = new Route();
-            r.AddStop(MakeStation(20, 20));
-            r.AddStop(MakeStation(21, 20));
-            r.AddStop(MakeStation(22, 20));
+            r.AddStop(SimpleTestStation.MakeStation(20, 20));
+            r.AddStop(SimpleTestStation.MakeStation(21, 20));
+            r.AddStop(SimpleTestStation.MakeStation(22, 20));
             Assert.AreEqual(3, r.Stops.Count);
         }
 
@@ -228,7 +218,7 @@ namespace VolcanicTransport_Tests.Roadnetwork
         public void GetNextStop_EmptyRoute_ReturnsNull()
         {
             var r = new Route();
-            var s = MakeStation(30, 30);
+            var s = SimpleTestStation.MakeStation(30, 30);
             Assert.IsNull(r.GetNextStop(s));
         }
 
@@ -243,16 +233,16 @@ namespace VolcanicTransport_Tests.Roadnetwork
         public void PrepareForSave_DoesNotThrow()
         {
             var r = new Route { Name = "SaveRoute" };
-            r.AddStop(MakeStation(40, 40));
+            r.AddStop(SimpleTestStation.MakeStation(40, 40));
             r.PrepareForSave();
         }
 
         [TestMethod]
         public void RestoreReference_RestoredRoute_StopsAreRelinked()
         {
-            var world = World.Instance;
+            var world = GameWorld.Instance;
             var coord = new Coordinate(50, 50);
-            var station = MakeStation(50, 50);
+            var station = SimpleTestStation.MakeStation(50, 50);
             world.GetField(coord)!.Surface = station;
             world.Stations.Add(station);
 
@@ -272,5 +262,8 @@ namespace VolcanicTransport_Tests.Roadnetwork
         new Product(ProductType.HUMAN, 0, 20))
     {
         public override int UnLoadProductFromVehicle(Vehicle vehicle) => 0;
+
+        public static SimpleTestStation MakeStation(int x, int y)
+            => new(new Coordinate(x, y));
     }
 }

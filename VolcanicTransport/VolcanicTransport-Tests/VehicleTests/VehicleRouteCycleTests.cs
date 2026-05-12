@@ -1,5 +1,4 @@
 using VolcanicTransport.Model.Utils;
-using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 using GameWorld = VolcanicTransport.Model.World.World;
@@ -19,8 +18,8 @@ namespace VolcanicTransport_Tests.VehicleTests
         {
             var bus = new Bus("RC_Bus1");
             var route = new Route();
-            var s1 = MakeStation(10, 10);
-            var s2 = MakeStation(11, 10);
+            var s1 = SimpleStation.MakeStation(10, 10);
+            var s2 = SimpleStation.MakeStation(11, 10);
             route.AddStop(s1);
             route.AddStop(s2);
 
@@ -32,11 +31,13 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void AssignNewRoute_WhenMoving_SetsPendingRoute()
         {
-            var bus = new Bus("RC_Bus2");
-            bus.State = VehicleState.Moving;
+            var bus = new Bus("RC_Bus2")
+            {
+                State = VehicleState.Moving
+            };
             var route = new Route();
-            var s1 = MakeStation(12, 10);
-            var s2 = MakeStation(13, 10);
+            var s1 = SimpleStation.MakeStation(12, 10);
+            var s2 = SimpleStation.MakeStation(13, 10);
             route.AddStop(s1);
             route.AddStop(s2);
 
@@ -53,8 +54,8 @@ namespace VolcanicTransport_Tests.VehicleTests
             bus.RouteChanged += (_, _) => fired = true;
 
             var route = new Route();
-            var s1 = MakeStation(14, 10);
-            var s2 = MakeStation(15, 10);
+            var s1 = SimpleStation.MakeStation(14, 10);
+            var s2 = SimpleStation.MakeStation(15, 10);
             route.AddStop(s1);
             route.AddStop(s2);
 
@@ -66,8 +67,10 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void ClearRoute_SetsStateToWaiting()
         {
-            var bus = new Bus("Clear_Bus");
-            bus.State = VehicleState.Moving;
+            var bus = new Bus("Clear_Bus")
+            {
+                State = VehicleState.Moving
+            };
             bus.ClearRoute();
             Assert.AreEqual(VehicleState.Waiting, bus.State);
         }
@@ -96,9 +99,11 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void TryStartNextRoute_WhenWaitingNoRoute_StaysWaiting()
         {
-            var bus = new Bus("TSN_Bus1");
-            bus.State = VehicleState.Waiting;
-            bus.Route = null;
+            var bus = new Bus("TSN_Bus1")
+            {
+                State = VehicleState.Waiting,
+                Route = null
+            };
             bus.TryStartNextRoute();
             Assert.AreEqual(VehicleState.Waiting, bus.State);
         }
@@ -106,10 +111,12 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void TryStartNextRoute_WhenWaitingWithSingleStopRoute_StaysWaiting()
         {
-            var bus = new Bus("TSN_Bus2");
-            bus.State = VehicleState.Waiting;
+            var bus = new Bus("TSN_Bus2")
+            {
+                State = VehicleState.Waiting
+            };
             var route = new Route();
-            route.AddStop(MakeStation(20, 20));
+            route.AddStop(SimpleStation.MakeStation(20, 20));
             bus.Route = route;
             bus.TryStartNextRoute();
             Assert.AreEqual(VehicleState.Waiting, bus.State);
@@ -146,8 +153,10 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Update_LoadingState_IncrementsWaitTimer()
         {
-            var bus = new Bus("Loading_Bus");
-            bus.State = VehicleState.Loading;
+            var bus = new Bus("Loading_Bus")
+            {
+                State = VehicleState.Loading
+            };
             bus.Update(1.0);
             Assert.AreEqual(VehicleState.Loading, bus.State);
         }
@@ -155,8 +164,10 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Update_LoadingState_AfterFullWait_TransitionsToWaiting()
         {
-            var bus = new Bus("FullWait_Bus");
-            bus.State = VehicleState.Loading;
+            var bus = new Bus("FullWait_Bus")
+            {
+                State = VehicleState.Loading
+            };
             bus.Update(25.0);
             Assert.AreEqual(VehicleState.Waiting, bus.State);
         }
@@ -164,8 +175,10 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Update_WaitingState_StaysWaiting()
         {
-            var bus = new Bus("Wait_Bus");
-            bus.State = VehicleState.Waiting;
+            var bus = new Bus("Wait_Bus")
+            {
+                State = VehicleState.Waiting
+            };
             bus.Update(1.0);
             Assert.AreEqual(VehicleState.Waiting, bus.State);
         }
@@ -173,11 +186,13 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Update_LoadingComplete_WithPendingRoute_ConsumesRoute()
         {
-            var bus = new Bus("PR_Bus");
-            bus.State = VehicleState.Loading;
+            var bus = new Bus("PR_Bus")
+            {
+                State = VehicleState.Loading
+            };
             var pending = new Route();
-            pending.AddStop(MakeStation(60, 60));
-            pending.AddStop(MakeStation(61, 60));
+            pending.AddStop(SimpleStation.MakeStation(60, 60));
+            pending.AddStop(SimpleStation.MakeStation(61, 60));
             bus.PendingRoute = pending;
 
             bus.Update(25.0);
@@ -189,9 +204,11 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void Update_LoadingComplete_NoRoute_GoesToWaiting()
         {
-            var bus = new Bus("NR_Bus");
-            bus.Route = null;
-            bus.State = VehicleState.Loading;
+            var bus = new Bus("NR_Bus")
+            {
+                Route = null,
+                State = VehicleState.Loading
+            };
             bus.Update(25.0);
             Assert.AreEqual(VehicleState.Waiting, bus.State);
         }
@@ -201,8 +218,8 @@ namespace VolcanicTransport_Tests.VehicleTests
         {
             var bus = new Bus("Nav_Bus");
             var route = new Route();
-            route.AddStop(MakeStation(62, 62));
-            route.AddStop(MakeStation(63, 62));
+            route.AddStop(SimpleStation.MakeStation(62, 62));
+            route.AddStop(SimpleStation.MakeStation(63, 62));
             bus.Route = route;
             bus.CurrentStopIndex = 1;
             bus.State = VehicleState.Loading;
@@ -217,8 +234,8 @@ namespace VolcanicTransport_Tests.VehicleTests
         {
             var bus = new Bus("TSN_Valid");
             var route = new Route();
-            route.AddStop(MakeStation(70, 70));
-            route.AddStop(MakeStation(71, 70));
+            route.AddStop(SimpleStation.MakeStation(70, 70));
+            route.AddStop(SimpleStation.MakeStation(71, 70));
             bus.Route = route;
             bus.CurrentStopIndex = 1;
             bus.State = VehicleState.Waiting;
@@ -230,21 +247,16 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void AssignNewRoute_WhenWaiting_EmptyRoute_StaysWaiting()
         {
-            var bus = new Bus("AW_Empty");
-            bus.State = VehicleState.Waiting;
+            var bus = new Bus("AW_Empty")
+            {
+                State = VehicleState.Waiting
+            };
             var route = new Route();
             bus.AssignNewRoute(route);
             Assert.AreEqual(VehicleState.Waiting, bus.State);
         }
 
-        private static Station MakeStation(int x, int y)
-        {
-            var coord = new Coordinate(x, y);
-            var station = new SimpleStation(coord);
-            var field = GameWorld.Instance.GetField(coord);
-            if (field != null) field.Surface = station;
-            return station;
-        }
+
     }
 
     file class SimpleStation(Coordinate coord) : Station(
@@ -253,5 +265,14 @@ namespace VolcanicTransport_Tests.VehicleTests
         new Product(ProductType.HUMAN, 0, 20))
     {
         public override int UnLoadProductFromVehicle(Vehicle vehicle) => 0;
+
+        public static SimpleStation MakeStation(int x, int y)
+        {
+            var coord = new Coordinate(x, y);
+            var station = new SimpleStation(coord);
+            var field = GameWorld.Instance.GetField(coord);
+            if (field != null) field.Surface = station;
+            return station;
+        }
     }
 }

@@ -21,13 +21,13 @@ namespace VolcanicTransport.Model.Persistance
 
         public Zip2FileSaveFormat() { }
 
-        public void OpenZipForSaving(string filename) 
+        public void OpenZipForSaving(string filename)
         {
             Dispose();
             _zipArchive = new(new FileStream(filename, FileMode.Create), ZipArchiveMode.Create);
         }
 
-        public void OpenZipForLoading(string filename) 
+        public void OpenZipForLoading(string filename)
         {
             Dispose();
             _zipArchive = ZipFile.OpenRead(filename);

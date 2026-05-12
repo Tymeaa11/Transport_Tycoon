@@ -31,7 +31,7 @@ namespace VolcanicTransport.Model.World
 
         public void UpdateNeighbourReferences()
         {
-            if (!World.IsInitialised()) 
+            if (!World.IsInitialised())
                 return;
 
             North = World.Instance.GetField(Coordinate + Coordinate.North);

@@ -80,7 +80,7 @@ namespace VolcanicTransport_WPF.View
                     vm.MinimapTeleport((Vector)e.GetPosition(MinimapBounds));
                 }
 
-                
+
             }
         }
 

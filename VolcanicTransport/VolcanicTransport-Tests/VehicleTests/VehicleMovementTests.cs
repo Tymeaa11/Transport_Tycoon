@@ -3,7 +3,6 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 using GameWorld = VolcanicTransport.Model.World.World;
 
 namespace VolcanicTransport_Tests.VehicleTests
@@ -109,7 +108,6 @@ namespace VolcanicTransport_Tests.VehicleTests
             var bus = new Bus("Bridge_Bus");
             bus.StartJourney([bridge, road], alreadyOnRoad: true);
 
-            float speedBefore = bus.CurrentSpeed;
             bus.Update(0.001);
 
             Assert.IsTrue(bus.CurrentSpeed <= GameSettings.BridgeTypes[0].MaxSpeed + 0.001f);
@@ -188,7 +186,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         [TestMethod]
         public void StartJourney_NotAlreadyOnRoad_SetsPositionFromStation()
         {
-            var r1 = MakeRoad(95, 80);
+            MakeRoad(95, 80);
             var r2 = MakeRoad(96, 80);
             var startCoord = new Coordinate(95, 80);
             var city = new City("StartCity", startCoord);
@@ -232,8 +230,10 @@ namespace VolcanicTransport_Tests.VehicleTests
             bus.StartJourney([r1, r2], alreadyOnRoad: true);
             bus.PrepareForSave();
 
-            var bus2 = new Bus("Restore_Bus2");
-            bus2.SavedPathCoordinates = bus.SavedPathCoordinates;
+            var bus2 = new Bus("Restore_Bus2")
+            {
+                SavedPathCoordinates = bus.SavedPathCoordinates
+            };
             bus2.RestoreReference(new Coordinate(100, 80));
 
             Assert.AreEqual(r1, bus2.CurrentRoad);

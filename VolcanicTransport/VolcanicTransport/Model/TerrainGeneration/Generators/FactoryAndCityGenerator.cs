@@ -101,13 +101,13 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 }
             });
 
-            Coordinate[] roadCoords = {
+            Coordinate[] roadCoords = [
                 center + Coordinate.North,
                 center + Coordinate.West,
                 center,
                 center + Coordinate.East,
                 center + Coordinate.South
-            };
+            ];
 
             foreach (var coord in roadCoords)
             {
@@ -130,20 +130,20 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
 
         private void CreateFactory(Coordinate origin)
         {
-            if (_factoryTypesToGenerate.Count == 0) 
+            if (_factoryTypesToGenerate.Count == 0)
                 FillFactoriesToGenerate();
 
             var factoryType = World.World.Instance.SharedRandom.Next(0, _factoryTypesToGenerate.Count);
             Factory newFactory = _factoryTypesToGenerate[factoryType] switch
             {
-                0 => new CondensatorFactory(RandomNameGenerator.NewName(typeof(CondensatorFactory),World.World.Instance.SharedRandom.Next()), origin),
-                1 => new ConcreteFactory(RandomNameGenerator.NewName(typeof(ConcreteFactory),World.World.Instance.SharedRandom.Next()), origin),
-                2 => new SulfurProducer(RandomNameGenerator.NewName(typeof(SulfurProducer),World.World.Instance.SharedRandom.Next()), origin),
-                3 => new BoneProducer(RandomNameGenerator.NewName(typeof(BoneProducer),World.World.Instance.SharedRandom.Next()), origin),
-                4 => new AshProducer(RandomNameGenerator.NewName(typeof(AshProducer),World.World.Instance.SharedRandom.Next()), origin),
-                5 => new MushroomProducer(RandomNameGenerator.NewName(typeof(MushroomProducer),World.World.Instance.SharedRandom.Next()), origin),
-                6 => new SteamProducer(RandomNameGenerator.NewName(typeof(SteamProducer),World.World.Instance.SharedRandom.Next()), origin),
-                _ => new MushroomProducer(RandomNameGenerator.NewName(typeof(MushroomProducer),World.World.Instance.SharedRandom.Next()), origin)
+                0 => new CondensatorFactory(RandomNameGenerator.NewName(typeof(CondensatorFactory), World.World.Instance.SharedRandom.Next()), origin),
+                1 => new ConcreteFactory(RandomNameGenerator.NewName(typeof(ConcreteFactory), World.World.Instance.SharedRandom.Next()), origin),
+                2 => new SulfurProducer(RandomNameGenerator.NewName(typeof(SulfurProducer), World.World.Instance.SharedRandom.Next()), origin),
+                3 => new BoneProducer(RandomNameGenerator.NewName(typeof(BoneProducer), World.World.Instance.SharedRandom.Next()), origin),
+                4 => new AshProducer(RandomNameGenerator.NewName(typeof(AshProducer), World.World.Instance.SharedRandom.Next()), origin),
+                5 => new MushroomProducer(RandomNameGenerator.NewName(typeof(MushroomProducer), World.World.Instance.SharedRandom.Next()), origin),
+                6 => new SteamProducer(RandomNameGenerator.NewName(typeof(SteamProducer), World.World.Instance.SharedRandom.Next()), origin),
+                _ => new MushroomProducer(RandomNameGenerator.NewName(typeof(MushroomProducer), World.World.Instance.SharedRandom.Next()), origin)
             };
 
             _factoryTypesToGenerate.RemoveAt(factoryType);
