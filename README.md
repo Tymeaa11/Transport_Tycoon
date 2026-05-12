@@ -8,5 +8,5 @@ https://dr-bt-a5f23a.szofttech.gitlab-pages.hu/docs/index.html
 Code Coverage:
 https://dr-bt-a5f23a.szofttech.gitlab-pages.hu/coverage/
 
-Tutorial:
+Tutorial (placeholder):
 https://www.youtube.com/watch?v=dQw4w9WgXcQ
