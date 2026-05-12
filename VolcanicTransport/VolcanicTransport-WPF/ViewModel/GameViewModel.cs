@@ -13,7 +13,7 @@ namespace VolcanicTransport_WPF.ViewModel
 {
     public class GameViewModel : ViewModelBase
     {
-        private int BorderOffset = 20;
+        private readonly int BorderOffset = 20;
         public static GameModel GameModelInstance { get => GameModel.Instance; }
         public Coordinate WorldSizeInChunks => GameModel.WorldInstance.SizeInChunks;
         public int TileSize => GameSettings.FieldSize; //used to size the hovered field highlight
@@ -50,6 +50,7 @@ namespace VolcanicTransport_WPF.ViewModel
             set
             {
                 _isPausedView = value;
+                Camera.IsPaused = value;
                 OnPropertyChanged();
                 if (_isPausedView)
                 {
@@ -401,8 +402,6 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public ObservableCollection<VehicleViewModel> VehicleViewModels { get; } = [];
 
-        private Station? _firstSelectedStation = null;
-
         private VehicleViewModel? _selectedVehicle;
         public VehicleViewModel? SelectedVehicle
         {
@@ -461,7 +460,7 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public GameViewModel()
         {
-            Camera = new Camera();
+            Camera = new Camera(IsPausedView);
             MinimapSelector = new CameraToMinimap(Camera);
             Camera.CameraChanged += (s, e) => UpdateVisibleChunks();
 
@@ -511,54 +510,11 @@ namespace VolcanicTransport_WPF.ViewModel
                 string chosenName = NewVehicleName;
                 string? chosenType = SelectedVehicleTemplate.InternalType;
                 Route? chosenRoute = SelectedSavedRoute;
-                /*
-                Station firstStation = chosenRoute.Stops[0];
-                Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
 
-                Vehicle newVehicle = chosenType switch
-                {
-                    "CargoTruck" => new CargoTruck(chosenName),
-                    "MiniCargoTruck" => new MiniCargoTruck(chosenName),
-                    "TankerTruck" => new TankerTruck(chosenName),
-                    "MiniTankerTruck" => new MiniTankerTruck(chosenName),
-                    "MiniBus" => new MiniBus(chosenName),
-                    _ => new Bus(chosenName)
-                };
-
-                newVehicle.AssignNewRoute(chosenRoute);
-                newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
-
-                List<Road> path = [];
-                if (secondStation != null)
-                {
-                    var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
-                    RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == firstStation.Coordinate);
-                    RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondStation.Coordinate);
-
-                    if (startNode != null && endNode != null)
-                    {
-                        path = Pathfinder.FindPath(startNode, endNode) ?? [];
-                    }
-                }
-
-                if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
-                {
-                    path.Insert(0, firstStation);
-                }
-                if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
-                {
-                    path.Add(secondStation);
-                }
-
-                newVehicle.StartJourney(path, false, firstStation);
-                GameModelInstance.BuyVehicle(newVehicle);
-
-                System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
-                */
                 bool success = GameModelInstance.CreateAndStartVehicle(chosenType, chosenName, chosenRoute);
                 if (success)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
+                    Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
                 }
                 IsPurchasePanelVisible = false;
             });
@@ -645,7 +601,7 @@ namespace VolcanicTransport_WPF.ViewModel
                 if (SelectedSavedRoute != null)
                 {
                     CurrentBuildMode = BuildMode.EDIT_GLOBAL_ROUTE;
-                    System.Diagnostics.Debug.WriteLine($"Szerkesztés indul: {SelectedSavedRoute.Name}. Kattints a megállókra!");
+                    Debug.WriteLine($"Szerkesztés indul: {SelectedSavedRoute.Name}. Kattints a megállókra!");
                 }
             });
 
@@ -655,7 +611,6 @@ namespace VolcanicTransport_WPF.ViewModel
                 {
                     SelectedVehicle.GetVehicle.ClearRoute();
 
-                    _firstSelectedStation = null;
                     CurrentBuildMode = BuildMode.BUY_VEHICLE;
                     Debug.WriteLine($"Menetrend törölve a {SelectedVehicle.GetName} járművön. Válassz új start állomást!");
                 }
@@ -672,6 +627,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         private void InitialiseAfter()
         {
+            Camera.IsPaused = IsPausedView;
+
             GameModel.WorldInstance.ChunkMatrix.ReadEach((x, y, c) =>
             {
                 ChunkViewModel chunkViewModel = new(c);
@@ -741,6 +698,7 @@ namespace VolcanicTransport_WPF.ViewModel
         public void InitialiseNewGame()
         {
             GameModel.InitialiseNewGame(GameSettings.DefaultWorldSize, new Random().Next());
+            IsPausedView = false;
             InitialiseAfter();
         }
 

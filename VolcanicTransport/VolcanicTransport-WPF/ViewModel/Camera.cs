@@ -23,6 +23,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public bool IsMovingRight { get; set; }
         public double Scale => _scale;
 
+        public bool IsPaused { get; set; }
+
         #region Camera Config
         private const double CameraMovementSpeed = 8000;
         private const double MovementDrag = 0.005;
@@ -61,7 +63,7 @@ namespace VolcanicTransport_WPF.ViewModel
         #endregion
 
         #region Constructor
-        public Camera()
+        public Camera(bool isPaused)
         {
             Position = new Vector(0, 0);
             _velocity = new Vector(0, 0);
@@ -69,7 +71,7 @@ namespace VolcanicTransport_WPF.ViewModel
             _scale = 1;
             CalculateZoomFromScale();
             _previousScale = _scale;
-
+            IsPaused = isPaused;
         }
         #endregion
 
@@ -137,6 +139,8 @@ namespace VolcanicTransport_WPF.ViewModel
 
         public void Zoom(double delta)
         {
+            if (IsPaused) return;
+
             if (delta > 0)
                 _zoomSpeed += CameraZoomSpeed;
             else
