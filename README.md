@@ -6,6 +6,8 @@ Code Coverage:
 https://dr-bt-a5f23a.szofttech.gitlab-pages.hu/coverage/
 
 
+![coverage](https://szofttech.inf.elte.hu/szofttech-ab-2026/group-03/dr.bt/badges/master/coverage.svg)
+
 ## Getting started
 
 To make it easy for you to get started with GitLab, here's a list of recommended next steps.
