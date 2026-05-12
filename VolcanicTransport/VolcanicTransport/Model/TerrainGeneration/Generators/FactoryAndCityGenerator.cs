@@ -101,13 +101,13 @@ namespace VolcanicTransport.Model.TerrainGeneration.Generators
                 }
             });
 
-            Coordinate[] roadCoords = {
+            Coordinate[] roadCoords = [
                 center + Coordinate.North,
                 center + Coordinate.West,
                 center,
                 center + Coordinate.East,
                 center + Coordinate.South
-            };
+            ];
 
             foreach (var coord in roadCoords)
             {

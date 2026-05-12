@@ -437,15 +437,15 @@ namespace VolcanicTransport_WPF.ViewModel
             set { _newVehicleName = value; OnPropertyChanged(); }
         }
 
-        public List<VehicleTemplate> VehicleTemplates { get; } = new()
-        {
+        public List<VehicleTemplate> VehicleTemplates { get; } =
+        [
             new() { Name = "Bus", Price = 6000, CargoDescription = "Passengers", InternalType = "Bus" },
             new() { Name = "Mini Bus", Price = 4000, CargoDescription = "Passengers", InternalType = "MiniBus" },
             new() { Name = "Cargo Truck", Price = 11000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "CargoTruck" },
             new() { Name = "Mini Cargo", Price = 8000, CargoDescription = "Ash, Sulfur, Mushroom, Bone", InternalType = "MiniCargoTruck" },
             new() { Name = "Tanker Truck", Price = 10000, CargoDescription = "Steam, Water, Concrete", InternalType = "TankerTruck" },
             new() { Name = "Mini Tanker", Price = 7000, CargoDescription = "Steam, Water, Concrete", InternalType = "MiniTankerTruck" }
-        };
+        ];
 
         private double _accumulator = 0;
         private const double FIXED_DELTA_TIME = 1.0 / 60.0; // Fix 60 FPS-es fizikai lépés (0.0166s)

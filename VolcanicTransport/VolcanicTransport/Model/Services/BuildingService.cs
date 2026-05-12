@@ -5,21 +5,15 @@ using VolcanicTransport.Model.World.Roadnetwork;
 
 namespace VolcanicTransport.Model.Services
 {
-    public class BuildingService
+    public class BuildingService(Func<World.World> getWorld, EconomyService economy)
     {
-        private readonly Func<World.World> _getWorld;
-        private readonly EconomyService _economy;
+        private readonly Func<World.World> _getWorld = getWorld;
+        private readonly EconomyService _economy = economy;
 
         private World.World WorldInstance => _getWorld();
 
         public event EventHandler? OnPlacementFailed;
         public event EventHandler? RoadBought;
-
-        public BuildingService(Func<World.World> getWorld, EconomyService economy)
-        {
-            _getWorld = getWorld;
-            _economy = economy;
-        }
 
         public bool IsBuildable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsBuildable() ?? false;
         public bool IsHeightenable(Coordinate coordinate) => WorldInstance.GetField(coordinate)?.IsHeightenable() ?? false;

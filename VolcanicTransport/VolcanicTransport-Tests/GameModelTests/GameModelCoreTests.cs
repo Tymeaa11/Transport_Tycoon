@@ -4,7 +4,6 @@ using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
-using static VolcanicTransport.Model.World.Roadnetwork.Vehicle;
 
 namespace VolcanicTransport_Tests.GameModelTests
 {
@@ -61,7 +60,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void Pause_SetsIsPausedTrue_AndFiresEvent()
         {
             bool eventFired = false;
-            EventHandler handler = (_, _) => eventFired = true;
+            void handler(object? _, EventArgs __) => eventFired = true;
             Model.GamePaused += handler;
             Model.Pause();
             Model.GamePaused -= handler;
@@ -75,7 +74,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool eventFired = false;
-            EventHandler handler = (_, _) => eventFired = true;
+            void handler(object? _, EventArgs __) => eventFired = true;
             Model.GameUnpaused += handler;
             Model.UnPause();
             Model.GameUnpaused -= handler;
@@ -89,7 +88,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool fired = false;
-            EventHandler handler = (_, _) => fired = true;
+            void handler(object? _, EventArgs __) => fired = true;
             Model.TimescaleChanged += handler;
             Model.ChangeTimeSpeed1X();
             Model.TimescaleChanged -= handler;
@@ -103,7 +102,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool fired = false;
-            EventHandler handler = (_, _) => fired = true;
+            void handler(object? _, EventArgs __) => fired = true;
             Model.TimescaleChanged += handler;
             Model.ChangeTimeSpeed2X();
             Model.TimescaleChanged -= handler;
@@ -117,7 +116,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool fired = false;
-            EventHandler handler = (_, _) => fired = true;
+            void handler(object? _, EventArgs __) => fired = true;
             Model.TimescaleChanged += handler;
             Model.ChangeTimeSpeed4X();
             Model.TimescaleChanged -= handler;
@@ -150,7 +149,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.UnPause();
             bool fired = false;
-            EventHandler handler = (_, _) => fired = true;
+            void handler(object? _, EventArgs __) => fired = true;
             Model.GameAdvanced += handler;
             Model.Update(0.1);
             Model.GameAdvanced -= handler;
@@ -224,7 +223,7 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void BuyVehicle_SufficientFunds_FiresVehicleBoughtEvent()
         {
             bool fired = false;
-            EventHandler handler = (_, _) => fired = true;
+            void handler(object? _, EventArgs __) => fired = true;
             Model.VehicleBought += handler;
             Model.BuyVehicle(new Bus("BuyEv"));
             Model.VehicleBought -= handler;
@@ -271,7 +270,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var v = new Bus("SellEv");
             Model.BuyVehicle(v);
             bool fired = false;
-            EventHandler handler = (_, _) => fired = true;
+            void handler(object? _, EventArgs __) => fired = true;
             Model.VehicleSold += handler;
             Model.SellVehicle(v);
             Model.VehicleSold -= handler;
@@ -393,8 +392,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void AddStopToVehicle_WithRoute_AddsStop()
         {
             var route = new Route();
-            var bus = new Bus("StopTest");
-            bus.Route = route;
+            var bus = new Bus("StopTest")
+            {
+                Route = route
+            };
             var station = new TestStation(new Coordinate(5, 5));
             World.GetField(new Coordinate(5, 5))!.Surface = station;
             World.Roadnetwork.RegisterNodeIfNeeded(new Coordinate(5, 5));

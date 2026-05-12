@@ -5,7 +5,7 @@ namespace VolcanicTransport.Model.Utils
     
     public class RandomNameGenerator
     {
-        private static readonly Dictionary<Type, NameSet> names = new();
+        private static readonly Dictionary<Type, NameSet> names = [];
 
         public static void Reset()
         {

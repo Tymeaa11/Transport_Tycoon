@@ -3,17 +3,12 @@ using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.Services
 {
-    public class EconomyService
+    public class EconomyService(double startingMoney)
     {
-        public double PlayerMoney { get; private set; }
+        public double PlayerMoney { get; private set; } = startingMoney;
 
         public event EventHandler? MoneyChanged;
         public event EventHandler? GameOver;
-
-        public EconomyService(double startingMoney)
-        {
-            PlayerMoney = startingMoney;
-        }
 
         public bool TryPurchase(double amount)
         {
