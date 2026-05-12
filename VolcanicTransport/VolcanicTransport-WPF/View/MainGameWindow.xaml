@@ -162,7 +162,7 @@
         </Border>
 
 
-        <Border Panel.ZIndex="200"  VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" Margin="0,0,20,40" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Border Panel.ZIndex="200"  VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="200" Margin="20,0,0,80" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsVehiclePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="IsEnabled" Value="True"/>
@@ -209,7 +209,7 @@
             </StackPanel>
         </Border>
 
-        <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="220" Margin="20,0,0,80" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsTimetablePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Border VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="220" Margin="0,0,20,40" Padding="15" Background="#E6FFFFFF" BorderBrush="#FF808080" BorderThickness="1" CornerRadius="5" Visibility="{Binding IsTimetablePanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Border.Style>
                 <Style TargetType="Border">
                     <Style.Triggers>

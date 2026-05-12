@@ -570,7 +570,10 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public void ClearRoute()
         {
             if (CurrentRoad != null)
+            {
+                if (CurrentRoad is Station station) station.IsOccupied = false;
                 World.Instance.VehicleManager.UnregisterVehicleFromField(this, CurrentRoad.Coordinate);
+            }
 
             State = VehicleState.Waiting;
             CurrentSpeed = 0;

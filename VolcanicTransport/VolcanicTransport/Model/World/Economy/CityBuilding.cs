@@ -12,9 +12,13 @@ namespace VolcanicTransport.Model.World.Economy
         public string CityName { get; private set; }
 
         [JsonIgnore]
-        public List<ProductType> ProductTypes => _cityReference!.ProductTypes;
-        [JsonIgnore]
         private City? _cityReference;
+
+        private City CityRef => _cityReference
+            ?? throw new InvalidOperationException($"RestoreReference() not yet called for CityBuilding '{CityName}'.");
+
+        [JsonIgnore]
+        public List<ProductType> ProductTypes => CityRef.ProductTypes;
         #endregion
         #region Constructors
 

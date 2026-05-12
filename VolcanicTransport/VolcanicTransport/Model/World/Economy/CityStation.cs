@@ -15,8 +15,11 @@ namespace VolcanicTransport.Model.World.Economy
         [JsonIgnore]
         private City? _city;
 
+        private City CityRef => _city
+            ?? throw new InvalidOperationException($"RestoreReference() not yet called for CityStation '{CityName}'.");
+
         [JsonIgnore]
-        public List<ProductType> GetCityProductNeeds => _city!.ProductTypes;
+        public List<ProductType> GetCityProductNeeds => CityRef.ProductTypes;
         #endregion
 
         #region Constructors
@@ -43,7 +46,7 @@ namespace VolcanicTransport.Model.World.Economy
         #region Methods
         public override int UnLoadProductFromVehicle(Vehicle vehicle)
         {
-            if (vehicle == null || !_city!.IsProductNeeded(vehicle.CurrentType))
+            if (vehicle == null || !CityRef.IsProductNeeded(vehicle.CurrentType))
             {
                 return 0;
             }

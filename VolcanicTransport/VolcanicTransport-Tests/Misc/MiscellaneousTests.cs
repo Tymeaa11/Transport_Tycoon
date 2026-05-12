@@ -270,55 +270,54 @@ namespace VolcanicTransport_Tests.Misc
     // ──────────────────────────────────────────────────────
     [TestClass]
     [DoNotParallelize]
-    public class VehicleManagerExtendedTests
+    public class WorldVehicleTrackingTests
     {
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
-        [TestMethod]
-        public void AddVehicle_ThenGetVehicles_ContainsVehicle()
+        [TestInitialize]
+        public void ClearVehicles()
         {
-            var vm = new VehicleManager();
-            var bus = new Bus("VME1");
+            foreach (var v in GameWorld.Instance.Vehicles.ToList())
+                GameWorld.Instance.RemoveVehicle(v);
+        }
 
-            vm.AddVehicle(bus);
-
-            CollectionAssert.Contains((System.Collections.ICollection)vm.GetVehicles(), bus);
-            vm.RemoveVehicle(bus);
+        [TestMethod]
+        public void AddVehicle_ThenVehiclesContainsIt()
+        {
+            var bus = new Bus("WVT1");
+            GameWorld.Instance.AddVehicle(bus);
+            Assert.IsTrue(GameWorld.Instance.Vehicles.Contains(bus));
+            GameWorld.Instance.RemoveVehicle(bus);
         }
 
         [TestMethod]
         public void RemoveVehicle_AfterAdd_IsAbsent()
         {
-            var vm = new VehicleManager();
-            var bus = new Bus("VME2");
-            vm.AddVehicle(bus);
-
-            vm.RemoveVehicle(bus);
-
-            Assert.IsFalse(vm.GetVehicles().Contains(bus));
+            var bus = new Bus("WVT2");
+            GameWorld.Instance.AddVehicle(bus);
+            GameWorld.Instance.RemoveVehicle(bus);
+            Assert.IsFalse(GameWorld.Instance.Vehicles.Contains(bus));
         }
 
         [TestMethod]
-        public void Update_CallsUpdateOnAllVehicles()
+        public void WorldUpdate_TransitionsMovingVehicleWithNoPath_ToWaiting()
         {
-            var vm = new VehicleManager();
-            var bus = new Bus("VME3");
+            var bus = new Bus("WVT3");
             bus.State = VehicleState.Moving;
-            vm.AddVehicle(bus);
+            GameWorld.Instance.AddVehicle(bus);
 
-            vm.Update(1.0);
+            GameWorld.Instance.Update(1.0);
 
             // Vehicle was Moving with no path — should transition to Waiting
             Assert.AreEqual(VehicleState.Waiting, bus.State);
-            vm.RemoveVehicle(bus);
+            GameWorld.Instance.RemoveVehicle(bus);
         }
 
         [TestMethod]
-        public void GetVehicles_EmptyManager_ReturnsEmptyList()
+        public void Vehicles_InitiallyEmpty_AfterClear()
         {
-            var vm = new VehicleManager();
-            Assert.AreEqual(0, vm.GetVehicles().Count);
+            Assert.AreEqual(0, GameWorld.Instance.Vehicles.Count);
         }
     }
 

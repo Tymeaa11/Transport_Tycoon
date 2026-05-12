@@ -1,4 +1,6 @@
-﻿using VolcanicTransport.Model.Utils;
+﻿using VolcanicTransport.Model;
+using VolcanicTransport.Model.Persistance;
+using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 
@@ -106,6 +108,87 @@ namespace VolcanicTransport_Tests.WorldTests
             Assert.AreEqual(factory.FinalProduct.ProductType, building.FinalProduct);
 
             World.Instance.Factories.Remove(factory);
+        }
+    }
+
+    [TestClass]
+    [DoNotParallelize]
+    public class CheckIfFactoryStateIsPreservedTests
+    {
+        private string? _tempFile;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _tempFile = Path.GetTempFileName() + ".zip";
+            GameModel.InitialiseNewGame(4, 8888);
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            if (_tempFile != null && File.Exists(_tempFile))
+                File.Delete(_tempFile);
+        }
+
+        [TestMethod]
+        public void CheckIfFactoryStateIsPeserved_ProductTypeAndName()
+        {
+            var world = World.Instance;
+
+            if (world.Factories.Count == 0) return;
+
+            var original = world.Factories[0];
+            string originalName = original.Name;
+            ProductType originalFinalProduct = original.FinalProduct.ProductType;
+
+            GameModel.Instance.SaveGame(_tempFile!);
+            GameModel.InitialiseLoadedGame(_tempFile!);
+
+            var restored = World.Instance.Factories.FirstOrDefault(f => f.Name == originalName);
+            Assert.IsNotNull(restored, "A gyár nem található betöltés után.");
+            Assert.AreEqual(originalFinalProduct, restored.FinalProduct.ProductType,
+                "A gyár végterméke megváltozott betöltés után.");
+        }
+
+        [TestMethod]
+        public void CheckIfFactoryStateIsPeserved_FactoryCount()
+        {
+            int countBefore = World.Instance.Factories.Count;
+            GameModel.Instance.SaveGame(_tempFile!);
+            GameModel.InitialiseLoadedGame(_tempFile!);
+            Assert.AreEqual(countBefore, World.Instance.Factories.Count,
+                "Gyárak száma megváltozott betöltés után.");
+        }
+
+        [TestMethod]
+        public void CheckIfFactoryStateIsPeserved_FactoryBuildingLinkRestored()
+        {
+            var world = World.Instance;
+            if (world.Factories.Count == 0) return;
+
+            var factory = world.Factories[0];
+            var coord = new Coordinate(2, 2);
+
+            var field = world.GetField(coord);
+            if (field == null || field.Surface != null) return;
+
+            var building = new FactoryBuilding(factory);
+            field.Surface = building;
+            factory.AddField(field);
+
+            GameModel.Instance.SaveGame(_tempFile!);
+            GameModel.InitialiseLoadedGame(_tempFile!);
+
+            var loadedField = World.Instance.GetField(coord);
+            var loadedBuilding = loadedField?.Surface as FactoryBuilding;
+
+            Assert.IsNotNull(loadedBuilding, "A gyárépület nem töltődött be.");
+            Assert.AreEqual(factory.Name, loadedBuilding.FactoryName,
+                "A gyárépület helytelen gyárhoz kapcsolódik betöltés után.");
+
+            Assert.AreEqual(factory.FinalProduct.ProductType, loadedBuilding.FinalProduct,
+                "A gyárépület FinalProduct tulajdonsága nem helyesen állítódott vissza.");
         }
     }
 }
