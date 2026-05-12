@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using VolcanicTransport.Model.World;
 
 namespace VolcanicTransport.Model.Services
 {
@@ -44,6 +45,13 @@ namespace VolcanicTransport.Model.Services
 
             Debug.WriteLine($"Havi kiadások levonva: -{totalExpense}$ (Járművek száma: {vehicleCount})");
             return able;
+        }
+
+        public static double GetMushroomCosts(Field field)
+        {
+            if (field.Surface is not Mushroom mushroom) return 0d;
+            var stage = (double)mushroom.GrowthStage + 1;
+            return stage * GameSettings.MushroomPricePerUnit;
         }
     }
 }
