@@ -240,8 +240,8 @@ namespace VolcanicTransport.Model.Services
             var factory = WorldInstance.Factories.FirstOrDefault(f => f.OriginCoordinate.Distance(coord) <= 4);
 
             Station? newStation = null;
-            if (city != null) newStation = new CityStation(city, coord, city.Name + " megálló");
-            else if (factory != null) newStation = new FactoryStation(coord, factory.Name + " megálló", factory);
+            if (city != null) newStation = new CityStation(city, coord, city.Name + " megálló " + coord);
+            else if (factory != null) newStation = new FactoryStation(coord, factory.Name + " megálló" + coord, factory);
 
             if (newStation == null || !_economy.TryPurchase(stationCost)) return false;
 
