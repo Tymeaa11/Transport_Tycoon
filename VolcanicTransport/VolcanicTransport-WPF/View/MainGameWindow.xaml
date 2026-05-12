@@ -9,6 +9,7 @@
         mc:Ignorable="d"
         Title="VolcanicTransport" Height="450" Width="800"
         x:Name="RootWindow"
+        Background="#930000"
         >
 
     <Window.Resources>
@@ -77,7 +78,6 @@
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <!-- magic suspected here -->
                     <Rectangle Width="18" Height="9" Fill="{Binding VehicleColor}" RadiusX="2" RadiusY="2">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
