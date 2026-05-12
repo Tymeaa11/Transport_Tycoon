@@ -157,6 +157,8 @@ namespace VolcanicTransport_WPF.ViewModel
             Field? field = GameModel.WorldInstance.GetField(coord);
             if (field == null) return;
 
+            bool needsTooltipRefresh = false;
+
             switch (CurrentBuildMode)
             {
                 case BuildMode.SELECT_STATION:
@@ -164,8 +166,11 @@ namespace VolcanicTransport_WPF.ViewModel
                     break;
 
                 case BuildMode.ROAD:
-                    if (field.IsBuildable()) 
+                    if (field.IsBuildable())
+                    {
                         GameModelInstance.PlaceRoad(coord);
+                        needsTooltipRefresh = true;
+                    }
                     break;
 
                 case BuildMode.STATION:
@@ -175,10 +180,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
                 case BuildMode.HEIGHTEN:
                     GameModelInstance.HeightenField(coord);
+                    needsTooltipRefresh = true;
                     break;
 
                 case BuildMode.LOWER:
                     GameModelInstance.LowerField(coord);
+                    needsTooltipRefresh = true;
                     break;
                 case BuildMode.EDIT_GLOBAL_ROUTE:
                     if (field.Surface is Station clickedGlobalStation && SelectedSavedRoute != null)
@@ -195,6 +202,11 @@ namespace VolcanicTransport_WPF.ViewModel
                 default:
                     // Handle BuildMode.NONE or unhandled cases
                     break;
+            }
+
+            if (needsTooltipRefresh)
+            {
+                UpdateHoveredCoordinateAndTooltips(_lastMousePosition);
             }
         }
 
@@ -244,7 +256,7 @@ namespace VolcanicTransport_WPF.ViewModel
             set { _selectedSavedRoute = value; OnPropertyChanged(); }
         }
 
-        private string _newRouteName = "Új Járat 1";
+        private string _newRouteName = "New Route 1";
         public string NewRouteName
         {
             get => _newRouteName;
@@ -509,54 +521,16 @@ namespace VolcanicTransport_WPF.ViewModel
                                     "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+                if (string.IsNullOrWhiteSpace(NewVehicleName))
+                {
+                    MessageBox.Show("Please enter a name for the new vehicle!",
+                "Name Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 string chosenName = NewVehicleName;
                 string? chosenType = SelectedVehicleTemplate.InternalType;
                 Route? chosenRoute = SelectedSavedRoute;
-                /*
-                Station firstStation = chosenRoute.Stops[0];
-                Station? secondStation = chosenRoute.Stops.Count > 1 ? chosenRoute.Stops[1] : null;
-
-                Vehicle newVehicle = chosenType switch
-                {
-                    "CargoTruck" => new CargoTruck(chosenName),
-                    "MiniCargoTruck" => new MiniCargoTruck(chosenName),
-                    "TankerTruck" => new TankerTruck(chosenName),
-                    "MiniTankerTruck" => new MiniTankerTruck(chosenName),
-                    "MiniBus" => new MiniBus(chosenName),
-                    _ => new Bus(chosenName)
-                };
-
-                newVehicle.AssignNewRoute(chosenRoute);
-                newVehicle.CurrentStopIndex = secondStation != null ? 1 : 0;
-
-                List<Road> path = [];
-                if (secondStation != null)
-                {
-                    var nodes = GameModel.WorldInstance.Roadnetwork.NodeMap;
-                    RoadNode? startNode = nodes.Values.FirstOrDefault(n => n.Coordinate == firstStation.Coordinate);
-                    RoadNode? endNode = nodes.Values.FirstOrDefault(n => n.Coordinate == secondStation.Coordinate);
-
-                    if (startNode != null && endNode != null)
-                    {
-                        path = Pathfinder.FindPath(startNode, endNode) ?? [];
-                    }
-                }
-
-                if (path.Count == 0 || path.First().Coordinate != firstStation.Coordinate)
-                {
-                    path.Insert(0, firstStation);
-                }
-                if (secondStation != null && path.Last().Coordinate != secondStation.Coordinate)
-                {
-                    path.Add(secondStation);
-                }
-
-                newVehicle.StartJourney(path, false, firstStation);
-                GameModelInstance.BuyVehicle(newVehicle);
-
-                System.Diagnostics.Debug.WriteLine($"Új busz sikeresen megvéve: {chosenName} ({chosenType}), Járat: {chosenRoute.Name}");
-                */
                 bool success = GameModelInstance.CreateAndStartVehicle(chosenType, chosenName, chosenRoute);
                 if (success)
                 {
@@ -572,7 +546,7 @@ namespace VolcanicTransport_WPF.ViewModel
             OpenPurchasePanelCommand = new DelegateCommand(_ =>
             {
                 IsPurchasePanelVisible = true;
-                NewRouteName = "New vehicle";
+                NewVehicleName = "New vehicle";
             });
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
             QuitToMainMenuCommand = new DelegateCommand(_ =>
@@ -607,7 +581,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         Debug.WriteLine($"[Járat] '{currentRoute.Name}' elmentve a globális listába!");
                     }
 
-                    NewRouteName = $"Új Járat {SavedRoutes.Count + 1}";
+                    NewRouteName = $"New route {SavedRoutes.Count + 1}";
                 }
             });
 
@@ -635,11 +609,17 @@ namespace VolcanicTransport_WPF.ViewModel
 
             CreateGlobalRouteCommand = new DelegateCommand(_ =>
             {
+                if (string.IsNullOrWhiteSpace(NewRouteName))
+                {
+                    MessageBox.Show("Please enter a name for the new route!",
+                                    "Name Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 var newRoute = new Route { Name = NewRouteName };
                 SavedRoutes.Add(newRoute);
                 GameModel.WorldInstance.AddRoute(newRoute);
                 SelectedSavedRoute = newRoute;
-                NewRouteName = $"Járat {SavedRoutes.Count + 1}";
+                NewRouteName = $"New Route {SavedRoutes.Count + 1}";
             });
 
             EditGlobalRouteCommand = new DelegateCommand(_ =>

@@ -43,9 +43,23 @@ namespace VolcanicTransport_WPF.ViewModel
                 OnPropertyChanged(nameof(GetCurrentLoad));
                 OnPropertyChanged(nameof(Capacity));
                 OnPropertyChanged(nameof(SpeedDisplay));
+                RefreshScheduleList();
             };
-            _vehicle.RouteChanged += (sender, args) => RefreshScheduleList();
+            _vehicle.RouteChanged += (sender, args) =>
+            {
+                SubscribeToRouteEvents();
+                RefreshScheduleList();
+            };
+            SubscribeToRouteEvents();
             RefreshScheduleList();
+        }
+
+        private void SubscribeToRouteEvents()
+        {
+            if (_vehicle.Route != null)
+            {
+                _vehicle.Route.Stops.CollectionChanged += (s, e) => RefreshScheduleList();
+            }
         }
 
         private void RefreshScheduleList()
@@ -61,12 +75,12 @@ namespace VolcanicTransport_WPF.ViewModel
                     {
                         var stop = activeRoute.Stops[i];
                         string prefix = (i == _vehicle.CurrentStopIndex && _vehicle.PendingRoute == null) ? "➔ " : "   ";
-                        ScheduleList.Add($"{prefix}Állomás: {stop.Coordinate.X}, {stop.Coordinate.Y}");
+                        ScheduleList.Add($"{prefix}{stop.StationName}: {stop.Coordinate.X}, {stop.Coordinate.Y}");
                     }
                 }
                 else
                 {
-                    ScheduleList.Add("Nincs menetrend megadva.");
+                    ScheduleList.Add("No timetable assigned.");
                 }
             });
         }
