@@ -51,7 +51,7 @@ namespace VolcanicTransport.Model.Services
                 _ => new Bus(vehicleName)
             };
 
-            if (_economy.PlayerMoney<newVehicle.Price)
+            if (economy.PlayerMoney<newVehicle.Price)
                 return false;
 
             newVehicle.AssignNewRoute(chosenRoute);
