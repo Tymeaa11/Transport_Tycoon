@@ -60,6 +60,7 @@ test-job:   # This job runs in the test stage.
       coverage_report:
           coverage_format: cobertura
           path: ./VolcanicTransport/*/TestResults/*/coverage.cobertura.xml
+  coverage: '/TOTAL_COVERAGE=(\d+.\d+)/'
 
 pages:
   stage: deploy
