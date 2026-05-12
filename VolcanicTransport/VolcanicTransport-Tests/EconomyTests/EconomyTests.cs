@@ -69,7 +69,7 @@ namespace VolcanicTransport_Tests.EconomyTests
         [TestMethod]
         public void Buffer_ReciveProduct_ShouldRejectEverything()
         {
-            var buffer = new ProductBuffer(ProductType.ASH, 100, 0);
+            var buffer = new ProductBuffer(ProductType.ASH, 100);
             var tanker = new TankerTruck("TestTanker");
             tanker.Load(50, ProductType.WATER);
 
@@ -95,7 +95,7 @@ namespace VolcanicTransport_Tests.EconomyTests
         [TestMethod]
         public void Buffer_FillVehicle_EmptyBuffer_ShouldDoNothing()
         {
-            var buffer = new ProductBuffer(ProductType.STEAM, 100, 0);
+            var buffer = new ProductBuffer(ProductType.STEAM, 100);
             var tanker = new TankerTruck("TestTanker");
 
             int filled = buffer.FillVehicle(tanker);

@@ -51,7 +51,7 @@ namespace VolcanicTransport_Tests.Persistance
                     var f = w.GetField(c);
                     if (f != null && f.Surface == null && f.Type == FieldType.LOW_LANDS)
                     {
-                        f.Surface = new Mushroom(c, MushroomGrowthStage.SPROUT);
+                        f.Surface = new Mushroom(c);
                         mushroomCoord = c;
                         break;
                     }

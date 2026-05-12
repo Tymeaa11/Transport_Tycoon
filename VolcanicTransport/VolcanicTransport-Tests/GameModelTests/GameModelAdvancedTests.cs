@@ -226,10 +226,10 @@ namespace VolcanicTransport_Tests.GameModelTests
                     if (fe == null || fe.Surface != null || fe.Type != FieldType.LOW_LANDS) continue;
 
                     bool fired = false;
-                    void h(object? _, EventArgs __) => fired = true;
-                    Model.RoadBought += h;
+                    void H(object? _, EventArgs __) => fired = true;
+                    Model.RoadBought += H;
                     Model.PlaceRoad(c);
-                    Model.RoadBought -= h;
+                    Model.RoadBought -= H;
 
                     if (fired) return;
                 }
@@ -296,10 +296,10 @@ namespace VolcanicTransport_Tests.GameModelTests
             if (lava == null) return;
 
             bool fired = false;
-            void h(object? _, EventArgs __) => fired = true;
-            Model.RoadBought += h;
+            void H(object? _, EventArgs __) => fired = true;
+            Model.RoadBought += H;
             Model.PlaceRoad(lava.Value);
-            Model.RoadBought -= h;
+            Model.RoadBought -= H;
             Assert.IsFalse(fired);
         }
     }
@@ -348,13 +348,13 @@ namespace VolcanicTransport_Tests.GameModelTests
             GameWorld.Instance.AddVehicle(v);
 
             bool fired = false;
-            void h(object? _, EventArgs __) => fired = true;
-            Model.GameOver += h;
+            void H(object? _, EventArgs __) => fired = true;
+            Model.GameOver += H;
 
             Model.UnPause();
             Model.Update(601);
 
-            Model.GameOver -= h;
+            Model.GameOver -= H;
             GameWorld.Instance.RemoveVehicle(v);
 
             Assert.IsTrue(fired, "GameOver should fire when expenses exceed funds.");

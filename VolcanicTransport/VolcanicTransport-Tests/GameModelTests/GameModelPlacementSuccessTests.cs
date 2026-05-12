@@ -191,7 +191,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var coord = new Coordinate(42, 40);
             var field = W.GetField(coord)!;
             field.SetFieldTypeTo(FieldType.LOW_LANDS);
-            field.Surface = new Mushroom(coord, MushroomGrowthStage.SPROUT);
+            field.Surface = new Mushroom(coord);
 
             double before = Model.PlayerMoney;
             Model.HeightenField(coord);
@@ -209,7 +209,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var coord = new Coordinate(43, 40);
             var field = W.GetField(coord)!;
             field.SetFieldTypeTo(FieldType.LOW_LANDS);
-            field.Surface = new Mushroom(coord, MushroomGrowthStage.SPROUT);
+            field.Surface = new Mushroom(coord);
             ClearAdjacentRoads(coord);
 
             double before = Model.PlayerMoney;

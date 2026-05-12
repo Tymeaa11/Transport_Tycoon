@@ -13,7 +13,7 @@ namespace VolcanicTransport_Tests.WorldTests
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameWorld.Initialise(4, 0);
 
-        public static GameWorld WInstance => GameWorld.Instance;
+        private static GameWorld WInstance => GameWorld.Instance;
 
         private static SulfurProducer MakeFactory(string name = "SulfurFactory", int x = 3, int y = 3)
             => new(name, new Coordinate(x, y));
@@ -117,8 +117,7 @@ namespace VolcanicTransport_Tests.WorldTests
     [DoNotParallelize]
     public class CheckIfFactoryStateIsPreservedTests
     {
-
-        public static GameWorld WInstance => GameWorld.Instance;
+        private static GameWorld WInstance => GameWorld.Instance;
         private string? _tempFile;
 
         [TestInitialize]

@@ -63,7 +63,7 @@ namespace VolcanicTransport_Tests.VehicleTests
         public void Update_Moving_WithRoute_FiresArrivedAtStation()
         {
             var r1 = MakeRoad(84, 80);
-            var r2 = MakeRoad(85, 80);
+            MakeRoad(85, 80);
             var bus = new Bus("Arr_Bus");
 
             var stationCoord = new Coordinate(85, 80);

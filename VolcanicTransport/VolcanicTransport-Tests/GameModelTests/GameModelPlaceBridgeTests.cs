@@ -114,12 +114,9 @@ namespace VolcanicTransport_Tests.GameModelTests
                 {
                     var c = new Coordinate(x, y);
                     var f = w.GetField(c);
-                    if (f != null && f.Type == FieldType.LOW_LANDS && f.Surface == null)
-                    {
-                        bool result = Model.PlaceStation(c);
-                        Assert.IsTrue(result == true || result == false);
-                        return;
-                    }
+                    if (f is not { Type: FieldType.LOW_LANDS, Surface: null }) continue;
+                    Model.PlaceStation(c);
+                    return;
                 }
         }
 
