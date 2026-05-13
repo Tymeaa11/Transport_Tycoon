@@ -6,10 +6,7 @@ namespace VolcanicTransport.Model.Services
 {
     public class BuildingService(Func<World.World> getWorld, EconomyService economy)
     {
-        private readonly Func<World.World> _getWorld = getWorld;
-        private readonly EconomyService _economy = economy;
-
-        private World.World WorldInstance => _getWorld();
+        private World.World WorldInstance => getWorld();
 
         public event EventHandler? OnPlacementFailed;
         public event EventHandler? RoadBought;
@@ -70,12 +67,12 @@ namespace VolcanicTransport.Model.Services
 
             roadPrice += EconomyService.GetMushroomCosts(field);
 
-            if (!_economy.TryPurchase(roadPrice)) return;
+            if (!economy.TryPurchase(roadPrice)) return;
 
             var road = CanPlaceRoadHere(coord, field);
             if (road == null)
             {
-                _economy.AddMoney(roadPrice);
+                economy.AddMoney(roadPrice);
                 return;
             }
 
@@ -83,7 +80,7 @@ namespace VolcanicTransport.Model.Services
             {
                 field.Surface = null;
                 road.UpdateNeighbours();
-                _economy.AddMoney(roadPrice);
+                economy.AddMoney(roadPrice);
                 OnPlacementFailed?.Invoke(this, EventArgs.Empty);
                 return;
             }
@@ -178,7 +175,7 @@ namespace VolcanicTransport.Model.Services
             }
 
             double actualPrice = (bridgeType.Price / bridgeType.Length) * length;
-            if (!_economy.TryPurchase(actualPrice))
+            if (!economy.TryPurchase(actualPrice))
             {
                 startField.Surface = originalStartSurface;
                 endField.Surface = originalEndSurface;
@@ -220,7 +217,7 @@ namespace VolcanicTransport.Model.Services
         {
             var stationCost = GameSettings.BaseStationPrice;
 
-            if (!IsBuildable(coord) || _economy.PlayerMoney < stationCost) return false;
+            if (!IsBuildable(coord) || economy.PlayerMoney < stationCost) return false;
             if (WorldInstance.Stations.Any(s => s.Coordinate.Distance(coord) <= 3)) return false;
 
             var field = WorldInstance.GetField(coord);
@@ -243,7 +240,7 @@ namespace VolcanicTransport.Model.Services
             if (city != null) newStation = new CityStation(city, coord, city.Name + " megálló " + coord);
             else if (factory != null) newStation = new FactoryStation(coord, factory.Name + " megálló" + coord, factory);
 
-            if (newStation == null || !_economy.TryPurchase(stationCost)) return false;
+            if (newStation == null || !economy.TryPurchase(stationCost)) return false;
 
             field.Surface = newStation;
             newStation.Update();
@@ -252,7 +249,7 @@ namespace VolcanicTransport.Model.Services
             {
                 field.Surface = null;
                 newStation.UpdateNeighbours();
-                _economy.AddMoney(stationCost);
+                economy.AddMoney(stationCost);
                 return false;
             }
 
@@ -282,7 +279,7 @@ namespace VolcanicTransport.Model.Services
             var newFieldType = (FieldType)((int)field.Type + deltaHeight);
 
             if (newFieldType > FieldType.HIGH_MOUNTAINS) return;
-            if (!_economy.TryPurchase(terraformationPrice)) return;
+            if (!economy.TryPurchase(terraformationPrice)) return;
 
             field.SetFieldTypeTo(newFieldType);
             WorldInstance.UpdateChunk(WorldInstance.GetChunkCoordinate(coord));

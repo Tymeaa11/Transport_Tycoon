@@ -45,7 +45,7 @@ namespace VolcanicTransport.Model.World
 
         public Vehicle? GetLatestVehicle() => Vehicles.LastOrDefault();
 
-        public VehicleManager VehicleManager { get; } = new();
+        public VehicleManager VehicleManager { get; }
 
         #endregion
 

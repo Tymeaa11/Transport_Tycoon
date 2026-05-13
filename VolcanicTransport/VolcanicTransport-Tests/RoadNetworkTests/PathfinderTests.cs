@@ -147,21 +147,21 @@ namespace VolcanicTransport_Tests.RoadnetworkTests
             var b = CreateNode(3, 0);
             var c = CreateNode(6, 0);
             var d = CreateNode(9, 0);
-            var rAB1 = CreateRoad(1, 0); var rAB2 = CreateRoad(2, 0);
-            var rBC1 = CreateRoad(4, 0); var rBC2 = CreateRoad(5, 0);
-            var rCA = CreateRoad(3, 1);
-            var rCD1 = CreateRoad(7, 0); var rCD2 = CreateRoad(8, 0);
+            var rAb1 = CreateRoad(1, 0); var rAb2 = CreateRoad(2, 0);
+            var rBc1 = CreateRoad(4, 0); var rBc2 = CreateRoad(5, 0);
+            var rCa = CreateRoad(3, 1);
+            var rCd1 = CreateRoad(7, 0); var rCd2 = CreateRoad(8, 0);
 
-            a.Edges.Add(new RoadEdge(b, 2, [rAB1, rAB2]));
-            b.Edges.Add(new RoadEdge(c, 2, [rBC1, rBC2]));
-            c.Edges.Add(new RoadEdge(a, 1, [rCA]));
-            c.Edges.Add(new RoadEdge(d, 2, [rCD1, rCD2]));
+            a.Edges.Add(new RoadEdge(b, 2, [rAb1, rAb2]));
+            b.Edges.Add(new RoadEdge(c, 2, [rBc1, rBc2]));
+            c.Edges.Add(new RoadEdge(a, 1, [rCa]));
+            c.Edges.Add(new RoadEdge(d, 2, [rCd1, rCd2]));
 
             var result = Pathfinder.Instance.FindPath(a, d);
 
             Assert.IsNotNull(result, "Ciklikus gráfban is megtalálható az útvonal.");
             CollectionAssert.AreEqual(
-                new List<Road> { rAB1, rAB2, rBC1, rBC2, rCD1, rCD2 }, result);
+                new List<Road> { rAb1, rAb2, rBc1, rBc2, rCd1, rCd2 }, result);
         }
 
         [TestMethod]

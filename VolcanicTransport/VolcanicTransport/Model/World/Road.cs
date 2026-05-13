@@ -5,7 +5,7 @@ namespace VolcanicTransport.Model.World
     public class Road(Coordinate coordinate) : KnowsNeighbour(coordinate)
     {
         #region Fields
-        public bool IsReserved { get; set; } = false;
+        public bool IsReserved { get; set; }
         public virtual RoadType RoadType { get; protected set; }
         #endregion
 

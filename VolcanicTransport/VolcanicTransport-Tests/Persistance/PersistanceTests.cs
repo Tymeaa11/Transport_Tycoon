@@ -1,4 +1,4 @@
-﻿using VolcanicTransport.Model.Persistance;
+﻿using VolcanicTransport.Model.Persistence;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
@@ -36,7 +36,7 @@ namespace VolcanicTransport_Tests.Persistance
         {
             _saveManager.SaveGame(data, _testPath);
             GameWorld.Initialise(WorldSize, Seed);
-            return _saveManager.LoadGame(_testPath, (s, e) => { });
+            return _saveManager.LoadGame(_testPath, (_, _) => { });
         }
 
         #region Basic & Binary Map Tests
@@ -92,7 +92,7 @@ namespace VolcanicTransport_Tests.Persistance
             var buildingField = world.GetField(buildingCoord);
 
             Assert.IsNotNull(buildingField);
-            buildingField!.Surface = building;
+            buildingField.Surface = building;
 
             city.AddField(buildingField);
 
@@ -124,7 +124,7 @@ namespace VolcanicTransport_Tests.Persistance
 
             Assert.IsInstanceOfType<SulfurProducer>(loadedSulfur, "SulfurProducer lost its specific type.");
             Assert.IsInstanceOfType<AshProducer>(loadedAsh, "AshProducer lost its specific type.");
-            Assert.AreEqual(ProductType.SULFUR, loadedSulfur!.FinalProduct.ProductType);
+            Assert.AreEqual(ProductType.SULFUR, loadedSulfur.FinalProduct.ProductType);
         }
 
         [TestMethod]

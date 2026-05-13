@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Exceptions;
-using VolcanicTransport.Model.Persistance;
+using VolcanicTransport.Model.Persistence;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Roadnetwork;
 
@@ -56,7 +56,7 @@ namespace VolcanicTransport.Model.World.Economy
         public float GetFactoryEfficiency(float time)
             => FactoryRef.FinalProduct.GetFactoryEfficiency(time);
 
-        public int LoadProduct(Vehicle vehicle)
+        public int LoadProduct(Vehicle? vehicle)
         {
             if (vehicle == null || (vehicle.CurrentLoad > 0 && vehicle.CurrentType != FactoryRef.FinalProduct.ProductType))
             {
@@ -68,7 +68,7 @@ namespace VolcanicTransport.Model.World.Economy
             return amountFilled;
         }
 
-        public override int UnLoadProductFromVehicle(Vehicle vehicle)
+        public override int UnLoadProductFromVehicle(Vehicle? vehicle)
         {
             if (vehicle == null || vehicle.CurrentType != FactoryRef.BaseProduct)
             {

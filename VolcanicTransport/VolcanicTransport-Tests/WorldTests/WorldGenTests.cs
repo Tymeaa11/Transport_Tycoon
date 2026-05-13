@@ -83,7 +83,7 @@ namespace VolcanicTransport_Tests.WorldTests
                     var surface = World.GetField(coord)?.Surface;
                     Assert.IsInstanceOfType<CityBuilding>(surface, $"City building missing at corner {coord}");
 
-                    var building = (CityBuilding)surface!;
+                    var building = (CityBuilding)surface;
                     Assert.AreEqual(city.Name, building.CityName, "CityBuilding has incorrect CityName reference.");
                 }
             }
@@ -103,7 +103,7 @@ namespace VolcanicTransport_Tests.WorldTests
 
                         Assert.IsInstanceOfType<FactoryBuilding>(surface, $"FactoryBuilding missing at {target}");
 
-                        var building = (FactoryBuilding)surface!;
+                        var building = (FactoryBuilding)surface;
                         Assert.AreEqual(factory.Name, building.FactoryName, "FactoryBuilding has incorrect FactoryName reference.");
                     }
                 }

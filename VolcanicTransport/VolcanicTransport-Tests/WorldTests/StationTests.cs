@@ -164,7 +164,7 @@ namespace VolcanicTransport_Tests.WorldTests
             var factory = MakeFactory();
             var station = new FactoryStation(new Coordinate(5, 5), "EffStop", factory);
             float eff = station.GetFactoryEfficiency(0f);
-            Assert.IsTrue(eff >= 0f && eff <= 1f);
+            Assert.IsTrue(eff is >= 0f and <= 1f);
         }
 
         [TestMethod]

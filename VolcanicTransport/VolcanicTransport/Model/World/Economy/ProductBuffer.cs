@@ -60,7 +60,7 @@ namespace VolcanicTransport.Model.World.Economy
             }
         }
 
-        public int FillVehicle(Vehicle vehicle) //visszatérési érték: amennyit leadott
+        public int FillVehicle(Vehicle? vehicle) //visszatérési érték: amennyit leadott
         {
             if (vehicle == null || CurrentLoad <= 0) { return 0; }
 

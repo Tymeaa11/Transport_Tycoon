@@ -1,4 +1,4 @@
-﻿namespace VolcanicTransport.Model.Persistance
+﻿namespace VolcanicTransport.Model.Persistence
 {
     public interface IHasSavedState
     {

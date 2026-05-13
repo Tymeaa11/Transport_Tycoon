@@ -4,7 +4,7 @@ using VolcanicTransport.Model.World;
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport.Model.Persistance
+namespace VolcanicTransport.Model.Persistence
 {
     public class SaveFileManager(ISaveFormat saveFormat) : ISaveFileManager
     {

@@ -1,5 +1,5 @@
 using VolcanicTransport.Model;
-using VolcanicTransport.Model.Persistance;
+using VolcanicTransport.Model.Persistence;
 using VolcanicTransport.Model.TerrainGeneration.Layers;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
@@ -335,7 +335,7 @@ namespace VolcanicTransport_Tests.Misc
         {
             var m = new SquareMatrixIterator<int>(3);
             int count = 0;
-            m.ReadEach((x, y, v) => count++);
+            m.ReadEach((_, _, _) => count++);
             Assert.AreEqual(9, count);
         }
 
@@ -346,7 +346,7 @@ namespace VolcanicTransport_Tests.Misc
             m.SetEach((x, y) => x + y * 3);
 
             int sum = 0;
-            m.ReadEach((x, y, v) => sum += v);
+            m.ReadEach((_, _, v) => sum += v);
             Assert.AreEqual(0 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8, sum);
         }
 
@@ -354,12 +354,12 @@ namespace VolcanicTransport_Tests.Misc
         public void ModifyEach_TransformsAllCells()
         {
             var m = new SquareMatrixIterator<int>(2);
-            m.SetEach((x, y) => 1);
+            m.SetEach((_, _) => 1);
 
-            m.ModifyEach((x, y, v) => v * 10);
+            m.ModifyEach((_, _, v) => v * 10);
 
             int sum = 0;
-            m.ReadEach((x, y, v) => sum += v);
+            m.ReadEach((_, _, v) => sum += v);
             Assert.AreEqual(40, sum);
         }
 

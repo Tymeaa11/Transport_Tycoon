@@ -29,9 +29,10 @@ namespace VolcanicTransport_Tests.GameModelTests
             var bus = new Bus("SellEvent");
             GameWorld.Instance.AddVehicle(bus);
             bool fired = false;
-            Model.VehicleSold += (_, _) => fired = true;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.VehicleSold += Handler;
             Model.SellVehicle(bus);
-            Model.VehicleSold -= (_, _) => { };
+            Model.VehicleSold -= Handler;
             Assert.IsTrue(fired);
         }
 

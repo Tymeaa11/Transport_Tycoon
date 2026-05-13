@@ -53,10 +53,10 @@ namespace VolcanicTransport_Tests.GameModelTests
             var bus = new Bus("EventBus");
 
             bool fired = false;
-            void h(object? _, VehicleArrivedEventArgs __) => fired = true;
-            Model.VehicleArrivedAtStation += h;
+            void H(object? _, VehicleArrivedEventArgs __) => fired = true;
+            Model.VehicleArrivedAtStation += H;
             Model.HandleVehicleArrived(null, new VehicleArrivedEventArgs(bus, station));
-            Model.VehicleArrivedAtStation -= h;
+            Model.VehicleArrivedAtStation -= H;
 
             Assert.IsTrue(fired);
         }

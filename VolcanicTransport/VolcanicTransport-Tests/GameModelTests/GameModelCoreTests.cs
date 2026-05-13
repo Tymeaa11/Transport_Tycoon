@@ -50,9 +50,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void MoneyChanged_FiredOnSuccessfulPurchase()
         {
             bool fired = false;
-            Model.MoneyChanged += (_, _) => fired = true;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.MoneyChanged += Handler;
             Model.TryPurchase(1);
-            Model.MoneyChanged -= (_, _) => fired = true;
+            Model.MoneyChanged -= Handler;
             Assert.IsTrue(fired);
         }
 
@@ -61,10 +62,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void Pause_SetsIsPausedTrue_AndFiresEvent()
         {
             bool eventFired = false;
-            void handler(object? _, EventArgs __) => eventFired = true;
-            Model.GamePaused += handler;
+            void Handler(object? _, EventArgs __) => eventFired = true;
+            Model.GamePaused += Handler;
             Model.Pause();
-            Model.GamePaused -= handler;
+            Model.GamePaused -= Handler;
 
             Assert.IsTrue(Model.IsPaused);
             Assert.IsTrue(eventFired);
@@ -75,10 +76,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool eventFired = false;
-            void handler(object? _, EventArgs __) => eventFired = true;
-            Model.GameUnpaused += handler;
+            void Handler(object? _, EventArgs __) => eventFired = true;
+            Model.GameUnpaused += Handler;
             Model.UnPause();
-            Model.GameUnpaused -= handler;
+            Model.GameUnpaused -= Handler;
 
             Assert.IsFalse(Model.IsPaused);
             Assert.IsTrue(eventFired);
@@ -89,10 +90,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool fired = false;
-            void handler(object? _, EventArgs __) => fired = true;
-            Model.TimescaleChanged += handler;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.TimescaleChanged += Handler;
             Model.ChangeTimeSpeed1X();
-            Model.TimescaleChanged -= handler;
+            Model.TimescaleChanged -= Handler;
 
             Assert.IsFalse(Model.IsPaused);
             Assert.IsTrue(fired);
@@ -103,10 +104,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool fired = false;
-            void handler(object? _, EventArgs __) => fired = true;
-            Model.TimescaleChanged += handler;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.TimescaleChanged += Handler;
             Model.ChangeTimeSpeed2X();
-            Model.TimescaleChanged -= handler;
+            Model.TimescaleChanged -= Handler;
 
             Assert.IsFalse(Model.IsPaused);
             Assert.IsTrue(fired);
@@ -117,10 +118,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.Pause();
             bool fired = false;
-            void handler(object? _, EventArgs __) => fired = true;
-            Model.TimescaleChanged += handler;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.TimescaleChanged += Handler;
             Model.ChangeTimeSpeed4X();
-            Model.TimescaleChanged -= handler;
+            Model.TimescaleChanged -= Handler;
 
             Assert.IsFalse(Model.IsPaused);
             Assert.IsTrue(fired);
@@ -150,10 +151,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         {
             Model.UnPause();
             bool fired = false;
-            void handler(object? _, EventArgs __) => fired = true;
-            Model.GameAdvanced += handler;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.GameAdvanced += Handler;
             Model.Update(0.1);
-            Model.GameAdvanced -= handler;
+            Model.GameAdvanced -= Handler;
             Assert.IsTrue(fired);
         }
 
@@ -179,7 +180,7 @@ namespace VolcanicTransport_Tests.GameModelTests
             var coord = new Coordinate(0, 0);
             var field = new Field
             {
-                Surface = new Mushroom(coord, MushroomGrowthStage.SPROUT)
+                Surface = new Mushroom(coord)
             };
             var result = EconomyService.GetMushroomCosts(field);
             // (0 + 1) * 100 = 100
@@ -224,10 +225,10 @@ namespace VolcanicTransport_Tests.GameModelTests
         public void BuyVehicle_SufficientFunds_FiresVehicleBoughtEvent()
         {
             bool fired = false;
-            void handler(object? _, EventArgs __) => fired = true;
-            Model.VehicleBought += handler;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.VehicleBought += Handler;
             Model.BuyVehicle(new Bus("BuyEv"));
-            Model.VehicleBought -= handler;
+            Model.VehicleBought -= Handler;
             Assert.IsTrue(fired);
         }
 
@@ -271,10 +272,10 @@ namespace VolcanicTransport_Tests.GameModelTests
             var v = new Bus("SellEv");
             Model.BuyVehicle(v);
             bool fired = false;
-            void handler(object? _, EventArgs __) => fired = true;
-            Model.VehicleSold += handler;
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.VehicleSold += Handler;
             Model.SellVehicle(v);
-            Model.VehicleSold -= handler;
+            Model.VehicleSold -= Handler;
             Assert.IsTrue(fired);
         }
 
@@ -412,7 +413,6 @@ namespace VolcanicTransport_Tests.GameModelTests
     public class GameModelVehicleArrivedTests
     {
         private static GameModel Model => GameModel.Instance;
-        private static GameWorld World => GameWorld.Instance;
 
         [ClassInitialize]
         public static void ClassSetup(TestContext _) => GameModel.InitialiseNewGame(4, 7);
@@ -453,11 +453,13 @@ namespace VolcanicTransport_Tests.GameModelTests
             var station = new CityStation(city, new Coordinate(2, 2), "EvStation");
             var bus = new Bus("EvBus");
             bool fired = false;
-            Model.VehicleArrivedAtStation += (_, _) => fired = true;
+            
+            void Handler(object? _, EventArgs __) => fired = true;
+            Model.VehicleArrivedAtStation += Handler;
 
             Model.HandleVehicleArrived(null, new VehicleArrivedEventArgs(bus, station));
 
-            Model.VehicleArrivedAtStation -= (_, _) => fired = true;
+            Model.VehicleArrivedAtStation -= Handler;
             Assert.IsTrue(fired);
         }
     }
