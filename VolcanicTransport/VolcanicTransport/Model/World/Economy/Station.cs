@@ -14,7 +14,7 @@ namespace VolcanicTransport.Model.World.Economy
         protected Product PassengerDemand = passengerDemand;
         [JsonIgnore]
         public int WaitingPassengers => PassengerBuffer.CurrentLoad;
-        public bool IsOccupied { get; set; } = false;
+        public bool IsOccupied { get; set; }
 
         [JsonInclude]
         private double passengerAccumulator = passengerAccumulator;
@@ -80,11 +80,7 @@ namespace VolcanicTransport.Model.World.Economy
 
             return actualUnloaded;
         }
-
-        public override void Update()
-        {
-            base.Update();
-        }
+        
         #endregion
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace VolcanicTransport.Model.Persistance
+﻿namespace VolcanicTransport.Model.Persistence
 {
     public readonly record struct GameData(
         World.World World,

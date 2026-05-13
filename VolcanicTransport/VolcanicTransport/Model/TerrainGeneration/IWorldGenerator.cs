@@ -2,7 +2,7 @@
 
 namespace VolcanicTransport.Model.TerrainGeneration
 {
-    public interface IWorldGenerator : ISeedable, ITerrainGenerator
+    public interface IWorldGenerator : ITerrainGenerator
     {
         public void GenerateCitiesAndFactories();
     }

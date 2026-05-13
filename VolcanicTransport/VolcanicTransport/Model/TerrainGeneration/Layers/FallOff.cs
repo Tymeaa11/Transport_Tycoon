@@ -1,6 +1,6 @@
 ﻿namespace VolcanicTransport.Model.TerrainGeneration.Layers
 {
-    internal class Falloff() : ILayer
+    internal class Falloff : ILayer
     {
         public float Get(float x, float y)
         {

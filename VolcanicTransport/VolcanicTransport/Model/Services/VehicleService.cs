@@ -38,7 +38,7 @@ namespace VolcanicTransport.Model.Services
 
         public bool CreateAndStartVehicle(string vehicleType, string vehicleName, Route chosenRoute)
         {
-            if (chosenRoute == null || chosenRoute.Stops.Count < 2)
+            if (chosenRoute.Stops.Count < 2)
                 return false;
 
             Vehicle newVehicle = vehicleType switch

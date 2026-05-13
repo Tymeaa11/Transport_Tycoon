@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Text.Json.Serialization;
-using VolcanicTransport.Model.Persistance;
+using VolcanicTransport.Model.Persistence;
 using VolcanicTransport.Model.Utils;
 using VolcanicTransport.Model.World.Economy;
 namespace VolcanicTransport.Model.World.Roadnetwork
@@ -115,7 +115,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
         public void StartJourney(List<Road> path, bool alreadyOnRoad = true, Station? currentStation = null)
         {
             //if (route == null) return;
-            if (path == null || path.Count == 0) return;
+            if (path.Count == 0) return;
 
             if (CurrentRoad != null)
             {
@@ -162,8 +162,8 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 float stationCenterX = (currentStation.Coordinate.X * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
                 float stationCenterY = (currentStation.Coordinate.Y * GameSettings.FieldSize) + GameSettings.FieldSizeP2;
 
-                currentWaypoints.Insert(0, new System.Numerics.Vector2(stationCenterX, stationCenterY));
-                Position = new System.Numerics.Vector2(stationCenterX, stationCenterY);
+                currentWaypoints.Insert(0, new Vector2(stationCenterX, stationCenterY));
+                Position = new Vector2(stationCenterX, stationCenterY);
 
             }
 
@@ -193,7 +193,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
                 return;
             }
 
-            if (State != VehicleState.Moving || currentPath == null || currentWaypoints.Count == 0)
+            if (State != VehicleState.Moving || currentWaypoints.Count == 0)
             {
                 State = VehicleState.Waiting;
                 StateUpdated?.Invoke(this, EventArgs.Empty);
@@ -260,7 +260,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
                 if (dist > 0.001f)
                 {
-                    Angle = (float)(System.Math.Atan2(diff.Y, diff.X) * (180.0 / System.Math.PI));
+                    Angle = (float)(Math.Atan2(diff.Y, diff.X) * (180.0 / Math.PI));
                 }
 
                 if (dist < 0.01f)

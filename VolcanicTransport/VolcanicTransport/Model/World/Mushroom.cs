@@ -34,14 +34,13 @@ namespace VolcanicTransport.Model.World
             if (IsAbleToSpread() && rand.NextDouble() < GameSettings.SpreadBaseChance)
             {
                 Coordinate targetCoord = myCoord + Coordinate.GetRandomDirection();
-                ;
                 Field? targetField = World.Instance.GetField(targetCoord);
 
                 if (targetField != null && (targetField.Type is < FieldType.LOW_LANDS or > FieldType.HIGH_LANDS)) return (null, hasChanged);
 
                 if (targetField != null && targetField.Surface == null && targetField.IsBuildable())
                 {
-                    targetField.Surface = new Mushroom(targetCoord, MushroomGrowthStage.SPROUT);
+                    targetField.Surface = new Mushroom(targetCoord);
                     hasChanged = true;
                     return (targetCoord, hasChanged);
                 }

@@ -58,7 +58,7 @@ namespace VolcanicTransport.Model.World.Economy
 
             List<int> possibleIndexes = [.. Enumerable.Range(2, 7)];
 
-            possibleIndexes = [.. possibleIndexes.OrderBy(x => rnd.Next())];
+            possibleIndexes = [.. possibleIndexes.OrderBy(_ => rnd.Next())];
 
             for (var i = 0; i < 3; i++)
             {

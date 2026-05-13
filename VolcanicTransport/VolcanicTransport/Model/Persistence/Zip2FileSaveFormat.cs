@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using VolcanicTransport.Model.Exceptions;
 
-namespace VolcanicTransport.Model.Persistance
+namespace VolcanicTransport.Model.Persistence
 {
     public class Zip2FileSaveFormat : ISaveFormat
     {
@@ -19,12 +19,10 @@ namespace VolcanicTransport.Model.Persistance
         };
         #endregion
 
-        public Zip2FileSaveFormat() { }
-
         public void OpenZipForSaving(string filename)
         {
             Dispose();
-            _zipArchive = new(new FileStream(filename, FileMode.Create), ZipArchiveMode.Create);
+            _zipArchive = new ZipArchive(new FileStream(filename, FileMode.Create), ZipArchiveMode.Create);
         }
 
         public void OpenZipForLoading(string filename)

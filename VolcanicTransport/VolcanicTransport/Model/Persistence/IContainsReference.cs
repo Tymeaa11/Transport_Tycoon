@@ -1,6 +1,6 @@
 ﻿using VolcanicTransport.Model.Utils;
 
-namespace VolcanicTransport.Model.Persistance
+namespace VolcanicTransport.Model.Persistence
 {
     internal interface IContainsReference
     {

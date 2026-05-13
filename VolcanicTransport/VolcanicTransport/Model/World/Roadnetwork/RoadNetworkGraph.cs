@@ -5,7 +5,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 {
     public class RoadNetworkGraph : IRoadNetworkGraph
     {
-        public Dictionary<KnowsNeighbour, RoadNode> NodeMap { get; private set; } = [];
+        public Dictionary<KnowsNeighbour, RoadNode> NodeMap { get; } = [];
         public void RegisterNodeIfNeeded(Coordinate coord)
         {
             Field? field = World.Instance.GetField(coord);
@@ -48,8 +48,7 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         private void Trace(RoadNode startNode, KnowsNeighbour current, KnowsNeighbour cameFrom, List<Road> currentPath, int currentWeight, HashSet<Coordinate> visited)
         {
-            if (visited.Contains(current.Coordinate)) return;
-            visited.Add(current.Coordinate);
+            if (!visited.Add(current.Coordinate)) return;
 
             if (NodeMap.TryGetValue(current, out RoadNode? targetNode))
             {

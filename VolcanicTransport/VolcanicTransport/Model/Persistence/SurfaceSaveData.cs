@@ -2,7 +2,7 @@
 using VolcanicTransport.Model.World.Economy;
 using VolcanicTransport.Model.World.Roadnetwork;
 
-namespace VolcanicTransport.Model.Persistance
+namespace VolcanicTransport.Model.Persistence
 {
     public readonly record struct SurfaceSaveData(
         int WorldSeed,

@@ -8,11 +8,11 @@ namespace VolcanicTransport.Model.Services
         private readonly Func<World.World> _getWorld;
         private readonly EconomyService _economy;
         private readonly ScalableTimer _mushroomGrowthTimer;
-        private double _monthlyExpenseAccumulator = 0;
+        private double _monthlyExpenseAccumulator;
 
         private World.World WorldInstance => _getWorld();
 
-        public double Time { get; private set; } = 0;
+        public double Time { get; private set; }
         public bool IsPaused { get; private set; }
 
         public event EventHandler? GamePaused;
@@ -26,7 +26,7 @@ namespace VolcanicTransport.Model.Services
             _economy = economy;
 
             _mushroomGrowthTimer = new ScalableTimer { TimeScale = 1 };
-            _mushroomGrowthTimer.Elapsed += (s, e) =>
+            _mushroomGrowthTimer.Elapsed += (_, _) =>
             {
                 if (World.World.IsInitialised())
                     UpdateAllMushrooms(0.1);
@@ -113,7 +113,7 @@ namespace VolcanicTransport.Model.Services
 
                 if (field.Surface is null && rand.NextDouble() < GameSettings.NewSpreadChance)
                 {
-                    field.Surface = new Mushroom(randomCoord, MushroomGrowthStage.SPROUT);
+                    field.Surface = new Mushroom(randomCoord);
                 }
                 else if (field.Surface is Mushroom mushroom)
                 {
@@ -126,7 +126,7 @@ namespace VolcanicTransport.Model.Services
                 }
             }
 
-            foreach (Chunk? chunk in chunksToRedraw)
+            foreach (var chunk in chunksToRedraw)
                 WorldInstance.UpdateChunk(chunk.Coordinate);
         }
 
