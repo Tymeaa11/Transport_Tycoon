@@ -83,12 +83,12 @@ public static class GameSettings
     {
         { ProductType.HUMAN, 15.0 },
         { ProductType.ASH, 10.0 },
-        { ProductType.SULFUR, 40.0 },
-        { ProductType.STEAM, 200.0 },
+        { ProductType.SULFUR, 20.0 },
+        { ProductType.STEAM, 60.0 },
         { ProductType.WATER, 50.0 },
-        { ProductType.BONE, 150.0 },
-        { ProductType.CONCRETE, 350.0 },
-        { ProductType.MUSHROOM, 80.0 },
+        { ProductType.BONE, 30.0 },
+        { ProductType.CONCRETE, 70.0 },
+        { ProductType.MUSHROOM, 25.0 },
         { ProductType.NONE, 0.0 }
     };
 

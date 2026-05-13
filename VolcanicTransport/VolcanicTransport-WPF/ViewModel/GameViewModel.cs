@@ -23,6 +23,8 @@ namespace VolcanicTransport_WPF.ViewModel
         public CameraToMinimap MinimapSelector { get; }
         public string CurrentMoney => GameModelInstance.PlayerMoney.ToString("F0") + " $";
 
+        private bool _isGameOverHandled = false;
+
 
         #region Events
         public event EventHandler? ExitToMenuRequested;
@@ -156,6 +158,8 @@ namespace VolcanicTransport_WPF.ViewModel
             Field? field = GameModel.WorldInstance.GetField(coord);
             if (field == null) return;
 
+            bool needsTooltipRefresh = false;
+
             switch (CurrentBuildMode)
             {
                 case BuildMode.SELECT_STATION:
@@ -164,7 +168,10 @@ namespace VolcanicTransport_WPF.ViewModel
 
                 case BuildMode.ROAD:
                     if (field.IsBuildable())
+                    {
                         GameModelInstance.PlaceRoad(coord);
+                        needsTooltipRefresh = true;
+                    }
                     break;
 
                 case BuildMode.STATION:
@@ -174,10 +181,12 @@ namespace VolcanicTransport_WPF.ViewModel
 
                 case BuildMode.HEIGHTEN:
                     GameModelInstance.HeightenField(coord);
+                    needsTooltipRefresh = true;
                     break;
 
                 case BuildMode.LOWER:
                     GameModelInstance.LowerField(coord);
+                    needsTooltipRefresh = true;
                     break;
                 case BuildMode.EDIT_GLOBAL_ROUTE:
                     if (field.Surface is Station clickedGlobalStation && SelectedSavedRoute != null)
@@ -194,6 +203,11 @@ namespace VolcanicTransport_WPF.ViewModel
                 default:
                     // Handle BuildMode.NONE or unhandled cases
                     break;
+            }
+
+            if (needsTooltipRefresh)
+            {
+                UpdateHoveredCoordinateAndTooltips(_lastMousePosition);
             }
         }
 
@@ -243,7 +257,7 @@ namespace VolcanicTransport_WPF.ViewModel
             set { _selectedSavedRoute = value; OnPropertyChanged(); }
         }
 
-        private string _newRouteName = "Új Járat 1";
+        private string _newRouteName = "New Route 1";
         public string NewRouteName
         {
             get => _newRouteName;
@@ -506,11 +520,16 @@ namespace VolcanicTransport_WPF.ViewModel
                                     "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+                if (string.IsNullOrWhiteSpace(NewVehicleName))
+                {
+                    MessageBox.Show("Please enter a name for the new vehicle!",
+                "Name Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 string chosenName = NewVehicleName;
                 string? chosenType = SelectedVehicleTemplate.InternalType;
                 Route? chosenRoute = SelectedSavedRoute;
-
                 bool success = GameModelInstance.CreateAndStartVehicle(chosenType, chosenName, chosenRoute);
                 if (success)
                 {
@@ -526,7 +545,7 @@ namespace VolcanicTransport_WPF.ViewModel
             OpenPurchasePanelCommand = new DelegateCommand(_ =>
             {
                 IsPurchasePanelVisible = true;
-                NewRouteName = "New vehicle";
+                NewVehicleName = "New vehicle";
             });
             ResumeCommand = new DelegateCommand(_ => IsPausedView = false);
             QuitToMainMenuCommand = new DelegateCommand(_ =>
@@ -561,7 +580,7 @@ namespace VolcanicTransport_WPF.ViewModel
                         Debug.WriteLine($"[Járat] '{currentRoute.Name}' elmentve a globális listába!");
                     }
 
-                    NewRouteName = $"Új Járat {SavedRoutes.Count + 1}";
+                    NewRouteName = $"New route {SavedRoutes.Count + 1}";
                 }
             });
 
@@ -589,11 +608,17 @@ namespace VolcanicTransport_WPF.ViewModel
 
             CreateGlobalRouteCommand = new DelegateCommand(_ =>
             {
+                if (string.IsNullOrWhiteSpace(NewRouteName))
+                {
+                    MessageBox.Show("Please enter a name for the new route!",
+                                    "Name Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 var newRoute = new Route { Name = NewRouteName };
                 SavedRoutes.Add(newRoute);
                 GameModel.WorldInstance.AddRoute(newRoute);
                 SelectedSavedRoute = newRoute;
-                NewRouteName = $"Járat {SavedRoutes.Count + 1}";
+                NewRouteName = $"New Route {SavedRoutes.Count + 1}";
             });
 
             EditGlobalRouteCommand = new DelegateCommand(_ =>
@@ -682,14 +707,15 @@ namespace VolcanicTransport_WPF.ViewModel
 
             GameModelInstance.GameOver += (s, e) =>
             {
+                if (_isGameOverHandled) return;
+                _isGameOverHandled = true;
+
                 CompositionTarget.Rendering -= OnCompositionTargetRendering;
+                GameModelInstance.Pause();
 
-                MessageBox.Show("Csődbe mentél! A játéknak vége.");
+                MessageBox.Show("Game Over! You went bankrupt.");
 
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
-                });
+                ExitToMenuRequested?.Invoke(this, EventArgs.Empty);
             };
 
             StartGameLoop();
