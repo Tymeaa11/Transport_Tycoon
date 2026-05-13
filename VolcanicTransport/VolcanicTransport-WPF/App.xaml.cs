@@ -148,7 +148,7 @@ namespace VolcanicTransport_WPF
                 {
                     _gameViewModel.SaveGame(_saveFileDialog.FileName);
                 }
-                catch (SavingException ex)
+                catch (PersistanceException ex)
                 {
                     MessageBox.Show("An error occured while trying to save the game: " + ex.Message,
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);

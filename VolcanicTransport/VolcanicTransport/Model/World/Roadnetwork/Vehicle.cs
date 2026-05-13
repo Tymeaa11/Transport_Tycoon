@@ -87,7 +87,6 @@ namespace VolcanicTransport.Model.World.Roadnetwork
 
         public int CurrentStopIndex { get; set; } = 1;
 
-        protected bool active = false;
         public VehicleState State { get; set; } = VehicleState.Waiting;
 
         protected List<Road> currentPath = [];
