@@ -75,7 +75,7 @@ namespace VolcanicTransport_WPF.ViewModel
                     {
                         var stop = activeRoute.Stops[i];
                         string prefix = (i == _vehicle.CurrentStopIndex && _vehicle.PendingRoute == null) ? "➔ " : "   ";
-                        ScheduleList.Add($"{prefix}{stop.StationName}: {stop.Coordinate.X}, {stop.Coordinate.Y}");
+                        ScheduleList.Add($"{prefix}{stop.StationName}");
                     }
                 }
                 else
