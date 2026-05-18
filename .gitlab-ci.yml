@@ -4,7 +4,8 @@ stages:          # List of stages for jobs, and their order of execution
   - build
   - test
   - deploy
-
+  - release
+  
 include:
   - component: szofttech.inf.elte.hu/components/code-quality-dotnet/windows@2
     inputs:
@@ -79,4 +80,35 @@ pages:
   only:
     - master
 
+
+publish-job:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:9.0-windowsservercore-ltsc2025
+  tags: [windows]
+  rules:
+    - if: $CI_COMMIT_TAG # ha új tag érkezik
+  script:
+    - echo "Release bináris fordítása és csomagolása..."
+    - dotnet publish VolcanicTransport -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish_output
+    - Compress-Archive -Path publish_output\* -DestinationPath VolcanicTransport_Windows.zip
+  artifacts:
+    paths:
+      - VolcanicTransport_Windows.zip
+    expire_in: never
+
+release-job:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG # ha új tag érkezik
+  script:
+    - echo "Release frissítése az elkészült binárisokkal..."
+  release:
+    name: 'Kiadás: $CI_COMMIT_TAG'
+    description: 'A $CI_COMMIT_TAG verzióhoz tartozó kiadás.'
+    tag_name: '$CI_COMMIT_TAG'
+    assets:
+      links:
+        - name: 'VolcanicTransport Windows Futtatható (.zip)'
+          url: '${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/VolcanicTransport_Windows.zip?job=publish-job'
 
