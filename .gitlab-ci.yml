@@ -4,7 +4,8 @@ stages:          # List of stages for jobs, and their order of execution
   - build
   - test
   - deploy
-
+  - release
+  
 include:
   - component: szofttech.inf.elte.hu/components/code-quality-dotnet/windows@2
     inputs:
