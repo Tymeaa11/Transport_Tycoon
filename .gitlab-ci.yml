@@ -89,7 +89,7 @@ publish-job:
     - if: $CI_COMMIT_TAG # ha új tag érkezik
   script:
     - echo "Release bináris fordítása és csomagolása..."
-    - dotnet publish VolcanicTransport -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish_output
+    - dotnet publish VolcanicTransport/VolcanicTransport-WPF/VolcanicTransport-WPF.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish_output
     - Compress-Archive -Path publish_output\* -DestinationPath VolcanicTransport_Windows.zip
   artifacts:
     paths:
